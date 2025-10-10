@@ -1,0 +1,31 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "course": "Curso"
+  },
+  "module": {
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "module": "Módulo",
+    "viewVideo": "Ver video del módulo",
+    "openMaterial": "Abrir material",
+    "videoContent": "Contenido en video",
+    "complementaryMaterial": "Material complementario",
+    "resources": "Recursos adicionales",
+    "complete": "Marcar completado"
+  },
+  "chapter": {
+    "content": "Contenido del Curso",
+    "chapters": "capítulos",
+    "modules": "módulos",
+    "progress": "Progreso",
+    "completed": "completado"
+  },
+  "footer": {
+    "rights": "Todos los derechos reservados",
+    "tagline": "Aprendé a vivir mejor, trabajar online y vender con propósito"
+  },
+  "hero": {
+    "viewCourse": "Ver Curso Completo"
+  }
+}
