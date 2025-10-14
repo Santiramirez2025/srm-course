@@ -2,14 +2,14 @@ import { CourseData } from './types';
 
 // Capítulo 1 - Vivir Mejor
 import { ParadigmasContent, paradigmasMetadata } from './modules/capitulo1/01-paradigmas';
-import { HabitosContent, habitosMetadata } from './modules/capitulo1/02-habitos';
-import { MentalidadContent, mentalidadMetadata } from './modules/capitulo1/03-mentalidad';
-import { PropositoContent, propositoMetadata } from './modules/capitulo1/04-proposito';
-import { RutinaContent, rutinaMetadata } from './modules/capitulo1/05-rutina';
-import { EmocionalContent, emocionalMetadata } from './modules/capitulo1/06-emocional';
-import { DescansoContent, descansoMetadata } from './modules/capitulo1/07-descanso';
-import { EnergiaContent, energiaMetadata } from './modules/capitulo1/08-energia';
-import { ConclusionVMContent, conclusionVMMetadata } from './modules/capitulo1/09-conclusion';
+import { VisionMundoContent, visionMundoMetadata } from './modules/capitulo1/02-vision-mundo';
+import { NaturalezaMetaContent, naturalezaMetaMetadata } from './modules/capitulo1/03-naturaleza-meta';
+import { DesarrolloPersonalContent, desarrolloPersonalMetadata } from './modules/capitulo1/04-desarrollo-personal';
+import { CadenasContent, cadenasMetadata } from './modules/capitulo1/05-cadenas';
+import { HonestidadContent, honestidadMetadata } from './modules/capitulo1/06-honestidad';
+import { ResistenciaContent, resistenciaMetadata } from './modules/capitulo1/07-resistencia';
+import { EnergiaContent, energiaMetadata } from './modules/capitulo1/08-polaridad';
+import { ConstantesContent, constantesMetadata } from './modules/capitulo1/09-constantes';
 
 // Capítulo 2 - Trabajar Online
 import { NichoContent, nichoMetadata } from './modules/capitulo2/01-nicho';
@@ -46,14 +46,14 @@ export const courseData: CourseData = {
       description: "Fundamentos para una vida plena y equilibrada",
       modules: [
         { ...paradigmasMetadata, content: ParadigmasContent, driveUrl: "" },
-        { ...habitosMetadata, content: HabitosContent, driveUrl: "" },
-        { ...mentalidadMetadata, content: MentalidadContent, driveUrl: "" },
-        { ...propositoMetadata, content: PropositoContent, driveUrl: "" },
-        { ...rutinaMetadata, content: RutinaContent, driveUrl: "" },
-        { ...emocionalMetadata, content: EmocionalContent, driveUrl: "" },
-        { ...descansoMetadata, content: DescansoContent, driveUrl: "" },
+        { ...visionMundoMetadata, content: VisionMundoContent, driveUrl: "" },
+        { ...naturalezaMetaMetadata, content: NaturalezaMetaContent, driveUrl: "" },
+        { ...desarrolloPersonalMetadata, content: DesarrolloPersonalContent, driveUrl: "" },
+        { ...cadenasMetadata, content: CadenasContent, driveUrl: "" },
+        { ...honestidadMetadata, content: HonestidadContent, driveUrl: "" },
+        { ...resistenciaMetadata, content: ResistenciaContent, driveUrl: "" },
         { ...energiaMetadata, content: EnergiaContent, driveUrl: "" },
-        { ...conclusionVMMetadata, content: ConclusionVMContent, driveUrl: "" }
+        { ...constantesMetadata, content: ConstantesContent, driveUrl: "" }
       ]
     },
     {

@@ -1,0 +1,47 @@
+.
+├── README.md
+├── eslint.config.js
+├── estructura.txt
+├── index.html
+├── package-lock.json
+├── package.json
+├── postcss.config.js
+├── public
+│   ├── music
+│   └── vite.svg
+├── scripts
+│   └── translate-deepl.js
+├── src
+│   ├── App.tsx
+│   ├── assets
+│   │   └── react.svg
+│   ├── components
+│   │   ├── common
+│   │   ├── course
+│   │   ├── home
+│   │   └── layout
+│   ├── data
+│   │   ├── courseData.ts
+│   │   ├── modules
+│   │   └── types.ts
+│   ├── hooks
+│   │   └── useCourseNavigation.ts
+│   ├── i18n
+│   │   ├── config.ts
+│   │   └── locales
+│   ├── index.css
+│   ├── main.tsx
+│   ├── pages
+│   │   ├── CoursePage.tsx
+│   │   └── HomePage.tsx
+│   ├── theme
+│   └── utils
+│       ├── analytics.ts
+│       └── driveUtils.ts
+├── tailwind.config.js
+├── tsconfig.app.json
+├── tsconfig.json
+├── tsconfig.node.json
+└── vite.config.ts
+
+19 directories, 26 files
