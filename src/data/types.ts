@@ -13,7 +13,7 @@ export interface Module {
   id: number;
   title: string;
   type: 'video' | 'document' | 'text';
-  content: React.ComponentType<any> | string; // 🔥 Acepta componentes o strings
+  content: React.ComponentType<any> | string;
   driveUrl?: string;
   duration?: string;
   resources?: Resource[];
@@ -29,6 +29,7 @@ export interface Chapter {
 export interface CourseData {
   title: string;
   subtitle: string;
+  description?: string; // ✅ AGREGADO
   chapters: Chapter[];
 }
 

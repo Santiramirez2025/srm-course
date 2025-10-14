@@ -538,11 +538,12 @@ Sé directo. No me digas lo que quiero oír. Mostrame lo que importa.`}
   );
 };
 
-export const polaridadMetadata = {
+export { PolaridadContent };
+export default PolaridadContent;
+
+export const energiaMetadata = {
   id: 8,
   title: "Polaridad",
   type: "document" as const,
   duration: "20 min"
 };
-
-export const energiaMetadata = polaridadMetadata;
