@@ -8,7 +8,7 @@ import { DesarrolloPersonalContent, desarrolloPersonalMetadata } from './modules
 import { CadenasContent, cadenasMetadata } from './modules/capitulo1/05-cadenas';
 import { HonestidadContent, honestidadMetadata } from './modules/capitulo1/06-honestidad';
 import { ResistenciaContent, resistenciaMetadata } from './modules/capitulo1/07-resistencia';
-import { EnergiaContent, energiaMetadata } from './modules/capitulo1/08-polaridad';
+import PolaridadContent, { energiaMetadata } from './modules/capitulo1/08-polaridad';
 import { ConstantesContent, constantesMetadata } from './modules/capitulo1/09-constantes';
 
 // Capítulo 2 - Trabajar Online
@@ -52,7 +52,7 @@ export const courseData: CourseData = {
         { ...cadenasMetadata, content: CadenasContent, driveUrl: "" },
         { ...honestidadMetadata, content: HonestidadContent, driveUrl: "" },
         { ...resistenciaMetadata, content: ResistenciaContent, driveUrl: "" },
-        { ...energiaMetadata, content: EnergiaContent, driveUrl: "" },
+        { ...energiaMetadata, content: PolaridadContent, driveUrl: "" },
         { ...constantesMetadata, content: ConstantesContent, driveUrl: "" }
       ]
     },

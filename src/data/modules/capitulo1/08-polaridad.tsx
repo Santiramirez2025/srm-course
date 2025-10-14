@@ -1,7 +1,22 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
-export const PolaridadContent = () => {
-  const [sliders, setSliders] = useState<{ [key: string]: number }>({
+// Define el tipo de los sliders de manera explícita
+type SliderKey = 'humor' | 'orgullo' | 'juicio' | 'escucha' | 'formalidad' | 
+                 'energia' | 'exigencia' | 'paciencia' | 'defensiva' | 'honestidad';
+
+type SliderValues = Record<SliderKey, number>;
+
+interface Situation {
+  id: string;
+  title: string;
+  icon: string;
+  adjustments: Partial<SliderValues>;
+  explanation: string;
+}
+
+const PolaridadContent = () => {
+  // Estado inicial con todos los valores definidos
+  const initialSliders: SliderValues = {
     humor: 50,
     orgullo: 50,
     juicio: 50,
@@ -12,14 +27,15 @@ export const PolaridadContent = () => {
     paciencia: 50,
     defensiva: 50,
     honestidad: 50
-  });
-  
+  };
+
+  const [sliders, setSliders] = useState<SliderValues>(initialSliders);
   const [selectedSituation, setSelectedSituation] = useState('');
   const [userDecision, setUserDecision] = useState('');
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
 
-  const situations = [
+  const situations: Situation[] = [
     {
       id: 'reunion',
       title: 'Reunión familiar tensa',
@@ -57,15 +73,15 @@ export const PolaridadContent = () => {
     }
   ];
 
-  const handleSliderChange = (key: string, value: number) => {
-    setSliders({ ...sliders, [key]: value });
+  const handleSliderChange = (key: SliderKey, value: number) => {
+    setSliders(prev => ({ ...prev, [key]: value }));
   };
 
   const handleSituationSelect = (situationId: string) => {
     setSelectedSituation(situationId);
     const situation = situations.find(s => s.id === situationId);
     if (situation) {
-      setSliders({ ...sliders, ...situation.adjustments });
+      setSliders(prev => ({ ...prev, ...situation.adjustments }));
     }
   };
 
@@ -84,6 +100,23 @@ Sé directo. No me digas lo que quiero oír. Mostrame lo que importa.`;
     navigator.clipboard.writeText(prompt);
     setCopiedPrompt(true);
     setTimeout(() => setCopiedPrompt(false), 2000);
+  };
+
+  // Array de sliders para mapear
+  const sliderKeys: SliderKey[] = ['humor', 'orgullo', 'juicio', 'escucha', 'formalidad', 
+                                     'energia', 'exigencia', 'paciencia', 'defensiva', 'honestidad'];
+
+  const sliderLabels: Record<SliderKey, string> = {
+    humor: 'Humor',
+    orgullo: 'Orgullo',
+    juicio: 'Juicio',
+    escucha: 'Escucha',
+    formalidad: 'Formalidad',
+    energia: 'Energía',
+    exigencia: 'Exigencia',
+    paciencia: 'Paciencia',
+    defensiva: 'Defensiva',
+    honestidad: 'Honestidad'
   };
 
   return (
@@ -227,22 +260,19 @@ Sé directo. No me digas lo que quiero oír. Mostrame lo que importa.`;
           <h3 className="font-bold text-gray-900 mb-4 text-lg">🎛️ Tu consola mental:</h3>
           
           <div className="grid md:grid-cols-2 gap-6">
-            {Object.entries(sliders).slice(0, 5).map(([key, value]) => (
+            {sliderKeys.map((key) => (
               <div key={key}>
                 <div className="flex justify-between items-center mb-2">
-                  <label className="text-sm font-medium text-gray-700 capitalize">{key}</label>
-                  <span className="text-sm font-bold text-indigo-600">{value}%</span>
+                  <label className="text-sm font-medium text-gray-700">{sliderLabels[key]}</label>
+                  <span className="text-sm font-bold text-indigo-600">{sliders[key]}%</span>
                 </div>
                 <input
                   type="range"
                   min="0"
                   max="100"
-                  value={value}
+                  value={sliders[key]}
                   onChange={(e) => handleSliderChange(key, Number(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #6366f1 0%, #6366f1 ${value}%, #e5e7eb ${value}%, #e5e7eb 100%)`
-                  }}
+                  className="w-full h-2 bg-gray-200 rounded-lg cursor-pointer accent-indigo-600"
                 />
               </div>
             ))}
@@ -508,8 +538,6 @@ Sé directo. No me digas lo que quiero oír. Mostrame lo que importa.`}
   );
 };
 
-export const EnergiaContent = PolaridadContent;
-
 export const polaridadMetadata = {
   id: 8,
   title: "Polaridad",
@@ -517,5 +545,4 @@ export const polaridadMetadata = {
   duration: "20 min"
 };
 
-// Exportar metadata con el nombre alternativo
 export const energiaMetadata = polaridadMetadata;
