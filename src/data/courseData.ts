@@ -12,16 +12,13 @@ import PolaridadContent, { energiaMetadata } from './modules/capitulo1/08-polari
 import { ConstantesContent, constantesMetadata } from './modules/capitulo1/09-constantes';
 
 // Capítulo 2 - Trabajar Online
-import { NichoContent, nichoMetadata } from './modules/capitulo2/01-nicho';
-import { HerramientasContent, herramientasMetadata } from './modules/capitulo2/02-herramientas';
-import { FreelancingContent, freelancingMetadata } from './modules/capitulo2/03-freelancing';
-import { BrandingContent, brandingMetadata } from './modules/capitulo2/04-branding';
-import { OfertasContent, ofertasMetadata } from './modules/capitulo2/05-ofertas';
-import { ProductividadContent, productividadMetadata } from './modules/capitulo2/06-productividad';
-import { ComunicacionContent, comunicacionMetadata } from './modules/capitulo2/07-comunicacion';
-import { PlataformasContent, plataformasMetadata } from './modules/capitulo2/08-plataformas';
-import { AutomatizacionContent, automatizacionMetadata } from './modules/capitulo2/09-automatizacion';
-import { ConclusionTOContent, conclusionTOMetadata } from './modules/capitulo2/10-conclusion';
+import { FuerzasIrracionalidadContent, fuerzasIrracionalidadMetadata } from './modules/capitulo2/01-fuerzas-irracionalidad';
+import { EntornoTrabajoContent, entornoTrabajoMetadata } from './modules/capitulo2/02-entorno-trabajo';
+import { NichoIdealContent, nichoIdealMetadata } from './modules/capitulo2/03-nicho-ideal';
+import { DominarNichoContent, dominarNichoMetadata } from './modules/capitulo2/04-dominar-nicho';
+import { OfertasIPsicologiaContent, ofertasIPsicologiaMetadata } from './modules/capitulo2/05-ofertas-psicologia';
+import { OfertasIIConstruccionContent, ofertasIIConstruccionMetadata } from './modules/capitulo2/06-ofertas-construccion';
+import { HojaTrabajoOfertasContent, hojaTrabajoOfertasMetadata } from './modules/capitulo2/07-hoja-trabajo-ofertas';
 
 // Capítulo 3 - Aprender a Vender
 import { PrincipiosContent, principiosMetadata } from './modules/capitulo3/01-principios';
@@ -61,16 +58,13 @@ export const courseData: CourseData = {
       title: "Trabajar Online",
       description: "Construye tu carrera digital desde cero",
       modules: [
-        { ...nichoMetadata, content: NichoContent, driveUrl: "" },
-        { ...herramientasMetadata, content: HerramientasContent, driveUrl: "" },
-        { ...freelancingMetadata, content: FreelancingContent, driveUrl: "" },
-        { ...brandingMetadata, content: BrandingContent, driveUrl: "" },
-        { ...ofertasMetadata, content: OfertasContent, driveUrl: "" },
-        { ...productividadMetadata, content: ProductividadContent, driveUrl: "" },
-        { ...comunicacionMetadata, content: ComunicacionContent, driveUrl: "" },
-        { ...plataformasMetadata, content: PlataformasContent, driveUrl: "" },
-        { ...automatizacionMetadata, content: AutomatizacionContent, driveUrl: "" },
-        { ...conclusionTOMetadata, content: ConclusionTOContent, driveUrl: "" }
+        { ...fuerzasIrracionalidadMetadata, content: FuerzasIrracionalidadContent, driveUrl: "" },
+        { ...entornoTrabajoMetadata, content: EntornoTrabajoContent, driveUrl: "" },
+        { ...nichoIdealMetadata, content: NichoIdealContent, driveUrl: "" },
+        { ...dominarNichoMetadata, content: DominarNichoContent, driveUrl: "" },
+        { ...ofertasIPsicologiaMetadata, content: OfertasIPsicologiaContent, driveUrl: "" },
+        { ...ofertasIIConstruccionMetadata, content: OfertasIIConstruccionContent, driveUrl: "" },
+        { ...hojaTrabajoOfertasMetadata, content: HojaTrabajoOfertasContent, driveUrl: "" }
       ]
     },
     {
