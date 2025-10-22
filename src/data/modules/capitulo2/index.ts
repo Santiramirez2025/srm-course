@@ -5,6 +5,5 @@ export * from './04-dominar-nicho';
 export * from './05-ofertas-psicologia';
 export * from './06-ofertas-construccion';
 export * from './07-hoja-trabajo-ofertas';
-export * from './11-conclusion';
-export * from './09-plataformas';
-export * from './10-automatizacion';
+export * from './09-guia-cobrar-online';
+export * from './10-calendario-diario-pro';

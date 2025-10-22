@@ -19,18 +19,17 @@ import { DominarNichoContent, dominarNichoMetadata } from './modules/capitulo2/0
 import { OfertasIPsicologiaContent, ofertasIPsicologiaMetadata } from './modules/capitulo2/05-ofertas-psicologia';
 import { OfertasIIConstruccionContent, ofertasIIConstruccionMetadata } from './modules/capitulo2/06-ofertas-construccion';
 import { HojaTrabajoOfertasContent, hojaTrabajoOfertasMetadata } from './modules/capitulo2/07-hoja-trabajo-ofertas';
+import { ComunicacionMensajesContent, comunicacionMensajesMetadata } from './modules/capitulo2/08-comunicacion-mensajes';
+import { GuiaCobrarOnlineContent, guiaCobrarOnlineMetadata } from './modules/capitulo2/09-guia-cobrar-online';
+import { CalendarioDiarioProContent, calendarioDiarioProMetadata } from './modules/capitulo2/10-calendario-diario-pro';
 
 // Capítulo 3 - Aprender a Vender
-import { PrincipiosContent, principiosMetadata } from './modules/capitulo3/01-principios';
-import { PsicologiaContent, psicologiaMetadata } from './modules/capitulo3/02-psicologia';
-import { CopywritingContent, copywritingMetadata } from './modules/capitulo3/03-copywriting';
-import { StorytellingContent, storytellingMetadata } from './modules/capitulo3/04-storytelling';
-import { ObjecionesContent, objecionesMetadata } from './modules/capitulo3/05-objeciones';
-import { PresentacionContent, presentacionMetadata } from './modules/capitulo3/06-presentacion';
-import { CierreContent, cierreMetadata } from './modules/capitulo3/07-cierre';
-import { FidelizacionContent, fidelizacionMetadata } from './modules/capitulo3/08-fidelizacion';
-import { UpsellingContent, upsellingMetadata } from './modules/capitulo3/09-upselling';
-import { ConclusionVentasContent, conclusionVentasMetadata } from './modules/capitulo3/10-conclusion';
+import { ConquistarVentasContent, conquistarVentasMetadata } from './modules/capitulo3/01-conquistar-ventas';
+import { LaBaseRealContent, laBaseRealMetadata } from './modules/capitulo3/02-la-base-real';
+import { GuiaVozCerrarContent, guiaVozCerrarMetadata } from './modules/capitulo3/03-guia-voz-cerrar';
+import { CerrarPoderEmpatiaContent, cerrarPoderEmpatiaMetadata } from './modules/capitulo3/04-cerrar-poder-empatia';
+import { ManualGuerraContent, manualGuerraMetadata } from './modules/capitulo3/05-manual-guerra';
+import { ReescribirScriptContent, reescribirScriptMetadata } from './modules/capitulo3/06-reescribir-script';
 
 export const courseData: CourseData = {
   title: "Curso SRM",
@@ -64,7 +63,10 @@ export const courseData: CourseData = {
         { ...dominarNichoMetadata, content: DominarNichoContent, driveUrl: "" },
         { ...ofertasIPsicologiaMetadata, content: OfertasIPsicologiaContent, driveUrl: "" },
         { ...ofertasIIConstruccionMetadata, content: OfertasIIConstruccionContent, driveUrl: "" },
-        { ...hojaTrabajoOfertasMetadata, content: HojaTrabajoOfertasContent, driveUrl: "" }
+        { ...hojaTrabajoOfertasMetadata, content: HojaTrabajoOfertasContent, driveUrl: "" },
+        { ...comunicacionMensajesMetadata, content: ComunicacionMensajesContent, driveUrl: "" },
+        { ...guiaCobrarOnlineMetadata, content: GuiaCobrarOnlineContent, driveUrl: "" },
+        { ...calendarioDiarioProMetadata, content: CalendarioDiarioProContent, driveUrl: "" }
       ]
     },
     {
@@ -72,16 +74,12 @@ export const courseData: CourseData = {
       title: "Aprender a Vender",
       description: "Domina el arte de la venta con propósito",
       modules: [
-        { ...principiosMetadata, content: PrincipiosContent, driveUrl: "" },
-        { ...psicologiaMetadata, content: PsicologiaContent, driveUrl: "" },
-        { ...copywritingMetadata, content: CopywritingContent, driveUrl: "" },
-        { ...storytellingMetadata, content: StorytellingContent, driveUrl: "" },
-        { ...objecionesMetadata, content: ObjecionesContent, driveUrl: "" },
-        { ...presentacionMetadata, content: PresentacionContent, driveUrl: "" },
-        { ...cierreMetadata, content: CierreContent, driveUrl: "" },
-        { ...fidelizacionMetadata, content: FidelizacionContent, driveUrl: "" },
-        { ...upsellingMetadata, content: UpsellingContent, driveUrl: "" },
-        { ...conclusionVentasMetadata, content: ConclusionVentasContent, driveUrl: "" }
+        { ...conquistarVentasMetadata, content: ConquistarVentasContent, driveUrl: "" },
+        { ...laBaseRealMetadata, content: LaBaseRealContent, driveUrl: "" },
+        { ...guiaVozCerrarMetadata, content: GuiaVozCerrarContent, driveUrl: "" },
+        { ...cerrarPoderEmpatiaMetadata, content: CerrarPoderEmpatiaContent, driveUrl: "" },
+        { ...manualGuerraMetadata, content: ManualGuerraContent, driveUrl: "" },
+        { ...reescribirScriptMetadata, content: ReescribirScriptContent, driveUrl: "" }
       ]
     }
   ]
