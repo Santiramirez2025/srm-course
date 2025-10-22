@@ -264,7 +264,7 @@ export const CerrarPoderEmpatiaContent = () => {
   };
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: number;
     if (silencioActivo && silencioSegundos < 15) {
       interval = setInterval(() => {
         setSilencioSegundos(prev => prev + 1);

@@ -30,6 +30,9 @@ import { GuiaVozCerrarContent, guiaVozCerrarMetadata } from './modules/capitulo3
 import { CerrarPoderEmpatiaContent, cerrarPoderEmpatiaMetadata } from './modules/capitulo3/04-cerrar-poder-empatia';
 import { ManualGuerraContent, manualGuerraMetadata } from './modules/capitulo3/05-manual-guerra';
 import { ReescribirScriptContent, reescribirScriptMetadata } from './modules/capitulo3/06-reescribir-script';
+import { EdicionMaestraContent, edicionMaestraMetadata } from './modules/capitulo3/07-edicion-maestra';
+import { ScriptFeedbackFormContent, scriptFeedbackFormMetadata } from './modules/capitulo3/08-script-feedback-form';
+import { EntrevistarContratarContent, entrevistarContratarMetadata } from './modules/capitulo3/09-entrevistar-contratar';
 
 export const courseData: CourseData = {
   title: "Curso SRM",
@@ -79,7 +82,10 @@ export const courseData: CourseData = {
         { ...guiaVozCerrarMetadata, content: GuiaVozCerrarContent, driveUrl: "" },
         { ...cerrarPoderEmpatiaMetadata, content: CerrarPoderEmpatiaContent, driveUrl: "" },
         { ...manualGuerraMetadata, content: ManualGuerraContent, driveUrl: "" },
-        { ...reescribirScriptMetadata, content: ReescribirScriptContent, driveUrl: "" }
+        { ...reescribirScriptMetadata, content: ReescribirScriptContent, driveUrl: "" },
+        { ...edicionMaestraMetadata, content: EdicionMaestraContent, driveUrl: "" },
+        { ...scriptFeedbackFormMetadata, content: ScriptFeedbackFormContent, driveUrl: "" },
+        { ...entrevistarContratarMetadata, content: EntrevistarContratarContent, driveUrl: "" }
       ]
     }
   ]

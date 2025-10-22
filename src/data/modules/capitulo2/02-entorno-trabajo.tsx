@@ -3,9 +3,7 @@ import React, { useState } from 'react';
 export const EntornoTrabajoContent = () => {
   const [selectedSpace, setSelectedSpace] = useState<number | null>(null);
   const [selectedBudget, setSelectedBudget] = useState<string | null>(null);
-  const [digitalAudit, setDigitalAudit] = useState({
-    hoursPerDay: '',
-    feeling: '',
+  const [digitalAudit, setDigitalAudit] = useState<{distractions: string[]}>({
     distractions: []
   });
   const [weeklyProgress, setWeeklyProgress] = useState({
