@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Home, BookOpen, Menu, TrendingUp, Globe, Award } from 'lucide-react';
+import { Home, BookOpen, TrendingUp, Globe, Award, LogOut } from 'lucide-react';
 import { ViewType } from '@data/types';
 
 interface NavigationProps {
@@ -11,13 +11,22 @@ interface NavigationProps {
     percentage: number;
   };
   showProgress?: boolean;
+  user?: {
+    uid: string;
+    email: string;
+    name: string;
+    photoURL?: string;
+  };
+  onLogout?: () => void;
 }
 
 export const Navigation: React.FC<NavigationProps> = ({ 
   currentView, 
   onNavigate,
   courseProgress,
-  showProgress = true
+  showProgress = true,
+  user,
+  onLogout
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -163,7 +172,6 @@ export const Navigation: React.FC<NavigationProps> = ({
     </button>
   );
 
-  // ✨ NUEVO TranslateWidget - Más limpio y profesional
   const TranslateWidget = ({ isMobile = false }: { isMobile?: boolean }) => {
     const containerId = isMobile ? 'google_translate_element_mobile' : 'google_translate_element';
     
@@ -177,6 +185,95 @@ export const Navigation: React.FC<NavigationProps> = ({
       `}>
         <Globe size={isMobile ? 18 : 16} className="text-amber-600 flex-shrink-0" />
         <div id={containerId} className="translate-widget" />
+      </div>
+    );
+  };
+
+  // ✨ UserMenu Component con foto de Google
+  const UserMenu = ({ isMobile = false }: { isMobile?: boolean }) => {
+    if (!user || !onLogout) return null;
+
+    const initial = user.name.charAt(0).toUpperCase();
+
+    if (isMobile) {
+      return (
+        <div className="space-y-3">
+          {/* User Info Card */}
+          <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
+            {user.photoURL ? (
+              <img 
+                src={user.photoURL} 
+                alt={user.name}
+                className="w-12 h-12 rounded-full shadow-lg flex-shrink-0 object-cover"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
+                <span className="text-white font-black text-lg">{initial}</span>
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-gray-900 truncate">{user.name}</p>
+              <p className="text-xs text-gray-600 truncate">{user.email}</p>
+            </div>
+          </div>
+
+          {/* Logout Button */}
+          <button
+            onClick={onLogout}
+            className="w-full flex items-center gap-3 px-4 py-3.5 bg-white text-red-600 hover:bg-red-50 border border-red-200 hover:border-red-300 rounded-xl transition-all font-medium text-sm group"
+          >
+            <LogOut size={20} className="group-hover:translate-x-1 transition-transform" />
+            <span>Cerrar Sesión</span>
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center gap-2">
+        {/* User Avatar + Name - Desktop */}
+        <div className="hidden lg:flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
+          {user.photoURL ? (
+            <img 
+              src={user.photoURL} 
+              alt={user.name}
+              className="w-7 h-7 rounded-full shadow-md object-cover"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <div className="w-7 h-7 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center shadow-md">
+              <span className="text-white font-bold text-xs">{initial}</span>
+            </div>
+          )}
+          <span className="text-sm font-semibold text-gray-700 max-w-[100px] truncate">
+            {user.name}
+          </span>
+        </div>
+
+        {/* Mobile: Solo Avatar */}
+        {user.photoURL ? (
+          <img 
+            src={user.photoURL} 
+            alt={user.name}
+            className="lg:hidden w-9 h-9 rounded-full shadow-md object-cover"
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          <div className="lg:hidden w-9 h-9 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center shadow-md">
+            <span className="text-white font-bold text-sm">{initial}</span>
+          </div>
+        )}
+
+        {/* Logout Button */}
+        <button
+          onClick={onLogout}
+          className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all text-sm font-medium group"
+          title="Cerrar sesión"
+        >
+          <LogOut size={18} className="group-hover:-translate-x-0.5 transition-transform" />
+          <span className="hidden xl:inline">Salir</span>
+        </button>
       </div>
     );
   };
@@ -226,6 +323,8 @@ export const Navigation: React.FC<NavigationProps> = ({
               <div className="w-px h-6 bg-gray-300 mx-1" aria-hidden="true" />
               <NavButton view="home" icon={Home} label="Inicio" />
               <NavButton view="course" icon={BookOpen} label="Curso" />
+              <div className="w-px h-6 bg-gray-300 mx-1" aria-hidden="true" />
+              <UserMenu />
             </div>
 
             {/* Mobile Menu Button */}
@@ -266,6 +365,8 @@ export const Navigation: React.FC<NavigationProps> = ({
           aria-hidden={!isMobileMenuOpen}
         >
           <div className="h-full overflow-y-auto px-4 py-6 space-y-3">
+            <UserMenu isMobile />
+            <div className="h-px bg-gray-200 my-4" />
             <TranslateWidget isMobile />
             <NavButton view="home" icon={Home} label="Inicio" mobile />
             <NavButton view="course" icon={BookOpen} label="Curso" mobile />
@@ -289,7 +390,6 @@ export const Navigation: React.FC<NavigationProps> = ({
           animation: shimmer 2s infinite;
         }
 
-        /* ✨ Google Translate Styling - LIMPIO Y PROFESIONAL */
         .translate-widget {
           display: inline-block;
           line-height: 1;
@@ -325,17 +425,14 @@ export const Navigation: React.FC<NavigationProps> = ({
           color: #374151 !important;
         }
         
-        /* ✨ Ocultar "Seleccionar idioma" - SOLO MOSTRAR CÓDIGO */
         .goog-te-gadget-simple .goog-te-menu-value span:first-child {
           display: none !important;
         }
         
-        /* Ocultar icono de Google */
         .goog-te-gadget-icon {
           display: none !important;
         }
         
-        /* Mejorar dropdown */
         .goog-te-menu-frame {
           max-height: 400px !important;
           border-radius: 12px !important;
@@ -343,22 +440,18 @@ export const Navigation: React.FC<NavigationProps> = ({
           border: 1px solid #e5e7eb !important;
         }
 
-        /* Ocultar banner de Google */
         .goog-te-banner-frame {
           display: none !important;
         }
         
         body {
           top: 0 !important;
+          overflow-x: hidden;
         }
 
         button:focus-visible {
           outline: 2px solid #f59e0b;
           outline-offset: 2px;
-        }
-
-        body {
-          overflow-x: hidden;
         }
       `}</style>
     </>
