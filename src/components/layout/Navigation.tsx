@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Home, BookOpen, TrendingUp, Globe, Award, LogOut } from 'lucide-react';
+import { Home, BookOpen, TrendingUp, Globe, Award, LogOut, Menu, X } from 'lucide-react';
 import { ViewType } from '@data/types';
 
 interface NavigationProps {
@@ -65,24 +65,28 @@ export const Navigation: React.FC<NavigationProps> = ({
     }) => {
       const isActive = currentView === view;
       
-      const baseClasses = "transition-all duration-200 font-medium text-sm flex items-center gap-2";
+      const baseClasses = "transition-all duration-200 font-medium flex items-center gap-2 active:scale-95";
       const activeClasses = mobile
         ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg"
         : "bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/30";
       const inactiveClasses = mobile
-        ? "bg-white text-gray-700 hover:bg-amber-50 border border-gray-200 hover:border-amber-200"
-        : "text-gray-600 hover:text-amber-600 hover:bg-amber-50";
+        ? "bg-white text-gray-700 hover:bg-amber-50 border border-gray-200 hover:border-amber-200 active:bg-amber-100"
+        : "text-gray-600 hover:text-amber-600 hover:bg-amber-50 active:bg-amber-100";
 
       if (mobile) {
         return (
           <button
             onClick={() => onNavigate(view)}
-            className={`w-full ${baseClasses} gap-3 px-4 py-3.5 rounded-xl group ${isActive ? activeClasses : inactiveClasses}`}
+            className={`
+              w-full ${baseClasses} gap-3 px-5 py-4 rounded-xl group text-base
+              ${isActive ? activeClasses : inactiveClasses}
+              min-h-[56px] touch-manipulation
+            `}
             aria-label={label}
             aria-current={isActive ? 'page' : undefined}
           >
-            <Icon size={20} className={isActive ? '' : 'group-hover:text-amber-600'} />
-            <span>{label}</span>
+            <Icon size={22} className={isActive ? '' : 'group-hover:text-amber-600'} />
+            <span className="font-semibold">{label}</span>
             {isActive && (
               <div className="ml-auto w-2 h-2 bg-white rounded-full animate-pulse" />
             )}
@@ -93,7 +97,11 @@ export const Navigation: React.FC<NavigationProps> = ({
       return (
         <button
           onClick={() => onNavigate(view)}
-          className={`relative px-4 py-2.5 rounded-xl ${baseClasses} ${isActive ? activeClasses : inactiveClasses}`}
+          className={`
+            relative px-4 py-2.5 rounded-xl ${baseClasses} text-sm
+            ${isActive ? activeClasses : inactiveClasses}
+            min-h-[44px] touch-manipulation
+          `}
           aria-label={label}
           aria-current={isActive ? 'page' : undefined}
         >
@@ -116,7 +124,7 @@ export const Navigation: React.FC<NavigationProps> = ({
     const isComplete = percentage === 100;
 
     return (
-      <div className={`${isMobile ? 'pb-3' : 'flex items-center gap-3'}`}>
+      <div className={`${isMobile ? 'pb-4 px-1' : 'flex items-center gap-3'}`}>
         <div className="flex items-center gap-2 text-xs font-semibold text-gray-600">
           <TrendingUp size={16} className="text-amber-600 flex-shrink-0" />
           <span className={isMobile ? 'inline' : 'hidden xl:inline'}>Progreso</span>
@@ -126,7 +134,7 @@ export const Navigation: React.FC<NavigationProps> = ({
             <span className="text-gray-500">{completed}/{total}</span>
             <span className="font-bold text-amber-600">{percentage}%</span>
           </div>
-          <div className="relative w-full bg-gray-200 rounded-full h-2 overflow-hidden shadow-inner">
+          <div className="relative w-full bg-gray-200 rounded-full h-2.5 overflow-hidden shadow-inner">
             <div
               className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-400 via-amber-500 to-orange-600 rounded-full transition-all duration-700 ease-out"
               style={{ width: `${percentage}%` }}
@@ -150,13 +158,13 @@ export const Navigation: React.FC<NavigationProps> = ({
   const Logo = () => (
     <button
       onClick={() => onNavigate('home')}
-      className="flex items-center gap-3 group -ml-2 px-2 py-1.5 rounded-lg hover:bg-amber-50 transition-colors"
+      className="flex items-center gap-2 sm:gap-3 group -ml-1 sm:-ml-2 px-1 sm:px-2 py-1.5 rounded-lg hover:bg-amber-50 transition-colors min-h-[44px] touch-manipulation"
       aria-label="Volver al inicio"
     >
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl blur-md opacity-60 group-hover:opacity-80 transition-opacity" />
-        <div className="relative w-10 h-10 sm:w-11 sm:h-11 bg-gradient-to-br from-amber-500 via-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg transform group-hover:scale-105 group-hover:rotate-3 transition-transform duration-300">
-          <span className="text-white font-black text-lg sm:text-xl">S</span>
+        <div className="relative w-11 h-11 sm:w-12 sm:h-12 bg-gradient-to-br from-amber-500 via-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg transform group-hover:scale-105 group-hover:rotate-3 transition-transform duration-300">
+          <span className="text-white font-black text-xl sm:text-2xl">S</span>
         </div>
       </div>
       <div className="hidden sm:block">
@@ -177,19 +185,18 @@ export const Navigation: React.FC<NavigationProps> = ({
     
     return (
       <div className={`
-        flex items-center gap-2 rounded-lg transition-all
+        flex items-center gap-2 rounded-lg transition-all touch-manipulation
         ${isMobile 
-          ? 'justify-center px-4 py-3 bg-white border border-gray-200 hover:border-amber-300 hover:bg-amber-50' 
-          : 'px-3 py-2 bg-gray-50 hover:bg-amber-50 border border-gray-200 hover:border-amber-300'
+          ? 'justify-center px-5 py-4 bg-white border border-gray-200 hover:border-amber-300 hover:bg-amber-50 min-h-[56px]' 
+          : 'px-3 py-2 bg-gray-50 hover:bg-amber-50 border border-gray-200 hover:border-amber-300 min-h-[44px]'
         }
       `}>
-        <Globe size={isMobile ? 18 : 16} className="text-amber-600 flex-shrink-0" />
+        <Globe size={isMobile ? 20 : 16} className="text-amber-600 flex-shrink-0" />
         <div id={containerId} className="translate-widget" />
       </div>
     );
   };
 
-  // ✨ UserMenu Component con foto de Google
   const UserMenu = ({ isMobile = false }: { isMobile?: boolean }) => {
     if (!user || !onLogout) return null;
 
@@ -198,33 +205,33 @@ export const Navigation: React.FC<NavigationProps> = ({
     if (isMobile) {
       return (
         <div className="space-y-3">
-          {/* User Info Card */}
-          <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
+          {/* User Info Card - Mejorado para móvil */}
+          <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl min-h-[80px]">
             {user.photoURL ? (
               <img 
                 src={user.photoURL} 
                 alt={user.name}
-                className="w-12 h-12 rounded-full shadow-lg flex-shrink-0 object-cover"
+                className="w-14 h-14 rounded-full shadow-lg flex-shrink-0 object-cover"
                 referrerPolicy="no-referrer"
               />
             ) : (
-              <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
-                <span className="text-white font-black text-lg">{initial}</span>
+              <div className="w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
+                <span className="text-white font-black text-xl">{initial}</span>
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="font-bold text-gray-900 truncate">{user.name}</p>
-              <p className="text-xs text-gray-600 truncate">{user.email}</p>
+              <p className="font-bold text-gray-900 truncate text-base">{user.name}</p>
+              <p className="text-sm text-gray-600 truncate">{user.email}</p>
             </div>
           </div>
 
-          {/* Logout Button */}
+          {/* Logout Button - Más grande */}
           <button
             onClick={onLogout}
-            className="w-full flex items-center gap-3 px-4 py-3.5 bg-white text-red-600 hover:bg-red-50 border border-red-200 hover:border-red-300 rounded-xl transition-all font-medium text-sm group"
+            className="w-full flex items-center justify-center gap-3 px-5 py-4 bg-white hover:bg-red-50 text-gray-700 hover:text-red-600 border border-gray-200 hover:border-red-200 rounded-xl transition-all font-semibold group min-h-[56px] text-base touch-manipulation active:scale-95"
           >
-            <LogOut size={20} className="group-hover:translate-x-1 transition-transform" />
-            <span>Cerrar Sesión</span>
+            <LogOut size={22} className="group-hover:-translate-x-1 transition-transform" />
+            <span>Cerrar sesión</span>
           </button>
         </div>
       );
@@ -232,8 +239,8 @@ export const Navigation: React.FC<NavigationProps> = ({
 
     return (
       <div className="flex items-center gap-2">
-        {/* User Avatar + Name - Desktop */}
-        <div className="hidden lg:flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
+        {/* Desktop: Avatar + Nombre (lg+) */}
+        <div className="hidden lg:flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200 min-h-[44px]">
           {user.photoURL ? (
             <img 
               src={user.photoURL} 
@@ -251,16 +258,16 @@ export const Navigation: React.FC<NavigationProps> = ({
           </span>
         </div>
 
-        {/* Mobile: Solo Avatar */}
+        {/* Tablet: Solo Avatar */}
         {user.photoURL ? (
           <img 
             src={user.photoURL} 
             alt={user.name}
-            className="lg:hidden w-9 h-9 rounded-full shadow-md object-cover"
+            className="lg:hidden w-10 h-10 rounded-full shadow-md object-cover min-h-[44px] min-w-[44px]"
             referrerPolicy="no-referrer"
           />
         ) : (
-          <div className="lg:hidden w-9 h-9 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center shadow-md">
+          <div className="lg:hidden w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center shadow-md min-h-[44px] min-w-[44px]">
             <span className="text-white font-bold text-sm">{initial}</span>
           </div>
         )}
@@ -268,7 +275,7 @@ export const Navigation: React.FC<NavigationProps> = ({
         {/* Logout Button */}
         <button
           onClick={onLogout}
-          className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all text-sm font-medium group"
+          className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all text-sm font-medium group min-h-[44px] touch-manipulation active:scale-95"
           title="Cerrar sesión"
         >
           <LogOut size={18} className="group-hover:-translate-x-0.5 transition-transform" />
@@ -308,8 +315,11 @@ export const Navigation: React.FC<NavigationProps> = ({
         role="navigation"
         aria-label="Navegación principal"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+        {/* Safe Area Top para iOS */}
+        <div className="safe-area-inset-top" />
+        
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 sm:h-18">
             <Logo />
 
             {/* Desktop Progress */}
@@ -327,52 +337,75 @@ export const Navigation: React.FC<NavigationProps> = ({
               <UserMenu />
             </div>
 
-            {/* Mobile Menu Button */}
+            {/* Mobile Menu Button - MEJORADO: 48x48px */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden relative w-10 h-10 flex items-center justify-center text-gray-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+              className="md:hidden relative w-12 h-12 flex items-center justify-center text-gray-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors touch-manipulation active:scale-95 min-h-[48px] min-w-[48px]"
               aria-label={isMobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
               aria-expanded={isMobileMenuOpen}
               aria-controls="mobile-menu"
             >
-              <HamburgerIcon />
+              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
 
-          {/* Mobile/Tablet Progress */}
-          <div className="md:hidden lg:hidden">
+          {/* Mobile/Tablet Progress - MEJORADO */}
+          <div className="md:hidden lg:hidden pb-2">
             <ProgressBar isMobile />
           </div>
         </div>
 
-        {/* Mobile Menu Overlay */}
+        {/* Mobile Menu Overlay - MEJORADO */}
         {isMobileMenuOpen && (
           <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden animate-fade-in"
             onClick={() => setIsMobileMenuOpen(false)}
             aria-hidden="true"
           />
         )}
 
-        {/* Mobile Menu Drawer */}
+        {/* Mobile Menu Drawer - MEJORADO con safe-area */}
         <div 
           id="mobile-menu"
           className={`
-            fixed top-16 left-0 right-0 bottom-0 bg-gradient-to-b from-white to-gray-50 z-50 md:hidden
+            fixed top-0 left-0 right-0 bottom-0 bg-gradient-to-b from-white to-gray-50 z-50 md:hidden
             transform transition-transform duration-300 ease-out
             ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
           `}
           aria-hidden={!isMobileMenuOpen}
         >
-          <div className="h-full overflow-y-auto px-4 py-6 space-y-3">
+          {/* Header del drawer con botón cerrar */}
+          <div className="safe-area-inset-top" />
+          <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200 bg-white">
+            <div className="flex items-center gap-3">
+              <div className="relative w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-white font-black text-lg">S</span>
+              </div>
+              <div>
+                <h2 className="text-lg font-black text-gray-900">SRM</h2>
+                <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider -mt-0.5">Menu</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="w-12 h-12 flex items-center justify-center text-gray-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors touch-manipulation active:scale-95"
+              aria-label="Cerrar menú"
+            >
+              <X size={24} />
+            </button>
+          </div>
+
+          {/* Contenido del drawer con scroll y safe-area */}
+          <div className="h-full overflow-y-auto overscroll-contain px-4 py-6 space-y-3 pb-safe">
             <UserMenu isMobile />
             <div className="h-px bg-gray-200 my-4" />
             <TranslateWidget isMobile />
             <NavButton view="home" icon={Home} label="Inicio" mobile />
             <NavButton view="course" icon={BookOpen} label="Curso" mobile />
 
-            <div className="pt-6 mt-6 border-t border-gray-200">
-              <p className="text-xs text-center text-gray-500">
+            {/* Footer del menú con safe-area */}
+            <div className="pt-8 mt-8 border-t border-gray-200 pb-safe">
+              <p className="text-xs text-center text-gray-500 font-medium">
                 SRM Academy © 2025
               </p>
             </div>
@@ -382,14 +415,47 @@ export const Navigation: React.FC<NavigationProps> = ({
 
       {/* Optimized Styles */}
       <style>{`
+        /* Safe Area Support para iOS */
+        .safe-area-inset-top {
+          height: env(safe-area-inset-top);
+        }
+        
+        .pb-safe {
+          padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+        }
+
+        /* Touch manipulation para mejor UX */
+        .touch-manipulation {
+          -webkit-tap-highlight-color: transparent;
+          touch-action: manipulation;
+        }
+
+        /* Animaciones */
         @keyframes shimmer {
           0% { transform: translateX(-100%); }
           100% { transform: translateX(100%); }
         }
+        
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
         .animate-shimmer {
           animation: shimmer 2s infinite;
         }
+        
+        .animate-fade-in {
+          animation: fade-in 0.2s ease-out;
+        }
 
+        /* Scroll suave en menú móvil */
+        .overscroll-contain {
+          overscroll-behavior: contain;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        /* Google Translate Styles */
         .translate-widget {
           display: inline-block;
           line-height: 1;
@@ -449,9 +515,17 @@ export const Navigation: React.FC<NavigationProps> = ({
           overflow-x: hidden;
         }
 
+        /* Focus visible para accesibilidad */
         button:focus-visible {
           outline: 2px solid #f59e0b;
           outline-offset: 2px;
+        }
+
+        /* Mejoras para pantallas muy pequeñas */
+        @media (max-width: 360px) {
+          .text-base {
+            font-size: 0.9375rem;
+          }
         }
       `}</style>
     </>

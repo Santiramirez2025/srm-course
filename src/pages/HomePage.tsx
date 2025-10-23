@@ -38,26 +38,64 @@ export const HomePage: React.FC<HomePageProps> = ({
   }, [courseData.chapters]);
 
   return (
-    <div className="relative min-h-screen pb-16 sm:pb-20 lg:pb-24">
-      <Hero
-        title={courseData.title}
-        subtitle={courseData.subtitle}
-        onStartCourse={onStartCourse}
-        courseProgress={courseProgress}
-        stats={{
-          totalModules: totalModules,
-          estimatedHours: undefined,  // ✅ Opcional
-          completionRate: courseProgress?.percentage
-        }}
-        // ✅ Removido logo prop (opcional)
-      />
+    <div className="relative min-h-screen">
+      {/* Safe Area Top para iOS */}
+      <div className="safe-area-top" />
       
-      <ChapterGrid 
-        chapters={courseData.chapters || []}
-        onChapterClick={handleChapterClick}
-        completedModules={completedModules}
-        isLoading={false}
-      />
+      {/* Container principal con padding responsive mejorado */}
+      <div className="pb-16 sm:pb-20 md:pb-24 lg:pb-28">
+        <Hero
+          title={courseData.title}
+          subtitle={courseData.subtitle}
+          onStartCourse={onStartCourse}
+          courseProgress={courseProgress}
+          stats={{
+            totalModules: totalModules,
+            estimatedHours: undefined,
+            completionRate: courseProgress?.percentage
+          }}
+        />
+        
+        {/* Separación optimizada entre Hero y ChapterGrid */}
+        <div className="h-8 sm:h-12 md:h-16" aria-hidden="true" />
+        
+        <ChapterGrid 
+          chapters={courseData.chapters || []}
+          onChapterClick={handleChapterClick}
+          completedModules={completedModules}
+          isLoading={false}
+        />
+      </div>
+
+      {/* Safe Area Bottom para iOS */}
+      <div className="safe-area-bottom" />
+
+      {/* Estilos específicos para HomePage */}
+      <style>{`
+        /* Safe Area Support para iOS */
+        .safe-area-top {
+          height: env(safe-area-inset-top);
+        }
+        
+        .safe-area-bottom {
+          height: env(safe-area-inset-bottom);
+        }
+
+        /* Optimización de scroll en móvil */
+        @media (max-width: 768px) {
+          html {
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+          }
+        }
+
+        /* Prevenir zoom accidental en inputs (móvil) */
+        @media (max-width: 768px) {
+          input, textarea, select {
+            font-size: 16px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };
