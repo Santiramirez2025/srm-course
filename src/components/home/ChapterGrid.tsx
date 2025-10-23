@@ -1,6 +1,6 @@
 import React from 'react';
 import { Chapter } from '@data/types';
-import { BookOpen, ChevronRight, CheckCircle, Lock, TrendingUp, Clock } from 'lucide-react';
+import { BookOpen, ChevronRight, CheckCircle, Lock, TrendingUp } from 'lucide-react';
 
 interface ChapterGridProps {
   chapters: Chapter[];
@@ -17,7 +17,6 @@ export const ChapterGrid: React.FC<ChapterGridProps> = ({
   currentChapterId = null,
   isLoading = false
 }) => {
-  // Calcular progreso del capítulo
   const getChapterProgress = (chapter: Chapter) => {
     const totalModules = chapter.modules?.length || 0;
     const completed = chapter.modules?.filter(m => completedModules.has(m.id)).length || 0;
@@ -28,7 +27,6 @@ export const ChapterGrid: React.FC<ChapterGridProps> = ({
     return { completed, total: totalModules, percentage, isComplete, isStarted };
   };
 
-  // Determinar colores según estado
   const getChapterColors = (progress: ReturnType<typeof getChapterProgress>) => {
     if (progress.isComplete) {
       return {
@@ -60,19 +58,15 @@ export const ChapterGrid: React.FC<ChapterGridProps> = ({
     };
   };
 
-  // Determinar si un capítulo está bloqueado (opcional)
   const isChapterLocked = (index: number) => {
-    // Lógica opcional: desbloquear capítulos secuencialmente
-    // return index > 0 && getChapterProgress(chapters[index - 1]).percentage < 100;
-    return false; // Por defecto todos desbloqueados
+    return false;
   };
 
-  // Loading skeleton
   if (isLoading) {
     return (
-      <div className="mt-12 sm:mt-16 lg:mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="mt-12 sm:mt-16 lg:mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-white rounded-xl shadow-md p-6 animate-pulse">
+          <div key={i} className="bg-white/80 backdrop-blur-sm rounded-xl shadow-md p-6 animate-pulse">
             <div className="w-14 h-14 bg-gray-200 rounded-xl mb-4" />
             <div className="h-6 bg-gray-200 rounded mb-2 w-3/4" />
             <div className="h-4 bg-gray-200 rounded mb-4 w-full" />
@@ -85,39 +79,41 @@ export const ChapterGrid: React.FC<ChapterGridProps> = ({
 
   if (!chapters || chapters.length === 0) {
     return (
-      <div className="mt-20 text-center py-12">
-        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <BookOpen size={32} className="text-gray-400" />
+      <div className="mt-20 text-center py-12 max-w-6xl mx-auto">
+        <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <BookOpen size={32} className="text-amber-600" />
         </div>
-        <p className="text-gray-500 text-lg">No hay capítulos disponibles</p>
+        <p className="text-gray-600 text-lg font-medium">No hay capítulos disponibles</p>
       </div>
     );
   }
 
   return (
-    <div className="mt-8 sm:mt-12 lg:mt-16">
+    <div className="mt-8 sm:mt-12 lg:mt-16 max-w-6xl mx-auto">
       {/* Header con estadísticas */}
-      <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-4 sm:px-0">
         <div>
           <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mb-1">
             Contenido del Curso
           </h2>
           <p className="text-sm sm:text-base text-gray-600">
-            {chapters.length} capítulos disponibles
+            {chapters.length} capítulo{chapters.length !== 1 ? 's' : ''} disponible{chapters.length !== 1 ? 's' : ''}
           </p>
         </div>
         
         {/* Progreso general */}
-        <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-xl">
-          <TrendingUp size={18} className="text-amber-600 flex-shrink-0" />
-          <span className="text-sm font-semibold text-amber-700">
-            {Math.round((completedModules.size / chapters.reduce((sum, ch) => sum + (ch.modules?.length || 0), 0)) * 100) || 0}% completado
-          </span>
-        </div>
+        {completedModules.size > 0 && (
+          <div className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm border border-amber-200 rounded-xl shadow-sm">
+            <TrendingUp size={18} className="text-amber-600 flex-shrink-0" />
+            <span className="text-sm font-semibold text-amber-700">
+              {Math.round((completedModules.size / chapters.reduce((sum, ch) => sum + (ch.modules?.length || 0), 0)) * 100) || 0}% completado
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Grid de capítulos */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 px-4 sm:px-0">
         {chapters.map((chapter, index) => {
           const progress = getChapterProgress(chapter);
           const isActive = currentChapterId === chapter.id;
@@ -129,8 +125,8 @@ export const ChapterGrid: React.FC<ChapterGridProps> = ({
               key={chapter.id}
               onClick={() => !isLocked && onChapterClick(chapter.id)}
               className={`
-                group relative bg-white rounded-xl sm:rounded-2xl shadow-md hover:shadow-2xl 
-                transition-all duration-300 overflow-hidden
+                group relative bg-white/95 backdrop-blur-sm rounded-xl sm:rounded-2xl 
+                shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden
                 ${isLocked 
                   ? 'opacity-60 cursor-not-allowed' 
                   : 'cursor-pointer hover:-translate-y-1 active:scale-98'
@@ -148,13 +144,12 @@ export const ChapterGrid: React.FC<ChapterGridProps> = ({
                 }
               }}
             >
-              {/* Barra de progreso superior animada */}
+              {/* Barra de progreso superior */}
               <div className="absolute top-0 left-0 right-0 h-1 bg-gray-200 overflow-hidden">
                 <div 
                   className={`h-full bg-gradient-to-r ${colors.progress} transition-all duration-700 ease-out relative`}
                   style={{ width: `${progress.percentage}%` }}
                 >
-                  {/* Shimmer effect */}
                   {progress.percentage > 0 && progress.percentage < 100 && (
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
                   )}
@@ -168,7 +163,7 @@ export const ChapterGrid: React.FC<ChapterGridProps> = ({
                     <Lock size={16} className="sm:w-5 sm:h-5 text-gray-500" />
                   </div>
                 ) : progress.isComplete ? (
-                  <div className="w-8 h-8 sm:w-9 sm:h-9 bg-green-500 rounded-full flex items-center justify-center shadow-lg animate-bounce-soft">
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
                     <CheckCircle size={18} className="sm:w-5 sm:h-5 text-white" />
                   </div>
                 ) : progress.isStarted ? (
@@ -280,7 +275,7 @@ export const ChapterGrid: React.FC<ChapterGridProps> = ({
         })}
       </div>
 
-      {/* Estilos adicionales */}
+      {/* Estilos */}
       <style>{`
         @keyframes shimmer {
           0% { transform: translateX(-100%); }

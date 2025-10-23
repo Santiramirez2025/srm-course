@@ -13,7 +13,7 @@ const App: React.FC = () => {
   const [audioError, setAudioError] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Estado de bookmarks (opcional)
+  // Estado de bookmarks
   const [bookmarkedModules, setBookmarkedModules] = useState<Set<number>>(new Set());
 
   // Hook de navegación del curso
@@ -65,7 +65,6 @@ const App: React.FC = () => {
         newSet.add(moduleId);
       }
       
-      // Guardar en localStorage
       try {
         localStorage.setItem('bookmarkedModules', JSON.stringify([...newSet]));
       } catch (error) {
@@ -121,17 +120,31 @@ const App: React.FC = () => {
         setIsMusicPlaying(true);
       }
     } catch (error) {
-      console.warn('Reproducción bloqueada por el navegador:', error);
+      console.warn('Reproducción bloqueada:', error);
       setIsMusicPlaying(false);
     }
   };
 
-  // Handler para comenzar curso
+  // Handler para comenzar curso desde HomePage
   const handleStartCourse = () => {
     navigateTo('course');
-    // Opcional: auto-seleccionar primer módulo
+    // Auto-seleccionar primer módulo
     if (courseData.chapters?.[0]?.modules?.[0]) {
       selectModule(courseData.chapters[0], courseData.chapters[0].modules[0]);
+    }
+  };
+
+  // Handler para click en capítulo desde HomePage
+  const handleChapterClick = (chapterId: number) => {
+    navigateTo('course');
+    const chapter = courseData.chapters.find(ch => ch.id === chapterId);
+    if (chapter) {
+      // Expandir capítulo
+      toggleChapter(chapterId);
+      // Seleccionar primer módulo del capítulo
+      if (chapter.modules?.[0]) {
+        selectModule(chapter, chapter.modules[0]);
+      }
     }
   };
 
@@ -187,6 +200,9 @@ const App: React.FC = () => {
           <HomePage
             courseData={courseData}
             onStartCourse={handleStartCourse}
+            completedModules={completedModules}
+            courseProgress={courseProgress}
+            onChapterClick={handleChapterClick}
           />
         ) : (
           <CoursePage

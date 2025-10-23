@@ -6,19 +6,57 @@ import { CourseData } from '@data/types';
 interface HomePageProps {
   courseData: CourseData;
   onStartCourse: () => void;
+  completedModules?: Set<number>;
+  courseProgress?: {
+    total: number;
+    completed: number;
+    percentage: number;
+  };
+  onChapterClick?: (chapterId: number) => void;
 }
 
-export const HomePage: React.FC<HomePageProps> = ({ courseData, onStartCourse }) => {
+export const HomePage: React.FC<HomePageProps> = ({ 
+  courseData, 
+  onStartCourse,
+  completedModules = new Set(),
+  courseProgress,
+  onChapterClick
+}) => {
+  const handleChapterClick = (chapterId: number) => {
+    if (onChapterClick) {
+      onChapterClick(chapterId);
+    } else {
+      onStartCourse();
+    }
+  };
+
+  const totalModules = React.useMemo(() => {
+    return courseData.chapters?.reduce(
+      (sum, ch) => sum + (ch.modules?.length || 0), 
+      0
+    ) || 0;
+  }, [courseData.chapters]);
+
   return (
-    <div className="max-w-4xl mx-auto px-4">
+    <div className="relative min-h-screen pb-16 sm:pb-20 lg:pb-24">
       <Hero
         title={courseData.title}
         subtitle={courseData.subtitle}
         onStartCourse={onStartCourse}
+        courseProgress={courseProgress}
+        stats={{
+          totalModules: totalModules,
+          estimatedHours: undefined,  // ✅ Opcional
+          completionRate: courseProgress?.percentage
+        }}
+        // ✅ Removido logo prop (opcional)
       />
+      
       <ChapterGrid 
-        chapters={courseData.chapters}
-        onChapterClick={onStartCourse}
+        chapters={courseData.chapters || []}
+        onChapterClick={handleChapterClick}
+        completedModules={completedModules}
+        isLoading={false}
       />
     </div>
   );
