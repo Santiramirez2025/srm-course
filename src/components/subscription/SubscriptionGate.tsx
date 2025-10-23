@@ -12,10 +12,12 @@ export const SubscriptionGate: React.FC<SubscriptionGateProps> = ({
   onUpgrade,
   children
 }) => {
+  // Si tiene acceso, mostrar el contenido
   if (hasAccess) {
     return <>{children}</>;
   }
 
+  // Si NO tiene acceso, mostrar el bloqueo
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
@@ -68,9 +70,14 @@ export const SubscriptionGate: React.FC<SubscriptionGateProps> = ({
           </ul>
         </div>
 
-        {/* CTA Button */}
+        {/* CTA Button - VERIFICAR QUE TENGA onClick */}
         <button
-          onClick={onUpgrade}
+          onClick={(e) => {
+            e.preventDefault();
+            console.log('🔥 Botón clickeado - abriendo modal');
+            onUpgrade();
+          }}
+          type="button"
           className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 mb-4"
         >
           Ver Planes y Precios

@@ -34,7 +34,6 @@ export const useAuth = () => {
       }
       setLoading(false);
     });
-
     return unsubscribe;
   }, []);
 
@@ -43,7 +42,7 @@ export const useAuth = () => {
       await createUserWithEmailAndPassword(auth, email, password);
       return { success: true, error: null };
     } catch (error: any) {
-      return { success: false, error: error.message };
+      return { success: false, error: 'Error al crear cuenta' };
     }
   };
 
@@ -56,20 +55,14 @@ export const useAuth = () => {
     }
   };
 
-  // ✨ NUEVO: Login con Google
   const loginWithGoogle = async () => {
     try {
       const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({
-        prompt: 'select_account'
-      });
       await signInWithPopup(auth, provider);
       return { success: true, error: null };
     } catch (error: any) {
-      if (error.code === 'auth/popup-closed-by-user') {
-        return { success: false, error: 'Inicio de sesión cancelado' };
-      }
-      return { success: false, error: 'Error al iniciar sesión con Google' };
+      console.error('Google error:', error);
+      return { success: false, error: 'Error con Google' };
     }
   };
 
@@ -77,7 +70,7 @@ export const useAuth = () => {
     try {
       await signOut(auth);
     } catch (error) {
-      console.error('Error al cerrar sesión:', error);
+      console.error('Error logout:', error);
     }
   };
 
@@ -86,7 +79,7 @@ export const useAuth = () => {
     loading,
     login, 
     register, 
-    loginWithGoogle, // ✨ NUEVO
+    loginWithGoogle,
     logout, 
     isAuthenticated: !!user 
   };

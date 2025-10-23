@@ -11,10 +11,13 @@ export const PricingModal: React.FC<PricingModalProps> = ({
   onClose, 
   onSelectPlan
 }) => {
+  console.log('🎨 PricingModal renderizado'); // ← DEBUG
+  
   const [loading, setLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
 
   const handleSelectPlan = async (planId: string) => {
+    console.log('💳 Seleccionando plan:', planId); // ← DEBUG
     setLoading(true);
     setSelectedPlan(planId);
     try {
@@ -83,12 +86,24 @@ export const PricingModal: React.FC<PricingModalProps> = ({
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white rounded-2xl max-w-6xl w-full p-8 relative shadow-2xl my-8">
+    <div 
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 overflow-y-auto"
+      onClick={(e) => {
+        // Cerrar al hacer click en el backdrop
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div 
+        className="bg-white rounded-2xl max-w-6xl w-full p-8 relative shadow-2xl my-8"
+        onClick={(e) => e.stopPropagation()}
+      >
         <button 
           onClick={onClose} 
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-10"
           aria-label="Cerrar"
+          type="button"
         >
           <X size={24} />
         </button>
@@ -170,6 +185,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({
                 <button
                   onClick={() => handleSelectPlan(plan.id)}
                   disabled={loading}
+                  type="button"
                   className={`
                     w-full py-3.5 rounded-xl font-bold text-base transition-all duration-300
                     transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed
