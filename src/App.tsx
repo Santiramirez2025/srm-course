@@ -8,10 +8,15 @@ import { courseData } from '@data/courseData';
 import { useCourseNavigation } from '@hooks/useCourseNavigation';
 
 const App: React.FC = () => {
+  // Estado de audio
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const [audioError, setAudioError] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
+  // Estado de bookmarks (opcional)
+  const [bookmarkedModules, setBookmarkedModules] = useState<Set<number>>(new Set());
+
+  // Hook de navegación del curso
   const {
     currentView,
     expandedChapter,
@@ -20,91 +25,168 @@ const App: React.FC = () => {
     selectModule,
     navigateTo,
     navigateModule,
+    initializeChapters,
+    markModuleComplete,
+    completedModules,
     hasPrevious,
     hasNext,
+    currentModuleNumber,
     totalModules,
-    isModuleCompleted,
-    markModuleComplete,
-    initializeChapters
+    courseProgress,
   } = useCourseNavigation();
 
-  // Inicializar los capítulos cuando el componente carga
-  React.useEffect(() => {
+  // Inicializar capítulos una sola vez
+  useEffect(() => {
     if (courseData?.chapters) {
       initializeChapters(courseData.chapters);
     }
-  }, [courseData, initializeChapters]);
+  }, [initializeChapters]);
 
-  // Manejar errores de audio
+  // Cargar bookmarks desde localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('bookmarkedModules');
+      if (saved) {
+        const ids = JSON.parse(saved) as number[];
+        setBookmarkedModules(new Set(ids));
+      }
+    } catch (error) {
+      console.error('Error loading bookmarks:', error);
+    }
+  }, []);
+
+  // Manejar bookmark de módulo
+  const handleBookmark = (moduleId: number) => {
+    setBookmarkedModules(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(moduleId)) {
+        newSet.delete(moduleId);
+      } else {
+        newSet.add(moduleId);
+      }
+      
+      // Guardar en localStorage
+      try {
+        localStorage.setItem('bookmarkedModules', JSON.stringify([...newSet]));
+      } catch (error) {
+        console.error('Error saving bookmarks:', error);
+      }
+      
+      return newSet;
+    });
+  };
+
+  // Setup de audio con cleanup
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
     const handleError = () => {
-      console.warn('Error al cargar el audio de fondo');
+      console.warn('Audio no disponible');
       setAudioError(true);
       setIsMusicPlaying(false);
     };
 
+    const handleEnded = () => {
+      setIsMusicPlaying(false);
+    };
+
+    const handleCanPlay = () => {
+      setAudioError(false);
+    };
+
     audio.addEventListener('error', handleError);
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('canplay', handleCanPlay);
 
     return () => {
       audio.removeEventListener('error', handleError);
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('canplay', handleCanPlay);
+      audio.pause();
     };
   }, []);
 
+  // Toggle música
   const toggleMusic = async () => {
-    if (!audioRef.current || audioError) return;
+    const audio = audioRef.current;
+    if (!audio || audioError) return;
 
     try {
       if (isMusicPlaying) {
-        audioRef.current.pause();
+        audio.pause();
         setIsMusicPlaying(false);
       } else {
-        // Intentar reproducir y manejar el rechazo del navegador
-        await audioRef.current.play();
+        await audio.play();
         setIsMusicPlaying(true);
       }
     } catch (error) {
-      console.warn('No se pudo reproducir el audio:', error);
+      console.warn('Reproducción bloqueada por el navegador:', error);
       setIsMusicPlaying(false);
     }
   };
 
+  // Handler para comenzar curso
+  const handleStartCourse = () => {
+    navigateTo('course');
+    // Opcional: auto-seleccionar primer módulo
+    if (courseData.chapters?.[0]?.modules?.[0]) {
+      selectModule(courseData.chapters[0], courseData.chapters[0].modules[0]);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
-      {/* Audio player oculto */}
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
+      {/* Audio Element */}
       <audio 
         ref={audioRef} 
-        loop
-        preload="auto"
+        loop 
+        preload="metadata"
+        aria-label="Música de fondo"
       >
         <source src="/music/background.mp3" type="audio/mpeg" />
         Tu navegador no soporta el elemento de audio.
       </audio>
 
-      {/* Botón de música flotante - solo si no hay error */}
+      {/* Music Toggle Button */}
       {!audioError && (
         <button
           onClick={toggleMusic}
-          className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center z-50 transition-all transform hover:scale-110 active:scale-95"
-          aria-label={isMusicPlaying ? 'Pausar música de fondo' : 'Reproducir música de fondo'}
+          className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-full shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-110 active:scale-95 flex items-center justify-center group"
+          aria-label={isMusicPlaying ? 'Pausar música' : 'Reproducir música'}
           title={isMusicPlaying ? 'Pausar música' : 'Reproducir música'}
+          type="button"
         >
-          {isMusicPlaying ? <Volume2 size={24} /> : <VolumeX size={24} />}
+          {isMusicPlaying ? (
+            <Volume2 
+              size={24} 
+              className="group-hover:scale-110 transition-transform" 
+              aria-hidden="true"
+            />
+          ) : (
+            <VolumeX 
+              size={24} 
+              className="group-hover:scale-110 transition-transform" 
+              aria-hidden="true"
+            />
+          )}
         </button>
       )}
 
+      {/* Navigation */}
       <Navigation 
         currentView={currentView} 
-        onNavigate={navigateTo} 
+        onNavigate={navigateTo}
+        courseProgress={courseProgress}
+        showProgress={currentView === 'course'}
       />
 
-      <main>
+      {/* Main Content */}
+      <main className="flex-1" role="main">
         {currentView === 'home' ? (
           <HomePage
             courseData={courseData}
-            onStartCourse={() => navigateTo('course')}
+            onStartCourse={handleStartCourse}
           />
         ) : (
           <CoursePage
@@ -113,10 +195,22 @@ const App: React.FC = () => {
             selectedModule={selectedModule}
             onToggleChapter={toggleChapter}
             onSelectModule={selectModule}
+            completedModules={completedModules}
+            onNavigateModule={navigateModule}
+            onModuleComplete={markModuleComplete}
+            onModuleBookmark={handleBookmark}
+            bookmarkedModules={bookmarkedModules}
+            hasPrevious={hasPrevious}
+            hasNext={hasNext}
+            currentModuleNumber={currentModuleNumber}
+            totalModules={totalModules}
+            courseProgress={courseProgress}
+            isLoading={false}
           />
         )}
       </main>
 
+      {/* Footer */}
       <Footer />
     </div>
   );

@@ -26,6 +26,42 @@
   
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  
+  <!-- Google Translate -->
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      // Widget principal (desktop)
+      new google.translate.TranslateElement({
+        pageLanguage: 'es',
+        includedLanguages: 'es,en,pt,fr,de,it,zh-CN,ja,ko,ar,ru,nl,sv,pl,tr,hi',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+        autoDisplay: false
+      }, 'google_translate_element');
+      
+      // Widget móvil
+      new google.translate.TranslateElement({
+        pageLanguage: 'es',
+        includedLanguages: 'es,en,pt,fr,de,it,zh-CN,ja,ko,ar,ru,nl,sv,pl,tr,hi',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+        autoDisplay: false
+      }, 'google_translate_element_mobile');
+    }
+  </script>
+  <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+  
+  <!-- Estilos globales para Google Translate -->
+  <style>
+    /* Ocultar el banner molesto de Google */
+    .goog-te-banner-frame.skiptranslate {
+      display: none !important;
+    }
+    body {
+      top: 0px !important;
+    }
+    .skiptranslate iframe {
+      visibility: hidden !important;
+    }
+  </style>
 </head>
 <body>
   <div id="root"></div>
