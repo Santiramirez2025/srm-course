@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
-import { auth } from '../config/firebase';
 
 interface Subscription {
-  status: 'active' | 'inactive' | 'trial' | 'expired';
+  status: 'active' | 'inactive' | 'expired';
   plan: 'free' | 'monthly' | 'yearly' | 'lifetime';
   expiresAt?: string;
   hasAccess: boolean;
@@ -22,28 +21,42 @@ export const useSubscription = (userId?: string) => {
       return;
     }
 
-    // TODO: Llamar a tu backend/Firebase para verificar suscripción
     checkSubscription(userId);
   }, [userId]);
 
   const checkSubscription = async (uid: string) => {
     try {
-      // Verificar en localStorage primero (para pruebas)
+      // Verificar en localStorage
       const saved = localStorage.getItem(`subscription_${uid}`);
       if (saved) {
         const data = JSON.parse(saved) as Subscription;
-        setSubscription(data);
+        
+        // Verificar si la suscripción expiró
+        if (data.expiresAt && new Date(data.expiresAt) < new Date()) {
+          // Suscripción expirada
+          setSubscription({
+            status: 'expired',
+            plan: 'free',
+            hasAccess: false
+          });
+        } else {
+          setSubscription(data);
+        }
       } else {
-        // Usuario nuevo - ofrecer trial de 7 días
+        // Usuario nuevo sin suscripción
         setSubscription({
-          status: 'trial',
+          status: 'inactive',
           plan: 'free',
-          hasAccess: true,
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+          hasAccess: false
         });
       }
     } catch (error) {
       console.error('Error checking subscription:', error);
+      setSubscription({
+        status: 'inactive',
+        plan: 'free',
+        hasAccess: false
+      });
     } finally {
       setLoading(false);
     }

@@ -166,28 +166,28 @@ const App: React.FC = () => {
   // Handler para seleccionar plan
   const handleSelectPlan = async (planId: string) => {
     try {
-      // TODO: Integrar con Stripe Checkout
-      // const stripe = await loadStripe(STRIPE_CONFIG.publishableKey);
-      // const { error } = await stripe.redirectToCheckout({ ... });
-      
       console.log('Plan seleccionado:', planId);
       
-      // Por ahora, activar directamente (para testing)
+      // Activar suscripción inmediatamente (sin Stripe por ahora)
       activateSubscription(planId as 'monthly' | 'yearly' | 'lifetime');
       setShowPricingModal(false);
       
+      // TODO: En producción, integrar con Stripe:
+      // const stripe = await loadStripe(STRIPE_CONFIG.publishableKey);
+      // const { error } = await stripe.redirectToCheckout({
+      //   lineItems: [{ price: STRIPE_CONFIG.prices[planId].id, quantity: 1 }],
+      //   mode: planId === 'lifetime' ? 'payment' : 'subscription',
+      //   successUrl: `${window.location.origin}/success`,
+      //   cancelUrl: `${window.location.origin}/`,
+      // });
+      
       // Mostrar mensaje de éxito
-      alert('¡Suscripción activada con éxito! 🎉');
+      alert('¡Suscripción activada con éxito! 🎉\n\nBienvenido a SRM Academy.');
     } catch (error) {
       console.error('Error al procesar el pago:', error);
       alert('Hubo un error al procesar el pago. Por favor, intenta de nuevo.');
     }
   };
-
-  // Calcular días de prueba restantes
-  const trialDaysLeft = subscription.status === 'trial' && subscription.expiresAt
-    ? Math.max(0, Math.ceil((new Date(subscription.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
-    : undefined;
 
   // Loading state mientras verifica autenticación
   if (authLoading) {
@@ -267,7 +267,6 @@ const App: React.FC = () => {
   return (
     <SubscriptionGate
       hasAccess={hasAccess}
-      trialDaysLeft={trialDaysLeft}
       onUpgrade={() => setShowPricingModal(true)}
     >
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
@@ -317,21 +316,6 @@ const App: React.FC = () => {
           onLogout={logout}
         />
 
-        {/* Trial Banner (si está en trial) */}
-        {subscription.status === 'trial' && trialDaysLeft && trialDaysLeft > 0 && (
-          <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-4 py-3 text-center">
-            <p className="text-sm font-semibold">
-              🎉 Tienes {trialDaysLeft} {trialDaysLeft === 1 ? 'día' : 'días'} de prueba gratis restantes.{' '}
-              <button 
-                onClick={() => setShowPricingModal(true)}
-                className="underline hover:text-amber-100 font-bold"
-              >
-                Actualiza ahora
-              </button>
-            </p>
-          </div>
-        )}
-
         {/* Main Content */}
         <main className="flex-1" role="main">
           {currentView === 'home' ? (
@@ -372,7 +356,6 @@ const App: React.FC = () => {
           <PricingModal
             onClose={() => setShowPricingModal(false)}
             onSelectPlan={handleSelectPlan}
-            trialDaysLeft={trialDaysLeft}
           />
         )}
       </div>

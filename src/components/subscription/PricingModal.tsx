@@ -5,13 +5,11 @@ import { STRIPE_CONFIG } from '../../config/stripe';
 interface PricingModalProps {
   onClose: () => void;
   onSelectPlan: (planId: string) => Promise<void>;
-  trialDaysLeft?: number;
 }
 
 export const PricingModal: React.FC<PricingModalProps> = ({ 
   onClose, 
-  onSelectPlan,
-  trialDaysLeft 
+  onSelectPlan
 }) => {
   const [loading, setLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
@@ -23,6 +21,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({
       await onSelectPlan(planId);
     } catch (error) {
       console.error('Error:', error);
+      alert('Hubo un error al procesar el pago. Por favor, intenta de nuevo.');
     } finally {
       setLoading(false);
       setSelectedPlan(null);
@@ -99,7 +98,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-full mb-4">
             <Sparkles size={16} className="text-amber-600" />
             <span className="text-sm font-semibold text-amber-700">
-              {trialDaysLeft ? `${trialDaysLeft} días de prueba gratis restantes` : 'Elige tu plan'}
+              Elige tu plan
             </span>
           </div>
           <h2 className="text-4xl font-black text-gray-900 mb-3">
@@ -127,7 +126,6 @@ export const PricingModal: React.FC<PricingModalProps> = ({
                   }
                 `}
               >
-                {/* Popular Badge */}
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                     <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-4 py-1 rounded-full text-xs font-bold shadow-lg">
@@ -136,17 +134,14 @@ export const PricingModal: React.FC<PricingModalProps> = ({
                   </div>
                 )}
 
-                {/* Icon */}
                 <div className={`w-14 h-14 bg-gradient-to-br ${plan.color} rounded-xl flex items-center justify-center mb-4 shadow-lg`}>
                   <Icon size={28} className="text-white" />
                 </div>
 
-                {/* Plan Name */}
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">
                   {plan.name}
                 </h3>
 
-                {/* Price */}
                 <div className="mb-6">
                   <div className="flex items-baseline gap-1">
                     <span className="text-4xl font-black text-gray-900">
@@ -163,7 +158,6 @@ export const PricingModal: React.FC<PricingModalProps> = ({
                   )}
                 </div>
 
-                {/* Features */}
                 <ul className="space-y-3 mb-6">
                   {plan.features.map((feature, i) => (
                     <li key={i} className="flex items-start gap-2 text-sm">
@@ -173,7 +167,6 @@ export const PricingModal: React.FC<PricingModalProps> = ({
                   ))}
                 </ul>
 
-                {/* CTA Button */}
                 <button
                   onClick={() => handleSelectPlan(plan.id)}
                   disabled={loading}
