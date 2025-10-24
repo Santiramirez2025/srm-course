@@ -67,30 +67,41 @@
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
   
-  <!-- Protección básica -->
+  <!-- Protección básica - SOLO DESKTOP -->
   <script>
-    // Bloquear clic derecho
-    document.addEventListener('contextmenu', e => e.preventDefault());
+    // Detectar si es móvil
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
-    // Bloquear teclas de desarrollador
-    document.addEventListener('keydown', e => {
-      if (e.key === 'F12' || 
-          (e.ctrlKey && e.shiftKey && e.key === 'I') ||
-          (e.ctrlKey && e.shiftKey && e.key === 'J') ||
-          (e.ctrlKey && e.key === 'U')) {
-        e.preventDefault();
-      }
-    });
-    
-    // Detectar DevTools (básico)
-    const detectDevTools = () => {
-      if (window.outerWidth - window.innerWidth > 160 || 
-          window.outerHeight - window.innerHeight > 160) {
-        document.body.innerHTML = '';
-      }
-    };
-    
-    setInterval(detectDevTools, 1000);
+    // Solo aplicar protección en DESKTOP
+    if (!isMobile) {
+      // Bloquear clic derecho
+      document.addEventListener('contextmenu', e => e.preventDefault());
+      
+      // Bloquear teclas de desarrollador
+      document.addEventListener('keydown', e => {
+        if (e.key === 'F12' || 
+            (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+            (e.ctrlKey && e.shiftKey && e.key === 'J') ||
+            (e.ctrlKey && e.key === 'U')) {
+          e.preventDefault();
+        }
+      });
+      
+      // Detectar DevTools - SOLO EN DESKTOP
+      const detectDevTools = () => {
+        const widthThreshold = window.outerWidth - window.innerWidth;
+        const heightThreshold = window.outerHeight - window.innerHeight;
+        
+        // Threshold más alto para evitar falsos positivos
+        if (widthThreshold > 200 || heightThreshold > 200) {
+          console.warn('⚠️ DevTools detectado');
+          // Opcional: redirigir en lugar de borrar
+          // window.location.href = '/';
+        }
+      };
+      
+      setInterval(detectDevTools, 1000);
+    }
   </script>
 </body>
 </html>
