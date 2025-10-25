@@ -180,7 +180,7 @@ const App: React.FC = () => {
       >
         <div className="flex flex-col min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
           <audio ref={audioRef} loop preload="metadata">
-            <source src="/music/background.mp3" type="audio/mpeg" />
+          <source src="/music/lofibro.m4a" type="audio/mp4" />
           </audio>
 
           {!audioError && (

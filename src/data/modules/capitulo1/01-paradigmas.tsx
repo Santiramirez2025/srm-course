@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useDragControls, PanInfo } from 'framer-motion';
+// Install types: npm install --save-dev @types/canvas-confetti
 import confetti from 'canvas-confetti';
 
 // Types
@@ -389,7 +390,7 @@ export const ParadigmasContent = () => {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.5, ease: "easeOut" }
+      transition: { duration: 0.5 }
     }
   };
 
@@ -397,8 +398,7 @@ export const ParadigmasContent = () => {
     y: [0, -10, 0],
     transition: {
       duration: 3,
-      repeat: Infinity,
-      ease: "easeInOut"
+      repeat: Infinity
     }
   };
 
@@ -1771,7 +1771,7 @@ export const ParadigmasContent = () => {
         </motion.div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes blob {
           0%, 100% { transform: translate(0, 0) scale(1); }
           33% { transform: translate(30px, -50px) scale(1.1); }
