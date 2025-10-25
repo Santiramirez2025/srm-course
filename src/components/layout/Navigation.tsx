@@ -87,14 +87,26 @@ export const Navigation: React.FC<NavigationProps> = ({
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
-    document.body.style.overflow = isMobileMenuOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    };
   }, [isMobileMenuOpen]);
 
   const Logo = () => (
     <button
       onClick={() => onNavigate('home')}
-      className="flex items-center gap-2 sm:gap-3 group touch-manipulation"
+      className="flex items-center gap-2 sm:gap-3 group touch-manipulation relative z-50"
       aria-label="Volver al inicio"
     >
       <div className="w-10 h-10 sm:w-11 sm:h-11 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
@@ -116,7 +128,7 @@ export const Navigation: React.FC<NavigationProps> = ({
       <button
         onClick={() => onNavigate(view)}
         className={`
-          flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all touch-manipulation
+          flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all touch-manipulation w-full
           ${isActive 
             ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md' 
             : 'text-gray-700 hover:bg-gray-100 active:bg-gray-200'
@@ -191,7 +203,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   return (
     <>
       <nav 
-        className="sticky top-0 z-50 bg-white shadow-md border-b border-gray-100"
+        className="sticky top-0 z-[100] bg-white shadow-md border-b border-gray-100"
         role="navigation"
         aria-label="Navegación principal"
       >
@@ -214,7 +226,7 @@ export const Navigation: React.FC<NavigationProps> = ({
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden w-11 h-11 flex items-center justify-center text-gray-700 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation"
+              className="md:hidden w-11 h-11 flex items-center justify-center text-gray-700 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation relative z-[110]"
               aria-label={isMobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
               aria-expanded={isMobileMenuOpen}
             >
@@ -227,7 +239,7 @@ export const Navigation: React.FC<NavigationProps> = ({
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden animate-fade-in"
+          className="fixed inset-0 bg-black/60 z-[105] md:hidden animate-fade-in backdrop-blur-sm"
           onClick={() => setIsMobileMenuOpen(false)}
           aria-hidden="true"
         />
@@ -236,7 +248,7 @@ export const Navigation: React.FC<NavigationProps> = ({
       {/* Mobile Menu Drawer */}
       <div 
         className={`
-          fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white z-50 md:hidden
+          fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white z-[110] md:hidden
           transform transition-transform duration-300 ease-out shadow-2xl
           ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}
         `}
@@ -257,7 +269,7 @@ export const Navigation: React.FC<NavigationProps> = ({
         </div>
 
         {/* Drawer Content */}
-        <div className="flex flex-col h-full overflow-y-auto p-5 pb-safe space-y-4">
+        <div className="flex flex-col h-[calc(100vh-4rem)] overflow-y-auto p-5 pb-safe space-y-4">
           {/* User Info */}
           {user && (
             <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
@@ -328,7 +340,7 @@ export const Navigation: React.FC<NavigationProps> = ({
         }
         
         .animate-fade-in {
-          animation: fade-in 0.2s ease-out;
+          animation: fade-in 0.3s ease-out;
         }
 
         .translate-widget {
@@ -379,6 +391,7 @@ export const Navigation: React.FC<NavigationProps> = ({
           border-radius: 12px !important;
           box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1) !important;
           border: 1px solid #e5e7eb !important;
+          z-index: 9999 !important;
         }
         
         .goog-te-banner-frame {
