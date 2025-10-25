@@ -40,12 +40,14 @@ const App: React.FC = () => {
     courseProgress,
   } = useCourseNavigation();
 
+  // Initialize chapters
   useEffect(() => {
     if (courseData?.chapters) {
       initializeChapters(courseData.chapters);
     }
   }, [initializeChapters]);
 
+  // Load bookmarks from localStorage
   useEffect(() => {
     if (!user) return;
     try {
@@ -59,6 +61,7 @@ const App: React.FC = () => {
     }
   }, [user]);
 
+  // Handle bookmark toggle
   const handleBookmark = (moduleId: number) => {
     if (!user) return;
     setBookmarkedModules(prev => {
@@ -77,9 +80,11 @@ const App: React.FC = () => {
     });
   };
 
+  // Setup audio handlers
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
+
     const handleError = () => {
       console.warn('Audio no disponible');
       setAudioError(true);
@@ -87,9 +92,11 @@ const App: React.FC = () => {
     };
     const handleEnded = () => setIsMusicPlaying(false);
     const handleCanPlay = () => setAudioError(false);
+
     audio.addEventListener('error', handleError);
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('canplay', handleCanPlay);
+
     return () => {
       audio.removeEventListener('error', handleError);
       audio.removeEventListener('ended', handleEnded);
@@ -98,9 +105,11 @@ const App: React.FC = () => {
     };
   }, []);
 
+  // Toggle music playback
   const toggleMusic = async () => {
     const audio = audioRef.current;
     if (!audio || audioError) return;
+
     try {
       if (isMusicPlaying) {
         audio.pause();
@@ -115,6 +124,7 @@ const App: React.FC = () => {
     }
   };
 
+  // Start course from beginning
   const handleStartCourse = () => {
     navigateTo('course');
     if (courseData.chapters?.[0]?.modules?.[0]) {
@@ -122,6 +132,7 @@ const App: React.FC = () => {
     }
   };
 
+  // Navigate to specific chapter
   const handleChapterClick = (chapterId: number) => {
     navigateTo('course');
     const chapter = courseData.chapters.find(ch => ch.id === chapterId);
@@ -133,6 +144,7 @@ const App: React.FC = () => {
     }
   };
 
+  // Handle plan selection
   const handleSelectPlan = async (planId: string) => {
     try {
       activateSubscription(planId as 'monthly' | 'yearly' | 'lifetime');
@@ -143,6 +155,7 @@ const App: React.FC = () => {
     }
   };
 
+  // Loading state
   if (authLoading || subLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
@@ -159,6 +172,7 @@ const App: React.FC = () => {
     );
   }
 
+  // Auth gate
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
@@ -172,6 +186,7 @@ const App: React.FC = () => {
     );
   }
 
+  // Main app
   return (
     <>
       <SubscriptionGate
@@ -179,15 +194,18 @@ const App: React.FC = () => {
         onUpgrade={() => setShowPricingModal(true)}
       >
         <div className="flex flex-col min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
+          {/* Background Music */}
           <audio ref={audioRef} loop preload="metadata">
-          <source src="/music/lofibro.m4a" type="audio/mp4" />
+            <source src="/music/lofibro.m4a" type="audio/mp4" />
           </audio>
 
+          {/* Music Toggle Button */}
           {!audioError && (
             <button
               onClick={toggleMusic}
               className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-full shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-110 active:scale-95 flex items-center justify-center group"
               type="button"
+              aria-label={isMusicPlaying ? 'Pausar música' : 'Reproducir música'}
             >
               {isMusicPlaying ? (
                 <Volume2 size={24} className="group-hover:scale-110 transition-transform" />
@@ -197,15 +215,15 @@ const App: React.FC = () => {
             </button>
           )}
 
+          {/* Navigation - Props corregidos sin courseProgress ni showProgress */}
           <Navigation 
             currentView={currentView} 
             onNavigate={navigateTo}
-            courseProgress={courseProgress}
-            showProgress={currentView === 'course'}
             user={user}
             onLogout={logout}
           />
 
+          {/* Main Content */}
           <main className="flex-1">
             {currentView === 'home' ? (
               <HomePage
@@ -237,10 +255,12 @@ const App: React.FC = () => {
             )}
           </main>
 
+          {/* Footer */}
           <Footer />
         </div>
       </SubscriptionGate>
 
+      {/* Pricing Modal */}
       {showPricingModal && (
         <PricingModal
           onClose={() => setShowPricingModal(false)}
