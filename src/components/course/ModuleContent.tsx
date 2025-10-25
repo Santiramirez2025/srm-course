@@ -99,8 +99,8 @@ export const ModuleContent: React.FC<ModuleContentProps> = ({
     }
   };
 
-  const config = typeConfig[module.type];
-  const TypeIcon = config.icon;
+  const config = typeConfig[module.type as keyof typeof typeConfig] ?? typeConfig.text;
+const TypeIcon = config.icon;
 
   const openLink = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
