@@ -1,789 +1,744 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export const NaturalezaMetaContent = () => {
-  const [sixForces, setSixForces] = useState<{ [key: number]: string }>({});
-  const [currentForce, setCurrentForce] = useState(0);
+  // Estados del juego
+  const [currentTerritory, setCurrentTerritory] = useState(-1); // -1 = intro
+  const [answers, setAnswers] = useState<{ [key: number]: string }>({});
   const [showResult, setShowResult] = useState(false);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
-  const [selectedVacuum, setSelectedVacuum] = useState<string>('');
+  const [unlockedEmblems, setUnlockedEmblems] = useState<number[]>([]);
+  const [showEmblemAnimation, setShowEmblemAnimation] = useState(false);
+  const [energyLevel, setEnergyLevel] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [currentFeedback, setCurrentFeedback] = useState('');
+  const [showBonusSecret, setShowBonusSecret] = useState(false);
+  const [completedChallenges, setCompletedChallenges] = useState<number[]>([]);
+  const [journeyStarted, setJourneyStarted] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
-  const forces = [
+  // Los 6 territorios del viaje
+  const territories = [
     {
-      title: "¿Qué querés realmente?",
-      subtitle: "Apuntando",
-      helper: "Concreto, específico, medible. No 'ser feliz', sino algo tangible.",
-      placeholder: "Ejemplo: Facturar $5.000 por mes haciendo diseño gráfico para marcas que respeto",
-      icon: "🎯"
+      id: 0,
+      name: "El Valle del Qué",
+      title: "¿Qué estás buscando realmente?",
+      subtitle: "Tu destino debe ser visible",
+      description: "En este valle, la niebla se disipa cuando nombras con claridad lo que deseas. No sueños vagos, sino algo que puedas ver, tocar, medir.",
+      helper: "Algo concreto y medible. No 'ser feliz', sino algo específico que puedas reconocer cuando lo veas.",
+      placeholder: "Ejemplo: Facturar $5.000 mensuales diseñando para marcas que me gusten",
+      icon: "🎯",
+      color: "from-blue-500 to-cyan-600",
+      bgGradient: "from-blue-50 to-cyan-50",
+      emblem: "💎",
+      emblemName: "Visionario",
+      feedbackTriggers: [
+        { keywords: ['quiero', 'lograr', 'alcanzar'], feedback: "Eso suena a meta con dirección 🧭" },
+        { keywords: ['facturar', 'ganar', '$', 'dinero'], feedback: "Medible y concreto. Excelente punto de partida 💰" },
+        { keywords: ['crear', 'construir', 'desarrollar'], feedback: "Hay poder en lo que estás construyendo 🏗️" }
+      ],
+      challenge: {
+        prompt: "¿Podés visualizar el momento exacto en que lográs esto? Describilo en 3 palabras.",
+        reward: "Carta del Futuro Desbloqueada"
+      }
     },
     {
-      title: "¿Cuándo lo querés?",
-      subtitle: "Tiempo",
-      helper: "Sé realista. Triplicá tu estimación inicial. ¿Estás dispuesto a sostenerlo?",
-      placeholder: "Ejemplo: En 12 meses, pero estoy preparado para que tome 24",
-      icon: "⏰"
+      id: 1,
+      name: "La Línea del Tiempo",
+      title: "¿Cuándo te gustaría lograrlo?",
+      subtitle: "El tiempo es tu aliado, no tu enemigo",
+      description: "Aquí el tiempo se estira como un río. Los impacientes se ahogan. Los realistas aprenden a navegar.",
+      helper: "Pensá en un horizonte realista. Si dudás, agregale tiempo. Es mejor llegar 'tarde' que abandonar porque era imposible.",
+      placeholder: "Ejemplo: En 12-18 meses, pero estoy preparado si toma más tiempo",
+      icon: "⏰",
+      color: "from-amber-500 to-orange-600",
+      bgGradient: "from-amber-50 to-orange-50",
+      emblem: "⌛",
+      emblemName: "Paciente Estratégico",
+      feedbackTriggers: [
+        { keywords: ['meses', 'año', 'años'], feedback: "Pensás en el largo plazo. Eso es madurez 🌱" },
+        { keywords: ['preparado', 'flexible', 'realista'], feedback: "La flexibilidad es sabiduría en acción 🧘" },
+        { keywords: ['rápido', 'pronto', 'ya'], feedback: "La urgencia es comprensible, pero recordá multiplicar x3 ⚠️" }
+      ],
+      challenge: {
+        prompt: "Si esto tomara el doble del tiempo que imaginás, ¿seguirías adelante?",
+        reward: "Sello de Persistencia Desbloqueado"
+      }
     },
     {
-      title: "¿Por qué lo querés?",
-      subtitle: "Aspiraciones",
-      helper: "El verdadero 'por qué' casi siempre nace de un vacío emocional del pasado.",
-      placeholder: "Ejemplo: Quiero validación porque de chico no me sentí valorado",
-      icon: "💎"
+      id: 2,
+      name: "El Santuario del Por Qué",
+      title: "¿Por qué te importa esto?",
+      subtitle: "Tu verdadero motor vive aquí",
+      description: "En el santuario más profundo de tu viaje, descubrís que tus metas no son solo tus metas. Son respuestas a llamados que vienen de muy atrás.",
+      helper: "A veces es obvio. Otras veces hay algo más profundo. No hay respuesta correcta o incorrecta acá.",
+      placeholder: "Ejemplo: Quiero independencia económica porque siempre sentí que dependía de otros para las decisiones importantes",
+      icon: "💎",
+      color: "from-purple-500 to-pink-600",
+      bgGradient: "from-purple-50 to-pink-50",
+      emblem: "🔥",
+      emblemName: "Buscador de Sentido",
+      feedbackTriggers: [
+        { keywords: ['sentí', 'siento', 'siempre'], feedback: "Tocaste algo profundo. Esto es auténtico 💜" },
+        { keywords: ['quiero', 'necesito', 'anhelo'], feedback: "Tu deseo tiene raíz. Eso le da fuerza 🌳" },
+        { keywords: ['porque', 'para', 'así'], feedback: "Estás conectando causa y propósito. Poderoso 🎯" }
+      ],
+      challenge: {
+        prompt: "Si ya tuvieras esto que buscás, ¿cómo te sentirías diferente?",
+        reward: "Espejo del Alma Desbloqueado"
+      }
     },
     {
-      title: "¿Cómo lo vas a lograr?",
-      subtitle: "Causalidad",
-      helper: "Hábitos, aprendizajes, acciones clave. ¿Qué causas deben estar presentes?",
-      placeholder: "Ejemplo: Estudiar diseño 2h diarias, construir portfolio, contactar 5 marcas por semana",
-      icon: "🔧"
+      id: 3,
+      name: "El Laboratorio de la Causalidad",
+      title: "¿Cómo pensás lograrlo?",
+      subtitle: "No fuerces. Provocá.",
+      description: "En este laboratorio, aprendés que las metas no se fuerzan. Se cultivan. Cada acción es una semilla.",
+      helper: "Hábitos, aprendizajes, acciones clave. No hace falta un plan perfecto, solo las primeras piezas.",
+      placeholder: "Ejemplo: Estudiar diseño 2h diarias, armar portfolio, contactar 5 marcas por semana",
+      icon: "🔧",
+      color: "from-green-500 to-emerald-600",
+      bgGradient: "from-green-50 to-emerald-50",
+      emblem: "⚙️",
+      emblemName: "Arquitecto del Cambio",
+      feedbackTriggers: [
+        { keywords: ['diarias', 'cada día', 'rutina'], feedback: "Los hábitos diarios son tu superpoder secreto 💪" },
+        { keywords: ['aprender', 'estudiar', 'practicar'], feedback: "El aprendizaje constante te convierte en imparable 📚" },
+        { keywords: ['contactar', 'buscar', 'probar'], feedback: "La acción imperfecta vence a la planificación perfecta 🚀" }
+      ],
+      challenge: {
+        prompt: "¿Qué harías hoy si solo tuvieras 15 minutos para avanzar?",
+        reward: "Llave de la Acción Desbloqueada"
+      }
     },
     {
-      title: "¿Dónde deberías estar?",
-      subtitle: "Entorno",
-      helper: "Tu ambiente físico y social. ¿Favorece tu progreso o te distrae?",
-      placeholder: "Ejemplo: Necesito un espacio de trabajo dedicado y rodearme de diseñadores exitosos",
-      icon: "🌍"
+      id: 4,
+      name: "El Jardín del Contexto",
+      title: "¿Dónde te conviene estar?",
+      subtitle: "Tu ambiente es invisible hasta que te frena",
+      description: "En este jardín, cada flor crece donde el suelo la alimenta. ¿Dónde está tu suelo fértil?",
+      helper: "Tu ambiente importa. ¿Te ayuda a avanzar o te distrae? ¿Qué cambios de entorno te facilitarían las cosas?",
+      placeholder: "Ejemplo: Necesito un espacio de trabajo dedicado y conectar con diseñadores que ya lo lograron",
+      icon: "🌍",
+      color: "from-teal-500 to-cyan-600",
+      bgGradient: "from-teal-50 to-cyan-50",
+      emblem: "🌱",
+      emblemName: "Cultivador de Ecosistemas",
+      feedbackTriggers: [
+        { keywords: ['espacio', 'lugar', 'ambiente'], feedback: "El espacio físico moldea tu mente 🏡" },
+        { keywords: ['gente', 'personas', 'comunidad'], feedback: "Sos el promedio de las 5 personas con las que pasás más tiempo 👥" },
+        { keywords: ['cambiar', 'mover', 'nuevo'], feedback: "A veces un cambio de contexto lo cambia todo 🔄" }
+      ],
+      challenge: {
+        prompt: "¿Qué tendrías que eliminar de tu entorno para que sea más fácil avanzar?",
+        reward: "Brújula del Entorno Desbloqueada"
+      }
     },
     {
-      title: "¿En quién necesitás convertirte?",
-      subtitle: "Identidad",
-      helper: "No podés lograr algo nuevo siendo la misma persona. ¿Qué cualidad debés desarrollar?",
-      placeholder: "Ejemplo: Debo desarrollar disciplina, confianza en mi trabajo y habilidad para vender",
-      icon: "🦋"
+      id: 5,
+      name: "El Templo de la Identidad",
+      title: "¿Qué versión de vos necesita aparecer?",
+      subtitle: "No se trata de tener más, sino de ser más",
+      description: "En el último templo, el más sagrado, te encontrás con quien necesitás convertirte. No es otra persona. Es vos, más completo.",
+      helper: "No se trata de convertirte en otra persona. Se trata de qué habilidades o actitudes vas a necesitar desarrollar.",
+      placeholder: "Ejemplo: Necesito ser más constante, confiar más en mi criterio, y aprender a vender mi trabajo",
+      icon: "🦋",
+      color: "from-violet-500 to-purple-600",
+      bgGradient: "from-violet-50 to-purple-50",
+      emblem: "👑",
+      emblemName: "Alquimista Interior",
+      feedbackTriggers: [
+        { keywords: ['ser', 'convertirme', 'desarrollar'], feedback: "Estás hablando de transformación real 🦋" },
+        { keywords: ['constante', 'disciplina', 'enfoque'], feedback: "La consistencia es el camino de los maestros 🎯" },
+        { keywords: ['confiar', 'creer', 'seguro'], feedback: "La confianza se construye paso a paso 🪜" }
+      ],
+      challenge: {
+        prompt: "¿Cómo se comportaría la persona que ya logró esto?",
+        reward: "Corona de la Metamorfosis Desbloqueada"
+      }
     }
   ];
 
-  const driveVacuums = [
-    {
-      external: "Quiero ganar $20.000 al mes",
-      internal: "Quiero atención y reconocimiento",
-      root: "De chico no me sentí valorado"
-    },
-    {
-      external: "Quiero dejar mi trabajo",
-      internal: "Quiero tener control sobre mi vida",
-      root: "Siempre sentí que otros decidían por mí"
-    },
-    {
-      external: "Quiero estar en forma",
-      internal: "Quiero sentirme suficiente",
-      root: "Me comparé toda la vida y nunca alcanzaba"
+  // Feedback contextual basado en palabras clave
+  const generateFeedback = (text: string, territoryIndex: number) => {
+    const territory = territories[territoryIndex];
+    const lowerText = text.toLowerCase();
+    
+    for (const trigger of territory.feedbackTriggers) {
+      if (trigger.keywords.some(keyword => lowerText.includes(keyword))) {
+        return trigger.feedback;
+      }
     }
-  ];
-
-  const handleForceChange = (value: string) => {
-    setSixForces({ ...sixForces, [currentForce]: value });
+    
+    // Feedback genérico si no hay match
+    const genericFeedbacks = [
+      "Interesante perspectiva 💭",
+      "Eso tiene peso 🎯",
+      "Hay claridad en lo que escribiste ✨",
+      "Estás encontrando tu camino 🧭"
+    ];
+    return genericFeedbacks[Math.floor(Math.random() * genericFeedbacks.length)];
   };
 
+  // Manejar cambio de respuesta
+  const handleAnswerChange = (value: string) => {
+    setAnswers({ ...answers, [currentTerritory]: value });
+    
+    // Actualizar energía basada en longitud
+    const wordCount = value.trim().split(' ').length;
+    setEnergyLevel(Math.min(100, (wordCount / 30) * 100));
+  };
+
+  // Avanzar al siguiente territorio
   const handleNext = () => {
-    if (currentForce < forces.length - 1) {
-      setCurrentForce(currentForce + 1);
-    } else {
-      setShowResult(true);
+    const feedback = generateFeedback(answers[currentTerritory], currentTerritory);
+    setCurrentFeedback(feedback);
+    setShowFeedback(true);
+    
+    // Desbloquear emblema
+    if (!unlockedEmblems.includes(currentTerritory)) {
+      setTimeout(() => {
+        setUnlockedEmblems([...unlockedEmblems, currentTerritory]);
+        setShowEmblemAnimation(true);
+        setTimeout(() => setShowEmblemAnimation(false), 2000);
+      }, 1000);
     }
+    
+    setTimeout(() => {
+      setShowFeedback(false);
+      setIsTransitioning(true);
+      
+      setTimeout(() => {
+        if (currentTerritory < territories.length - 1) {
+          setCurrentTerritory(currentTerritory + 1);
+          setEnergyLevel(0);
+        } else {
+          setShowResult(true);
+        }
+        setIsTransitioning(false);
+      }, 300);
+    }, 2500);
   };
 
+  // Retroceder
   const handlePrevious = () => {
-    if (currentForce > 0) {
-      setCurrentForce(currentForce - 1);
+    setIsTransitioning(true);
+    setTimeout(() => {
+      if (currentTerritory > 0) {
+        setCurrentTerritory(currentTerritory - 1);
+      }
+      setIsTransitioning(false);
+    }, 300);
+  };
+
+  // Completar desafío
+  const handleCompleteChallenge = (territoryId: number) => {
+    if (!completedChallenges.includes(territoryId)) {
+      setCompletedChallenges([...completedChallenges, territoryId]);
     }
   };
 
-  const canAdvance = sixForces[currentForce]?.trim().length > 5;
-  const completedForces = Object.values(sixForces).filter(v => v && v.trim().length > 0).length;
-
+  // Copiar prompt
   const copyPrompt = () => {
-    const prompt = `🔓 Ayúdame a redefinir mi meta utilizando el Modelo de las Seis Fuerzas Ocultas.
+    const prompt = `🎯 Quiero entender cómo alinear mis metas con mi identidad profunda.
 
-Quiero descubrir mi verdadero 'por qué' y construir una visión de autotrascendencia alineada con la identidad que debo encarnar para lograrlo.
+Estas son mis respuestas del Camino hacia mi Norte:
 
-Mis respuestas a las 6 fuerzas:
+${territories.map((t, i) => `${t.icon} ${t.name}: ${t.title}
+→ ${answers[i] || 'Sin respuesta'}`).join('\n\n')}
 
-${forces.map((f, i) => `${f.icon} ${f.title}
-→ ${sixForces[i] || 'Sin respuesta'}`).join('\n\n')}
-
-Sé preciso, desafiante y sin rodeos.`;
+Actuá como un mentor que combina psicología, estrategia y visión de propósito. Mostrame lo que no estoy viendo todavía y cómo puedo integrar mis metas sin forzarme.`;
     
     navigator.clipboard.writeText(prompt);
     setCopiedPrompt(true);
     setTimeout(() => setCopiedPrompt(false), 2000);
   };
 
+  const canAdvance = answers[currentTerritory]?.trim().length > 10;
+  const completedTerritories = Object.values(answers).filter(a => a && a.trim().length > 0).length;
+  const currentTerritoryData = territories[currentTerritory];
+
   return (
-    <div className="space-y-8">
-      {/* Hero */}
-      <div className="text-center py-6">
-        <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-          🎯 La Naturaleza de la Meta
-        </h1>
-        <p className="text-2xl text-indigo-600 font-medium">
-          Tu brújula hacia la autotrascendencia
-        </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 relative overflow-hidden">
+      {/* Fondo animado sutil */}
+      <div className="fixed inset-0 opacity-30">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400 rounded-full filter blur-3xl animate-blob"></div>
+        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-400 rounded-full filter blur-3xl animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-pink-400 rounded-full filter blur-3xl animate-blob animation-delay-4000"></div>
       </div>
 
-      {/* Hook inicial */}
-      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border-l-4 border-indigo-500 p-6 rounded-lg">
-        <h2 className="text-2xl font-bold text-gray-900 mb-3">
-          🧭 Esto no es motivación. Es entrenamiento.
-        </h2>
-        <p className="text-lg text-gray-700 leading-relaxed mb-4">
-          Hablar de metas no es hablar de listas de deseos ni de frases bonitas. 
-          <strong className="text-indigo-700"> Es hablar de la brújula que dirige tu vida.</strong>
-        </p>
-        <p className="text-lg text-gray-700 leading-relaxed">
-          Sin una meta clara, sos un barco a la deriva. Con una meta, te convertís en capitán.
-        </p>
-      </div>
-
-      {/* Analogía del barco - VISUAL */}
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-red-50 p-6 rounded-xl border-2 border-red-200">
-          <div className="text-6xl mb-4 text-center">🌊</div>
-          <h3 className="text-xl font-bold text-gray-900 mb-3 text-center">Sin meta clara</h3>
-          <div className="space-y-2 text-gray-700">
-            <p className="flex items-center gap-2">
-              <span className="text-red-500">❌</span>
-              Cualquier viento te arrastra
-            </p>
-            <p className="flex items-center gap-2">
-              <span className="text-red-500">❌</span>
-              Dudás constantemente
-            </p>
-            <p className="flex items-center gap-2">
-              <span className="text-red-500">❌</span>
-              Te desvías con facilidad
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-green-50 p-6 rounded-xl border-2 border-green-200">
-          <div className="text-6xl mb-4 text-center">⛵</div>
-          <h3 className="text-xl font-bold text-gray-900 mb-3 text-center">Con meta clara</h3>
-          <div className="space-y-2 text-gray-700">
-            <p className="flex items-center gap-2">
-              <span className="text-green-500">✓</span>
-              Trazás un rumbo definido
-            </p>
-            <p className="flex items-center gap-2">
-              <span className="text-green-500">✓</span>
-              Ajustás tus velas con propósito
-            </p>
-            <p className="flex items-center gap-2">
-              <span className="text-green-500">✓</span>
-              Atravesás cualquier tormenta
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* 3 Características de una meta poderosa */}
-      <div className="bg-white p-6 rounded-xl border-2 border-indigo-200 shadow-lg">
-        <h2 className="text-3xl font-bold text-gray-900 mb-6">📍 Una meta poderosa tiene que ser:</h2>
-        
-        <div className="grid md:grid-cols-3 gap-4">
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-5 rounded-lg border-2 border-blue-200">
-            <div className="text-3xl mb-3">🎯</div>
-            <h3 className="font-bold text-gray-900 mb-2">Concreta</h3>
-            <p className="text-sm text-gray-700">Que se pueda visualizar con claridad</p>
-          </div>
-
-          <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-5 rounded-lg border-2 border-purple-200">
-            <div className="text-3xl mb-3">📊</div>
-            <h3 className="font-bold text-gray-900 mb-2">Medible</h3>
-            <p className="text-sm text-gray-700">Que sepas si estás más cerca o más lejos</p>
-          </div>
-
-          <div className="bg-gradient-to-br from-orange-50 to-red-50 p-5 rounded-lg border-2 border-orange-200">
-            <div className="text-3xl mb-3">❤️‍🔥</div>
-            <h3 className="font-bold text-gray-900 mb-2">Emocionalmente vibrante</h3>
-            <p className="text-sm text-gray-700">Que te haga latir el corazón</p>
-          </div>
-        </div>
-
-        <div className="mt-6 bg-indigo-100 p-5 rounded-lg border-l-4 border-indigo-500">
-          <p className="text-gray-900 font-medium mb-2">📌 Ejemplo potente:</p>
-          <p className="text-lg text-indigo-700 italic">
-            "Quiero ganar $5.000 al mes haciendo lo que amo."
-          </p>
-          <p className="text-sm text-gray-600 mt-3">
-            No se trata solo de plata. Se trata de dirección. De identidad. De declarar: 
-            <strong> "Esto es lo que quiero. Esto es lo que soy."</strong>
-          </p>
-        </div>
-      </div>
-
-      {/* Transición a las 6 fuerzas */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-8 rounded-xl text-center">
-        <h2 className="text-3xl font-bold mb-4">🧩 Las Seis Fuerzas Ocultas</h2>
-        <p className="text-xl leading-relaxed max-w-3xl mx-auto">
-          Estas seis preguntas funcionan como una linterna. No iluminan el mundo exterior. 
-          <strong> Iluminan tu interior.</strong>
-        </p>
-        <p className="text-lg mt-4 text-purple-100">
-          Te ayudan a descubrir qué querés de verdad, por qué lo querés, y quién necesitás ser para conseguirlo.
-        </p>
-      </div>
-
-      {/* Ejercicio de las 6 fuerzas */}
-      <div className="bg-white border-2 border-purple-200 rounded-xl p-6 shadow-lg">
-        <div className="mb-6">
-          <div className="flex justify-between items-center mb-2">
-            <h2 className="text-2xl font-bold text-gray-900">
-              ✨ Definí tu meta con las 6 Fuerzas
-            </h2>
-            <span className="text-sm font-medium text-purple-600">
-              {completedForces}/{forces.length}
-            </span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className="bg-purple-600 h-2 rounded-full transition-all duration-500"
-              style={{ width: `${(completedForces / forces.length) * 100}%` }}
-            />
-          </div>
-        </div>
-
-        {!showResult ? (
-          <div className="space-y-6">
-            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-6 rounded-lg border-2 border-indigo-300">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="text-5xl">{forces[currentForce].icon}</div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-indigo-600 mb-1">
-                    FUERZA {currentForce + 1} DE {forces.length} · {forces[currentForce].subtitle.toUpperCase()}
-                  </p>
-                  <h3 className="text-2xl font-bold text-gray-900">
-                    {forces[currentForce].title}
-                  </h3>
-                </div>
-              </div>
-              
-              <p className="text-sm text-gray-600 italic mb-4 bg-white p-3 rounded border-l-4 border-indigo-400">
-                💭 {forces[currentForce].helper}
+      <div className="relative z-10 max-w-5xl mx-auto px-4 py-8">
+        {/* Pantalla de introducción */}
+        {!journeyStarted && (
+          <div className="min-h-screen flex items-center justify-center animate-fade-in">
+            <div className="text-center space-y-8 max-w-3xl">
+              <div className="text-8xl mb-6 animate-float">🧭</div>
+              <h1 className="text-6xl font-bold text-gray-900 mb-4">
+                El Camino hacia tu Norte
+              </h1>
+              <p className="text-2xl text-gray-700 leading-relaxed">
+                Un viaje de 6 territorios para descubrir la naturaleza profunda de tus metas
               </p>
               
-              <textarea
-                value={sixForces[currentForce] || ''}
-                onChange={(e) => handleForceChange(e.target.value)}
-                placeholder={forces[currentForce].placeholder}
-                className="w-full p-4 border-2 border-indigo-200 rounded-lg focus:border-indigo-400 focus:outline-none min-h-[100px] text-gray-800"
-              />
-              
-              <div className="mt-4 flex justify-between items-center">
-                {currentForce > 0 && (
-                  <button
-                    onClick={handlePrevious}
-                    className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all font-medium"
-                  >
-                    ← Anterior
-                  </button>
-                )}
-                
-                <button
-                  onClick={handleNext}
-                  disabled={!canAdvance}
-                  className={`${currentForce === 0 ? '' : 'ml-auto'} px-6 py-3 rounded-lg font-bold transition-all ${
-                    canAdvance
-                      ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg'
-                      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  }`}
-                >
-                  {currentForce === forces.length - 1 ? 'Ver mi mapa completo 🗺️' : 'Siguiente →'}
-                </button>
+              <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl space-y-4">
+                <p className="text-lg text-gray-700">
+                  Este no es un formulario. Es una experiencia.
+                </p>
+                <p className="text-gray-600">
+                  Atravesarás valles, santuarios y templos donde cada respuesta desbloqueará 
+                  comprensión sobre quién eres y hacia dónde vas.
+                </p>
+                <div className="flex items-center justify-center gap-6 pt-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">⏱️</span>
+                    <span className="text-sm text-gray-600">~20 minutos</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">🎯</span>
+                    <span className="text-sm text-gray-600">6 territorios</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">💎</span>
+                    <span className="text-sm text-gray-600">Logros desbloqueables</span>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            {/* Mini preview */}
-            {currentForce > 0 && (
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <p className="text-sm font-bold text-gray-600 mb-3">TUS FUERZAS ANTERIORES:</p>
-                <div className="space-y-2">
-                  {forces.slice(0, currentForce).map((f, i) => (
-                    <div key={i} className="flex items-start gap-2 text-sm">
-                      <span className="text-lg">{f.icon}</span>
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-700">{f.title}</p>
-                        <p className="text-gray-600 italic line-clamp-1">→ {sixForces[i]}</p>
+              <button
+                onClick={() => {
+                  setJourneyStarted(true);
+                  setCurrentTerritory(0);
+                }}
+                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 
+                         text-white text-xl font-bold py-6 px-12 rounded-2xl shadow-2xl 
+                         transform hover:scale-105 transition-all duration-300 animate-pulse-slow"
+              >
+                🚀 Comenzar el Viaje
+              </button>
+
+              <p className="text-sm text-gray-500 italic">
+                "No se trata de encontrar respuestas perfectas. Se trata de hacer las preguntas correctas."
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Juego principal */}
+        {journeyStarted && !showResult && currentTerritory >= 0 && (
+          <div className={`space-y-8 transition-all duration-300 ${isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
+            {/* Header con progreso */}
+            <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-xl">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-5xl animate-pulse-slow">{currentTerritoryData.icon}</span>
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-900">
+                      {currentTerritoryData.name}
+                    </h2>
+                    <p className="text-sm text-gray-600">{currentTerritoryData.subtitle}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-gray-600">Territorio</p>
+                  <p className="text-2xl font-bold text-indigo-600">
+                    {currentTerritory + 1} / {territories.length}
+                  </p>
+                </div>
+              </div>
+
+              {/* Barra de progreso del viaje */}
+              <div className="relative">
+                <div className="flex justify-between mb-2">
+                  {territories.map((t, i) => (
+                    <div key={i} className="flex flex-col items-center">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl
+                        transition-all duration-500 ${
+                          i < currentTerritory ? 'bg-green-500 scale-110' :
+                          i === currentTerritory ? 'bg-indigo-600 scale-125 animate-pulse' :
+                          'bg-gray-300'
+                        }`}>
+                        {i < currentTerritory ? '✓' : t.icon}
                       </div>
+                      <span className="text-xs text-gray-600 mt-1">{t.name.split(' ')[1]}</span>
                     </div>
                   ))}
                 </div>
+                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div 
+                    className="h-2 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full transition-all duration-1000"
+                    style={{ width: `${((currentTerritory + 1) / territories.length) * 100}%` }}
+                  ></div>
+                </div>
               </div>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {/* Resultado principal */}
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-6 rounded-lg border-2 border-amber-300">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <span className="text-3xl">🎯</span>
-                Tu Mapa de Autotrascendencia
-              </h3>
-              <p className="text-lg text-gray-800 leading-relaxed">
-                Acabás de hacer lo que muy pocas personas logran: definir tu meta con precisión quirúrgica. 
-                Este no es un ejercicio motivacional. Es tu arquitectura interna.
+            </div>
+
+            {/* Descripción del territorio */}
+            <div className={`bg-gradient-to-br ${currentTerritoryData.bgGradient} p-8 rounded-2xl border-2 border-white/50 shadow-xl`}>
+              <p className="text-lg text-gray-800 leading-relaxed italic">
+                "{currentTerritoryData.description}"
               </p>
             </div>
 
-            {/* Resumen de las 6 fuerzas */}
-            <div className="bg-white p-6 rounded-lg border-2 border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">
-                🗺️ Tu sistema completo:
+            {/* Pregunta principal */}
+            <div className="bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-xl space-y-6">
+              <h3 className="text-3xl font-bold text-gray-900 mb-4">
+                {currentTerritoryData.title}
               </h3>
-              <div className="space-y-4">
-                {forces.map((f, i) => (
-                  <div key={i} className="border-l-4 border-indigo-400 pl-4 bg-indigo-50 p-3 rounded-r">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xl">{f.icon}</span>
-                      <p className="text-sm font-bold text-indigo-600">{f.subtitle.toUpperCase()}: {f.title}</p>
+              <p className="text-gray-600 text-lg">
+                {currentTerritoryData.helper}
+              </p>
+
+              <textarea
+                value={answers[currentTerritory] || ''}
+                onChange={(e) => handleAnswerChange(e.target.value)}
+                placeholder={currentTerritoryData.placeholder}
+                className="w-full min-h-[200px] p-6 border-2 border-gray-200 rounded-xl 
+                         focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100 
+                         resize-y text-lg transition-all"
+              />
+
+              {/* Barra de energía de respuesta */}
+              {answers[currentTerritory] && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Profundidad de tu respuesta</span>
+                    <span className="text-sm font-bold text-indigo-600">{Math.floor(energyLevel)}%</span>
+                  </div>
+                  <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-3 rounded-full transition-all duration-300 ${
+                        energyLevel > 70 ? 'bg-green-500' :
+                        energyLevel > 40 ? 'bg-yellow-500' :
+                        'bg-red-400'
+                      }`}
+                      style={{ width: `${energyLevel}%` }}
+                    ></div>
+                  </div>
+                  {energyLevel > 70 && (
+                    <p className="text-sm text-green-600 font-semibold animate-fade-in">
+                      ✨ Respuesta profunda y poderosa
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Desafío opcional */}
+              {!completedChallenges.includes(currentTerritory) && (
+                <div className="bg-amber-50 border-2 border-amber-200 p-5 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <span className="text-3xl">🎯</span>
+                    <div className="flex-1">
+                      <p className="font-bold text-gray-900 mb-2">Desafío Opcional:</p>
+                      <p className="text-gray-700 mb-3">{currentTerritoryData.challenge.prompt}</p>
+                      <button
+                        onClick={() => handleCompleteChallenge(currentTerritory)}
+                        className="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-4 py-2 rounded-lg transition-all"
+                      >
+                        ✓ Reflexioné sobre esto
+                      </button>
                     </div>
-                    <p className="text-gray-700 font-medium">{sixForces[i]}</p>
+                  </div>
+                </div>
+              )}
+
+              {completedChallenges.includes(currentTerritory) && (
+                <div className="bg-green-50 border-2 border-green-300 p-5 rounded-xl animate-fade-in">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">🏆</span>
+                    <div>
+                      <p className="font-bold text-green-900">{currentTerritoryData.challenge.reward}</p>
+                      <p className="text-sm text-green-700">Completaste el desafío de este territorio</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Navegación */}
+            <div className="flex justify-between items-center">
+              <button
+                onClick={handlePrevious}
+                disabled={currentTerritory === 0}
+                className={`px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 ${
+                  currentTerritory === 0
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    : 'bg-gray-300 hover:bg-gray-400 text-gray-800 shadow-md hover:shadow-lg'
+                }`}
+              >
+                ← Territorio Anterior
+              </button>
+
+              <div className="flex items-center gap-2">
+                {unlockedEmblems.map((emblemIndex) => (
+                  <div key={emblemIndex} className="text-3xl animate-bounce-in">
+                    {territories[emblemIndex].emblem}
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={handleNext}
+                disabled={!canAdvance}
+                className={`px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 ${
+                  canAdvance
+                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                {currentTerritory === territories.length - 1 ? 'Completar Viaje' : 'Siguiente Territorio'} →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Feedback contextual */}
+        {showFeedback && (
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 animate-scale-in">
+            <div className="bg-white p-8 rounded-2xl shadow-2xl border-4 border-indigo-300 max-w-md">
+              <p className="text-2xl text-center font-semibold text-gray-900">
+                {currentFeedback}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Animación de emblema desbloqueado */}
+        {showEmblemAnimation && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white p-12 rounded-3xl shadow-2xl text-center animate-scale-in">
+              <div className="text-9xl mb-6 animate-bounce-celebration">
+                {currentTerritoryData.emblem}
+              </div>
+              <p className="text-3xl font-bold text-gray-900 mb-2">¡Emblema Desbloqueado!</p>
+              <p className="text-xl text-indigo-600 font-semibold">
+                {currentTerritoryData.emblemName}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Mapa final */}
+        {showResult && (
+          <div className="space-y-8 animate-fade-in">
+            {/* Celebración inicial */}
+            <div className="text-center py-12">
+              <div className="text-9xl mb-6 animate-float">🗺️</div>
+              <h2 className="text-5xl font-bold text-gray-900 mb-4">
+                Tu Mapa del Norte Personal
+              </h2>
+              <p className="text-2xl text-gray-700 max-w-3xl mx-auto">
+                Has completado el viaje. Este es el mapa de tu claridad.
+              </p>
+            </div>
+
+            {/* Emblemas ganados */}
+            <div className="bg-gradient-to-br from-yellow-50 to-amber-50 p-8 rounded-2xl border-2 border-yellow-300 shadow-xl">
+              <h3 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <span className="text-4xl">🏆</span>
+                Emblemas Conquistados
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {territories.map((t, i) => (
+                  <div key={i} className="bg-white p-6 rounded-xl border-2 border-yellow-200 text-center">
+                    <div className="text-5xl mb-3">{t.emblem}</div>
+                    <p className="font-bold text-gray-900">{t.emblemName}</p>
+                    <p className="text-xs text-gray-600">{t.name}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Botón copiar */}
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-lg border-2 border-green-300">
-              <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
-                <span className="text-2xl">🚀</span>
-                Profundizá tu claridad con IA
+            {/* Mapa visual de respuestas */}
+            <div className="bg-white p-8 rounded-2xl shadow-xl">
+              <h3 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+                📜 Tu Carta de Navegación
               </h3>
-              <p className="text-gray-700 mb-4">
-                Copiá tu mapa completo y usalo con ChatGPT o Claude para recibir un análisis profundo y desafiante.
+              <div className="space-y-6">
+                {territories.map((t, i) => (
+                  answers[i] && (
+                    <div key={i} className={`bg-gradient-to-br ${t.bgGradient} p-6 rounded-xl border-2 border-white/50 shadow-md animate-slide-in`}
+                         style={{ animationDelay: `${i * 100}ms` }}>
+                      <div className="flex items-start gap-4">
+                        <div className="text-4xl">{t.icon}</div>
+                        <div className="flex-1">
+                          <p className="font-bold text-gray-900 text-lg mb-2">{t.name}</p>
+                          <p className="text-sm text-gray-600 mb-3 italic">"{t.subtitle}"</p>
+                          <div className="bg-white/70 p-4 rounded-lg">
+                            <p className="text-gray-800 leading-relaxed">{answers[i]}</p>
+                          </div>
+                        </div>
+                        <div className="text-3xl">{t.emblem}</div>
+                      </div>
+                    </div>
+                  )
+                ))}
+              </div>
+            </div>
+
+            {/* Sabiduría final */}
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-10 rounded-2xl text-white text-center shadow-2xl">
+              <p className="text-3xl font-bold mb-4">🌟</p>
+              <p className="text-2xl mb-4">
+                "No viniste aquí a encontrar todas las respuestas."
               </p>
+              <p className="text-xl">
+                Viniste a descubrir cuáles son las preguntas correctas.
+              </p>
+            </div>
+
+            {/* Prompt de regalo */}
+            <div className="bg-gray-900 text-white p-8 rounded-2xl shadow-2xl">
+              <h3 className="text-3xl font-bold mb-4 text-amber-400 flex items-center gap-3">
+                <span className="text-4xl">🎁</span>
+                Tu Regalo: Mentor Digital Personalizado
+              </h3>
+              <p className="text-gray-300 mb-6">
+                Copiá este prompt y usalo con tu IA favorita para profundizar tu visión:
+              </p>
+              <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 mb-6">
+                <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-line">
+                  {`🎯 Quiero entender cómo alinear mis metas con mi identidad profunda.
+
+Estas son mis respuestas del Camino hacia mi Norte:
+
+${territories.map((t, i) => `${t.icon} ${t.name}: ${t.title}
+→ ${answers[i] || 'Sin respuesta'}`).join('\n\n')}
+
+Actuá como un mentor que combina psicología, estrategia y visión de propósito. Mostrame lo que no estoy viendo todavía y cómo puedo integrar mis metas sin forzarme.`}
+                </p>
+              </div>
               <button
                 onClick={copyPrompt}
-                className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold px-8 py-4 rounded-lg transition-all shadow-lg flex items-center justify-center gap-2"
+                className="w-full bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold py-4 px-6 rounded-xl transition-all flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105"
               >
                 {copiedPrompt ? (
                   <>
-                    <span>✓</span>
-                    <span>¡Copiado!</span>
+                    <span className="text-2xl">✓</span>
+                    <span className="text-xl">¡Copiado! Listo para usar</span>
                   </>
                 ) : (
                   <>
-                    <span>📋</span>
-                    <span>Copiar mapa + prompt de profundización</span>
+                    <span className="text-2xl">📋</span>
+                    <span className="text-xl">Copiar Mi Prompt Personalizado</span>
                   </>
                 )}
+              </button>
+            </div>
+
+            {/* Bonus secreto */}
+            {!showBonusSecret ? (
+              <div className="text-center">
+                <button
+                  onClick={() => setShowBonusSecret(true)}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 
+                           text-white font-bold py-4 px-8 rounded-full shadow-xl hover:shadow-2xl 
+                           transform hover:scale-110 transition-all animate-pulse-slow"
+                >
+                  💎 Bonus Oculto: Tocá para revelar tu carta
+                </button>
+              </div>
+            ) : (
+              <div className="bg-gradient-to-br from-pink-50 to-purple-50 p-10 rounded-2xl border-4 border-pink-300 shadow-2xl animate-scale-in">
+                <div className="text-center space-y-6">
+                  <div className="text-8xl mb-6">🔮</div>
+                  <h3 className="text-4xl font-bold text-gray-900 mb-4">
+                    Tu Carta del Universo
+                  </h3>
+                  <div className="bg-white/70 p-8 rounded-xl max-w-2xl mx-auto">
+                    <p className="text-2xl text-gray-800 leading-relaxed mb-6">
+                      "El camino que buscás ya existe dentro de vos. 
+                      No lo fuerces. No lo apures. 
+                      Solo caminalo con la certeza de quien sabe que cada paso cuenta."
+                    </p>
+                    <p className="text-lg text-gray-700 italic">
+                      Tu siguiente paso aparecerá cuando estés listo para verlo.
+                    </p>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    ✨ Guardá esta carta. Volvé a ella cuando necesites recordar tu claridad.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Botón de nuevo viaje */}
+            <div className="text-center pt-8">
+              <button
+                onClick={() => {
+                  setJourneyStarted(false);
+                  setCurrentTerritory(-1);
+                  setAnswers({});
+                  setShowResult(false);
+                  setUnlockedEmblems([]);
+                  setCompletedChallenges([]);
+                  setShowBonusSecret(false);
+                }}
+                className="bg-gray-700 hover:bg-gray-800 text-white font-semibold py-3 px-8 rounded-xl transition-all"
+              >
+                🔄 Comenzar Nuevo Viaje
               </button>
             </div>
           </div>
         )}
       </div>
 
-      {/* Drive Vacuums - INTERACTIVO */}
-      <div className="bg-gradient-to-br from-pink-50 to-rose-50 p-6 rounded-xl border-2 border-pink-200">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">
-          🧠 Drive Vacuums: El verdadero "Por qué"
-        </h2>
-        <p className="text-lg text-gray-700 mb-6 leading-relaxed">
-          Tus metas no nacen de la nada. Son espejos de vacíos emocionales que buscás llenar. 
-          <strong className="text-pink-700"> Y eso no está mal... si sos consciente de ello.</strong>
-        </p>
-
-        <div className="space-y-4 mb-6">
-          {driveVacuums.map((vacuum, index) => (
-            <button
-              key={index}
-              onClick={() => setSelectedVacuum(selectedVacuum === vacuum.external ? '' : vacuum.external)}
-              className={`w-full text-left p-5 rounded-lg border-2 transition-all ${
-                selectedVacuum === vacuum.external
-                  ? 'bg-white border-pink-400 shadow-lg'
-                  : 'bg-white border-gray-200 hover:border-pink-300'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <p className="font-bold text-gray-900">{vacuum.external}</p>
-                <span className="text-2xl">{selectedVacuum === vacuum.external ? '👇' : '👉'}</span>
-              </div>
-              
-              {selectedVacuum === vacuum.external && (
-                <div className="mt-4 space-y-3">
-                  <div className="flex items-start gap-3 bg-orange-50 p-3 rounded border-l-4 border-orange-400">
-                    <span className="text-xl">🎭</span>
-                    <div>
-                      <p className="text-sm font-semibold text-orange-600">Capa interna:</p>
-                      <p className="text-gray-700">{vacuum.internal}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3 bg-red-50 p-3 rounded border-l-4 border-red-400">
-                    <span className="text-xl">💔</span>
-                    <div>
-                      <p className="text-sm font-semibold text-red-600">Raíz emocional:</p>
-                      <p className="text-gray-700">{vacuum.root}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </button>
-          ))}
-        </div>
-
-        <div className="bg-white p-5 rounded-lg border-2 border-pink-300">
-          <p className="text-gray-800 font-medium">
-            ⚠️ El problema aparece cuando lográs la meta externa... pero el vacío interno sigue ahí. 
-            Sin un nuevo "por qué", te quedás sin norte.
-          </p>
-          <p className="text-pink-700 font-bold mt-3">
-            👉 Tu "por qué" necesita renovarse con el tiempo. Evolucionar como vos evolucionás.
-          </p>
-        </div>
-      </div>
-
-      {/* El "Cuándo" - Los optimistas mueren primero */}
-      <div className="bg-gradient-to-br from-red-50 to-orange-50 p-6 rounded-xl border-2 border-red-200">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-          <span className="text-4xl">⏳</span>
-          "Los optimistas mueren primero"
-        </h2>
+      {/* Estilos CSS */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes blob {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          25% { transform: translate(20px, -20px) scale(1.1); }
+          50% { transform: translate(-20px, 20px) scale(0.9); }
+          75% { transform: translate(-20px, -20px) scale(1.05); }
+        }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+        }
+        @keyframes pulse-slow {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.8; transform: scale(1.05); }
+        }
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes scale-in {
+          from { opacity: 0; transform: scale(0.8); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes bounce-in {
+          0% { transform: scale(0) rotate(0deg); opacity: 0; }
+          60% { transform: scale(1.2) rotate(10deg); opacity: 1; }
+          100% { transform: scale(1) rotate(0deg); }
+        }
+        @keyframes bounce-celebration {
+          0%, 100% { transform: translateY(0) scale(1); }
+          25% { transform: translateY(-30px) scale(1.1); }
+          50% { transform: translateY(0) scale(1); }
+          75% { transform: translateY(-15px) scale(1.05); }
+        }
+        @keyframes slide-in {
+          from { opacity: 0; transform: translateX(-30px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
         
-        <div className="space-y-4">
-          <p className="text-lg text-gray-700 leading-relaxed">
-            Muchas personas se ilusionan con plazos irreales. Se convencen de que todo va a salir rápido y fácil. 
-            Pero cuando la realidad no responde a su calendario... <strong className="text-red-600">se frustran, se cansan, y se rinden.</strong>
-          </p>
-
-          <div className="bg-white p-5 rounded-lg border-l-4 border-red-500">
-            <p className="text-gray-900 font-bold mb-2">💥 No seas ese optimista ingenuo.</p>
-            <p className="text-gray-700">
-              Convertite en un <strong>realista con fe inquebrantable</strong>: alguien que no niega las dificultades, 
-              pero que cree profundamente que vale la pena seguir.
-            </p>
-          </div>
-
-          <div className="bg-orange-100 p-5 rounded-lg border-2 border-orange-300">
-            <p className="text-xl font-bold text-gray-900 mb-2">🎯 La regla del x3</p>
-            <p className="text-gray-700">
-              Si pensás que te va a llevar 3 meses, <strong>preparate para 9.</strong>
-            </p>
-            <p className="text-sm text-gray-600 mt-2">
-              No para resignarte, sino para que el proceso no te saque del juego.
-            </p>
-          </div>
-
-          <p className="text-gray-700 text-center font-medium italic">
-            La tolerancia al proceso, a la incertidumbre, a lo incómodo... 
-            <span className="text-orange-600 font-bold"> eso es lo que diferencia al que llega del que solo sueña.</span>
-          </p>
-        </div>
-      </div>
-
-      {/* El "Cómo" - Causalidad */}
-      <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-6 rounded-xl border-2 border-blue-200">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-          <span className="text-4xl">🔍</span>
-          Toda meta es un efecto, no una casualidad
-        </h2>
-        
-        <p className="text-lg text-gray-700 leading-relaxed mb-6">
-          Nada "pasa porque sí". Si lográs algo, es porque hubo <strong>causas</strong> detrás que lo hicieron posible.
-        </p>
-
-        <div className="bg-white p-6 rounded-lg border-2 border-blue-300 mb-6">
-          <p className="text-xl font-bold text-gray-900 mb-4 text-center">
-            👉 Si querés resultados distintos, necesitás causas distintas
-          </p>
-          
-          <div className="grid md:grid-cols-2 gap-4 mt-4">
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">✅</span>
-              <div>
-                <p className="font-semibold text-gray-900">Precisión en tu rutina</p>
-                <p className="text-sm text-gray-600">No hacer mucho, sino lo que importa, todos los días</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">✅</span>
-              <div>
-                <p className="font-semibold text-gray-900">Energía enfocada</p>
-                <p className="text-sm text-gray-600">Tu atención es tu activo más valioso</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">✅</span>
-              <div>
-                <p className="font-semibold text-gray-900">Cuidar cuerpo y mente</p>
-                <p className="text-sm text-gray-600">Sin combustible real, no hay movimiento</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">✅</span>
-              <div>
-                <p className="font-semibold text-gray-900">Alineación total</p>
-                <p className="text-sm text-gray-600">Todo lo que hacés apunta al objetivo</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-r from-blue-100 to-cyan-100 p-5 rounded-lg text-center">
-          <p className="text-lg font-bold text-gray-900">
-            🎯 La meta no se fuerza... <span className="text-blue-600">se provoca.</span>
-          </p>
-          <p className="text-gray-700 mt-2">
-            Cuando todo lo que hacés, pensás y sentís está alineado... el resultado llega como consecuencia natural.
-          </p>
-        </div>
-      </div>
-
-      {/* El "Dónde" y "Quién" */}
-      <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-6 rounded-xl border-2 border-purple-200">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-          <span className="text-4xl">🌍</span>
-          No podés florecer en cualquier suelo
-        </h2>
-        
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
-          <div className="bg-white p-5 rounded-lg border-2 border-purple-300">
-            <div className="text-3xl mb-3">🌱</div>
-            <h3 className="font-bold text-gray-900 mb-2">El "Dónde" importa</h3>
-            <p className="text-gray-700 text-sm leading-relaxed">
-              Las personas que te rodean, los lugares en los que te movés, las ideas que consumís... 
-              todo eso moldea tu realidad, te potencia o te frena.
-            </p>
-          </div>
-
-          <div className="bg-white p-5 rounded-lg border-2 border-indigo-300">
-            <div className="text-3xl mb-3">🦋</div>
-            <h3 className="font-bold text-gray-900 mb-2">El "Quién" eres define todo</h3>
-            <p className="text-gray-700 text-sm leading-relaxed">
-              Quién sos mientras vas en busca de tu meta es lo que determina si vas a alcanzarla... 
-              y sostenerla sin romperte.
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-r from-purple-100 to-indigo-100 p-5 rounded-lg">
-          <p className="text-lg font-bold text-gray-900 mb-3">
-            💡 No se trata solo de "tener" más. Se trata de "ser" más.
-          </p>
-          <div className="space-y-2 text-gray-700">
-            <p className="flex items-start gap-2">
-              <span className="text-purple-600">→</span>
-              <span>Desarrollar habilidades que antes no tenías</span>
-            </p>
-            <p className="flex items-start gap-2">
-              <span className="text-purple-600">→</span>
-              <span>Carácter para resistir los momentos duros</span>
-            </p>
-            <p className="flex items-start gap-2">
-              <span className="text-purple-600">→</span>
-              <span>Hábitos que te eleven en lugar de sabotearte</span>
-            </p>
-            <p className="flex items-start gap-2">
-              <span className="text-purple-600">→</span>
-              <span>Conciencia para no perderte en el camino</span>
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-6 bg-white p-5 rounded-lg border-2 border-purple-300">
-          <p className="text-gray-800 font-medium text-center">
-            🚫 Si el entorno no acompaña, y vos no evolucionás... 
-            <strong className="text-purple-700"> esa meta que tanto soñás se vuelve inalcanzable, o peor: insostenible.</strong>
-          </p>
-        </div>
-      </div>
-
-      {/* Ciclo de estancamiento */}
-      <div className="bg-gradient-to-br from-gray-50 to-slate-100 p-6 rounded-xl border-2 border-gray-300">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-          <span className="text-4xl">🔄</span>
-          El Ciclo de Estancamiento
-        </h2>
-        
-        <div className="space-y-4">
-          <p className="text-lg text-gray-700 leading-relaxed">
-            ¿Alguna vez lograste algo que parecía enorme... y no sentiste nada? 
-            <strong className="text-gray-900"> Ese "¿y ahora qué?" silencioso.</strong>
-          </p>
-
-          <div className="bg-white p-5 rounded-lg border-l-4 border-gray-500">
-            <p className="text-gray-900 font-bold mb-2">Eso es estancamiento.</p>
-            <p className="text-gray-700">
-              No ocurre por falta de éxito, sino por una desconexión interna. 
-              Cuando tu meta era solo un parche para un dolor emocional.
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-3 gap-3">
-            <div className="bg-slate-100 p-4 rounded text-center">
-              <div className="text-3xl mb-2">💼</div>
-              <p className="text-sm text-gray-700">Ganan mucho dinero</p>
-            </div>
-            <div className="bg-slate-100 p-4 rounded text-center">
-              <div className="text-3xl mb-2">🏆</div>
-              <p className="text-sm text-gray-700">Consiguen estatus</p>
-            </div>
-            <div className="bg-slate-100 p-4 rounded text-center">
-              <div className="text-3xl mb-2">👏</div>
-              <p className="text-sm text-gray-700">Reciben aplausos</p>
-            </div>
-          </div>
-
-          <p className="text-center text-gray-700 font-medium">
-            ...y de pronto se apagan. Su motor emocional se quedó sin gasolina.
-          </p>
-
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-5 rounded-lg border-2 border-green-300">
-            <p className="text-lg font-bold text-gray-900 mb-3">🔥 La solución:</p>
-            <div className="space-y-2 text-gray-700">
-              <p className="flex items-start gap-2">
-                <span className="text-green-600">✓</span>
-                <span>Una nueva causa, algo que te trascienda</span>
-              </p>
-              <p className="flex items-start gap-2">
-                <span className="text-green-600">✓</span>
-                <span>Un nuevo "por qué", más alineado con quién sos hoy</span>
-              </p>
-              <p className="flex items-start gap-2">
-                <span className="text-green-600">✓</span>
-                <span>Un nuevo nivel de conciencia que convierta el éxito en sentido</span>
-              </p>
-            </div>
-          </div>
-
-          <p className="text-center text-lg font-medium text-gray-800 italic">
-            Cuando el alma no está involucrada... el logro se siente hueco. <br/>
-            <span className="text-green-600 font-bold">Pero cuando todo tu ser está en juego... cada paso vibra.</span>
-          </p>
-        </div>
-      </div>
-
-      {/* Llamado final */}
-      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white p-10 rounded-xl text-center shadow-2xl">
-        <h2 className="text-4xl font-bold mb-6">🖼️ La realidad es una obra de arte</h2>
-        <div className="space-y-4 text-xl leading-relaxed max-w-3xl mx-auto">
-          <p>
-            Pero cada uno la mira con lentes que no eligió. Lentes distorsionados por creencias, traumas, historias heredadas.
-          </p>
-          <p className="text-2xl font-bold text-yellow-300">
-            Limpiar esas gafas es el acto más revolucionario que podés hacer.
-          </p>
-          <p>
-            Porque solo cuando ves con claridad, podés crear con intención.
-          </p>
-        </div>
-        
-        <div className="mt-8 bg-white/10 backdrop-blur p-6 rounded-lg max-w-2xl mx-auto">
-          <p className="text-lg mb-3">
-            Este documento no te motiva. <strong>Te entrena.</strong>
-          </p>
-          <p className="text-xl">
-            Te entrena para pensar con precisión. Para actuar con propósito. 
-            Para convertirte en alguien que no solo persigue una meta, sino que <strong>se eleva a través de ella.</strong>
-          </p>
-        </div>
-      </div>
-
-      {/* Resumen visual de conceptos clave */}
-      <div className="bg-gray-50 p-8 rounded-xl border-2 border-gray-200">
-        <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">
-          🔑 Conceptos clave para recordar
-        </h2>
-        
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="bg-white p-5 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-            <div className="text-3xl mb-3">🎯</div>
-            <h3 className="font-bold text-gray-900 mb-2">Meta clara</h3>
-            <p className="text-sm text-gray-600">Concreta, medible y emocionalmente vibrante</p>
-          </div>
-
-          <div className="bg-white p-5 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-            <div className="text-3xl mb-3">⏰</div>
-            <h3 className="font-bold text-gray-900 mb-2">Regla del x3</h3>
-            <p className="text-sm text-gray-600">Triplicá tus tiempos estimados. Prepárate para el proceso largo</p>
-          </div>
-
-          <div className="bg-white p-5 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-            <div className="text-3xl mb-3">💔</div>
-            <h3 className="font-bold text-gray-900 mb-2">Drive Vacuums</h3>
-            <p className="text-sm text-gray-600">Tus metas son espejos de vacíos emocionales. Sé consciente de ellos</p>
-          </div>
-
-          <div className="bg-white p-5 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-            <div className="text-3xl mb-3">🔧</div>
-            <h3 className="font-bold text-gray-900 mb-2">Causalidad</h3>
-            <p className="text-sm text-gray-600">La meta no se fuerza, se provoca. Alineá tus causas</p>
-          </div>
-
-          <div className="bg-white p-5 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-            <div className="text-3xl mb-3">🌍</div>
-            <h3 className="font-bold text-gray-900 mb-2">Entorno</h3>
-            <p className="text-sm text-gray-600">No podés florecer en cualquier suelo. Elegí bien tu contexto</p>
-          </div>
-
-          <div className="bg-white p-5 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-            <div className="text-3xl mb-3">🦋</div>
-            <h3 className="font-bold text-gray-900 mb-2">Identidad</h3>
-            <p className="text-sm text-gray-600">No se trata de tener más, sino de ser más</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Bonus prompt */}
-      <div className="bg-gray-900 text-white p-6 rounded-xl">
-        <h3 className="text-2xl font-bold mb-4 text-amber-400">🔓 BONUS: Prompt de Redefinición</h3>
-        <p className="text-gray-300 mb-4">
-          Si querés llevar tu claridad al siguiente nivel, usá este prompt con ChatGPT o Claude:
-        </p>
-        <div className="bg-gray-800 p-5 rounded-lg border border-gray-700">
-          <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-line">
-            {`🔓 Ayúdame a redefinir mi meta utilizando el Modelo de las Seis Fuerzas Ocultas.
-
-Quiero descubrir mi verdadero 'por qué' y construir una visión de autotrascendencia alineada con la identidad que debo encarnar para lograrlo.
-
-Sé preciso, desafiante y sin rodeos.`}
-          </p>
-        </div>
-        <button 
-          onClick={() => {
-            const promptText = `🔓 Ayúdame a redefinir mi meta utilizando el Modelo de las Seis Fuerzas Ocultas.
-
-Quiero descubrir mi verdadero 'por qué' y construir una visión de autotrascendencia alineada con la identidad que debo encarnar para lograrlo.
-
-Sé preciso, desafiante y sin rodeos.`;
-            navigator.clipboard.writeText(promptText);
-            setCopiedPrompt(true);
-            setTimeout(() => setCopiedPrompt(false), 2000);
-          }}
-          className="mt-4 bg-amber-500 hover:bg-amber-600 text-gray-900 font-semibold px-6 py-3 rounded-lg transition-all w-full sm:w-auto flex items-center justify-center gap-2"
-        >
-          {copiedPrompt ? (
-            <>
-              <span>✓</span>
-              <span>¡Copiado!</span>
-            </>
-          ) : (
-            <>
-              <span>📋</span>
-              <span>Copiar prompt de redefinición</span>
-            </>
-          )}
-        </button>
-        
-        <div className="mt-6 bg-amber-900/30 border border-amber-700/50 p-4 rounded-lg">
-          <p className="text-sm text-amber-200 flex items-start gap-2">
-            <span className="text-lg">💡</span>
-            <span>
-              <strong>Pro tip:</strong> Agregá al prompt tus respuestas de las 6 Fuerzas para recibir un análisis 
-              ultra-personalizado que te desafíe a pensar más profundo.
-            </span>
-          </p>
-        </div>
-      </div>
+        .animate-blob { animation: blob 7s infinite; }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        .animate-pulse-slow { animation: pulse-slow 3s ease-in-out infinite; }
+        .animate-fade-in { animation: fade-in 0.5s ease-out; }
+        .animate-scale-in { animation: scale-in 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+        .animate-bounce-in { animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+        .animate-bounce-celebration { animation: bounce-celebration 1s ease-in-out; }
+        .animate-slide-in { animation: slide-in 0.6s ease-out; }
+        .animation-delay-2000 { animation-delay: 2s; }
+        .animation-delay-4000 { animation-delay: 4s; }
+      `}} />
     </div>
   );
 };
 
 export const naturalezaMetaMetadata = {
   id: 3,
-  title: "La Naturaleza de la Meta",
+  title: "El Camino hacia tu Norte",
   type: "document" as const,
-  duration: "25 min"
+  duration: "20-25 min"
 };

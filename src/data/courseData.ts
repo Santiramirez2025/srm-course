@@ -4,7 +4,7 @@ import { CourseData } from './types';
 import { ParadigmasContent, paradigmasMetadata } from './modules/capitulo1/01-paradigmas';
 import { VisionMundoContent, visionMundoMetadata } from './modules/capitulo1/02-vision-mundo';
 import { NaturalezaMetaContent, naturalezaMetaMetadata } from './modules/capitulo1/03-naturaleza-meta';
-import { DesarrolloPersonalContent, desarrolloPersonalMetadata } from './modules/capitulo1/04-desarrollo-personal';
+import { DesarrolloPersonalGame, desarrolloPersonalGameMetadata } from './modules/capitulo1/04-desarrollo-personal';
 import { CadenasContent, cadenasMetadata } from './modules/capitulo1/05-cadenas';
 import { HonestidadContent, honestidadMetadata } from './modules/capitulo1/06-honestidad';
 import { ResistenciaContent, resistenciaMetadata } from './modules/capitulo1/07-resistencia';
@@ -35,58 +35,58 @@ import { ScriptFeedbackFormContent, scriptFeedbackFormMetadata } from './modules
 import { EntrevistarContratarContent, entrevistarContratarMetadata } from './modules/capitulo3/09-entrevistar-contratar';
 
 export const courseData: CourseData = {
-  title: "Curso SRM",
-  subtitle: "Aprendé a vivir mejor, trabajar online y vender con propósito",
-  description: "Un curso completo para transformar tu vida personal y profesional",
-  chapters: [
-    {
-      id: 1,
-      title: "Vivir Mejor",
-      description: "Fundamentos para una vida plena y equilibrada",
-      modules: [
-        { ...paradigmasMetadata, content: ParadigmasContent, driveUrl: "" },
-        { ...visionMundoMetadata, content: VisionMundoContent, driveUrl: "" },
-        { ...naturalezaMetaMetadata, content: NaturalezaMetaContent, driveUrl: "" },
-        { ...desarrolloPersonalMetadata, content: DesarrolloPersonalContent, driveUrl: "" },
-        { ...cadenasMetadata, content: CadenasContent, driveUrl: "" },
-        { ...honestidadMetadata, content: HonestidadContent, driveUrl: "" },
-        { ...resistenciaMetadata, content: ResistenciaContent, driveUrl: "" },
-        { ...energiaMetadata, content: PolaridadContent, driveUrl: "" },
-        { ...constantesMetadata, content: ConstantesContent, driveUrl: "" }
-      ]
-    },
-    {
-      id: 2,
-      title: "Trabajar Online",
-      description: "Construye tu carrera digital desde cero",
-      modules: [
-        { ...fuerzasIrracionalidadMetadata, content: FuerzasIrracionalidadContent, driveUrl: "" },
-        { ...entornoTrabajoMetadata, content: EntornoTrabajoContent, driveUrl: "" },
-        { ...nichoIdealMetadata, content: NichoIdealContent, driveUrl: "" },
-        { ...dominarNichoMetadata, content: DominarNichoContent, driveUrl: "" },
-        { ...ofertasIPsicologiaMetadata, content: OfertasIPsicologiaContent, driveUrl: "" },
-        { ...ofertasIIConstruccionMetadata, content: OfertasIIConstruccionContent, driveUrl: "" },
-        { ...hojaTrabajoOfertasMetadata, content: HojaTrabajoOfertasContent, driveUrl: "" },
-        { ...comunicacionMensajesMetadata, content: ComunicacionMensajesContent, driveUrl: "" },
-        { ...guiaCobrarOnlineMetadata, content: GuiaCobrarOnlineContent, driveUrl: "" },
-        { ...calendarioDiarioProMetadata, content: CalendarioDiarioProContent, driveUrl: "" }
-      ]
-    },
-    {
-      id: 3,
-      title: "Aprender a Vender",
-      description: "Domina el arte de la venta con propósito",
-      modules: [
-        { ...conquistarVentasMetadata, content: ConquistarVentasContent, driveUrl: "" },
-        { ...laBaseRealMetadata, content: LaBaseRealContent, driveUrl: "" },
-        { ...guiaVozCerrarMetadata, content: GuiaVozCerrarContent, driveUrl: "" },
-        { ...cerrarPoderEmpatiaMetadata, content: CerrarPoderEmpatiaContent, driveUrl: "" },
-        { ...manualGuerraMetadata, content: ManualGuerraContent, driveUrl: "" },
-        { ...reescribirScriptMetadata, content: ReescribirScriptContent, driveUrl: "" },
-        { ...edicionMaestraMetadata, content: EdicionMaestraContent, driveUrl: "" },
-        { ...scriptFeedbackFormMetadata, content: ScriptFeedbackFormContent, driveUrl: "" },
-        { ...entrevistarContratarMetadata, content: EntrevistarContratarContent, driveUrl: "" }
-      ]
-    }
-  ]
+title: "Curso SRM",
+subtitle: "Aprendé a vivir mejor, trabajar online y vender con propósito",
+description: "Un curso completo para transformar tu vida personal y profesional",
+chapters: [
+{
+id: 1,
+title: "Vivir Mejor",
+description: "Fundamentos para una vida plena y equilibrada",
+modules: [
+{ ...paradigmasMetadata, content: ParadigmasContent, driveUrl: "" },
+{ ...visionMundoMetadata, content: VisionMundoContent, driveUrl: "" },
+{ ...naturalezaMetaMetadata, content: NaturalezaMetaContent, driveUrl: "" },
+{ ...desarrolloPersonalGameMetadata, content: DesarrolloPersonalGame, driveUrl: "" },
+{ ...cadenasMetadata, content: CadenasContent, driveUrl: "" },
+{ ...honestidadMetadata, content: HonestidadContent, driveUrl: "" },
+{ ...resistenciaMetadata, content: ResistenciaContent, driveUrl: "" },
+{ ...energiaMetadata, content: PolaridadContent, driveUrl: "" },
+{ ...constantesMetadata, content: ConstantesContent, driveUrl: "" }
+]
+},
+{
+id: 2,
+title: "Trabajar Online",
+description: "Construye tu carrera digital desde cero",
+modules: [
+{ ...fuerzasIrracionalidadMetadata, content: FuerzasIrracionalidadContent, driveUrl: "" },
+{ ...entornoTrabajoMetadata, content: EntornoTrabajoContent, driveUrl: "" },
+{ ...nichoIdealMetadata, content: NichoIdealContent, driveUrl: "" },
+{ ...dominarNichoMetadata, content: DominarNichoContent, driveUrl: "" },
+{ ...ofertasIPsicologiaMetadata, content: OfertasIPsicologiaContent, driveUrl: "" },
+{ ...ofertasIIConstruccionMetadata, content: OfertasIIConstruccionContent, driveUrl: "" },
+{ ...hojaTrabajoOfertasMetadata, content: HojaTrabajoOfertasContent, driveUrl: "" },
+{ ...comunicacionMensajesMetadata, content: ComunicacionMensajesContent, driveUrl: "" },
+{ ...guiaCobrarOnlineMetadata, content: GuiaCobrarOnlineContent, driveUrl: "" },
+{ ...calendarioDiarioProMetadata, content: CalendarioDiarioProContent, driveUrl: "" }
+]
+},
+{
+id: 3,
+title: "Aprender a Vender",
+description: "Domina el arte de la venta con propósito",
+modules: [
+{ ...conquistarVentasMetadata, content: ConquistarVentasContent, driveUrl: "" },
+{ ...laBaseRealMetadata, content: LaBaseRealContent, driveUrl: "" },
+{ ...guiaVozCerrarMetadata, content: GuiaVozCerrarContent, driveUrl: "" },
+{ ...cerrarPoderEmpatiaMetadata, content: CerrarPoderEmpatiaContent, driveUrl: "" },
+{ ...manualGuerraMetadata, content: ManualGuerraContent, driveUrl: "" },
+{ ...reescribirScriptMetadata, content: ReescribirScriptContent, driveUrl: "" },
+{ ...edicionMaestraMetadata, content: EdicionMaestraContent, driveUrl: "" },
+{ ...scriptFeedbackFormMetadata, content: ScriptFeedbackFormContent, driveUrl: "" },
+{ ...entrevistarContratarMetadata, content: EntrevistarContratarContent, driveUrl: "" }
+]
+}
+]
 };

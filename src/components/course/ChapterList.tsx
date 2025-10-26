@@ -51,10 +51,12 @@ export const ChapterList: React.FC<ChapterListProps> = ({
     const icons = {
       video: <Play size={16} className="sm:w-[18px] sm:h-[18px] flex-shrink-0 text-amber-600" />,
       document: <FileText size={16} className="sm:w-[18px] sm:h-[18px] flex-shrink-0 text-blue-600" />,
-      text: <FileText size={16} className="sm:w-[18px] sm:h-[18px] flex-shrink-0 text-purple-600" />
+      text: <FileText size={16} className="sm:w-[18px] sm:h-[18px] flex-shrink-0 text-purple-600" />,
+      game: <Lock size={16} className="sm:w-[18px] sm:h-[18px] flex-shrink-0 text-pink-600" /> // ✅ Nuevo tipo
     };
     return icons[type] || icons.text;
   };
+  
 
   // Verificar si módulo está seleccionado
   const isModuleSelected = (chapterTitle: string, moduleId: number): boolean => {

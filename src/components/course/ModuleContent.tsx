@@ -14,7 +14,7 @@ interface Resource {
 interface Module {
   id: number;
   title: string;
-  type: 'video' | 'document' | 'text';
+  type: 'video' | 'document' | 'text' | 'game'; // ✅ agregado "game"
   content: React.ComponentType<any> | string;
   driveUrl?: string;
   duration?: string;
