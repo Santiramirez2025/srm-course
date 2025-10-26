@@ -1,74 +1,34 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform, useDragControls, PanInfo } from 'framer-motion';
-// Install types: npm install --save-dev @types/canvas-confetti
-import confetti from 'canvas-confetti';
+import { Check, Lock, ChevronRight, ArrowRight, Sparkles } from 'lucide-react';
 
-// Types
-interface Achievement {
-  id: string;
-  title: string;
-  description: string;
-  icon: string;
-  unlocked: boolean;
-  points: number;
+// ==================== TYPES ====================
+interface PhaseState {
+  currentPhase: number;
+  completedPhases: Set<number>;
+  unlockedPhases: Set<number>;
 }
 
-interface JournalEntry {
-  id: string;
-  belief: string;
-  reflection: string;
-  timestamp: number;
-}
-
-interface UserProgress {
-  points: number;
-  level: number;
-  achievements: Achievement[];
-  completedActions: string[];
-  streak: number;
-  lastVisit: number;
-}
-
+// ==================== MAIN COMPONENT ====================
 export const ParadigmasContent = () => {
-  const [selectedBelief, setSelectedBelief] = useState<string>('');
-  const [userInput, setUserInput] = useState('');
-  const [showResult, setShowResult] = useState(false);
-  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
-  const [copiedPrompt, setCopiedPrompt] = useState(false);
+  // State Management
+  const [phaseState, setPhaseState] = useState<PhaseState>({
+    currentPhase: 1,
+    completedPhases: new Set([]),
+    unlockedPhases: new Set([1])
+  });
+  
   const [testAnswers, setTestAnswers] = useState<boolean[]>([]);
   const [showTestResult, setShowTestResult] = useState(false);
-  
-  // Advanced features
-  const [userProgress, setUserProgress] = useState<UserProgress>({
-    points: 0,
-    level: 1,
-    achievements: [],
-    completedActions: [],
-    streak: 1,
-    lastVisit: Date.now()
-  });
-  const [showAchievement, setShowAchievement] = useState<Achievement | null>(null);
-  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
-  const [currentJournal, setCurrentJournal] = useState('');
-  const [showJournal, setShowJournal] = useState(false);
-  const [draggedBelief, setDraggedBelief] = useState<string | null>(null);
-  const [beliefTransformations, setBeliefTransformations] = useState<{[key: string]: boolean}>({});
+  const [selectedBelief, setSelectedBelief] = useState<string>('');
+  const [showBeliefResult, setShowBeliefResult] = useState(false);
+  const [userInput, setUserInput] = useState('');
+  const [copiedPrompt, setCopiedPrompt] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
-  const [showStats, setShowStats] = useState(false);
-  const [transformationScore, setTransformationScore] = useState(0);
-  const [showTimeline, setShowTimeline] = useState(false);
-  const [dailyChallenge, setDailyChallenge] = useState<string>('');
-  const [challengeCompleted, setChallengeCompleted] = useState(false);
-  
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const journalRef = useRef<HTMLTextAreaElement>(null);
-  
-  const { scrollYProgress } = useScroll();
-  const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.3]);
-  const scale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
 
+  const phaseRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
+  const totalPhases = 8;
+
+  // ==================== DATA ====================
   const limitingBeliefs = [
     "No soy bueno para esto",
     "No tengo suerte",
@@ -94,176 +54,34 @@ export const ParadigmasContent = () => {
     "Evito situaciones nuevas por miedo a fallar"
   ];
 
-  const achievements: Achievement[] = [
-    { id: 'first_test', title: 'Autoconocimiento', description: 'Completaste el test inicial', icon: '🔍', unlocked: false, points: 10 },
-    { id: 'belief_selected', title: 'Identificación', description: 'Seleccionaste tu primera creencia', icon: '🎯', unlocked: false, points: 15 },
-    { id: 'transformation', title: 'Transformador', description: 'Transformaste una creencia limitante', icon: '✨', unlocked: false, points: 20 },
-    { id: 'journal_entry', title: 'Reflexivo', description: 'Escribiste tu primera reflexión', icon: '📝', unlocked: false, points: 25 },
-    { id: 'all_beliefs', title: 'Explorador Mental', description: 'Exploraste todas las creencias', icon: '🧠', unlocked: false, points: 30 },
-    { id: 'daily_challenge', title: 'Desafío Diario', description: 'Completaste el desafío del día', icon: '🏆', unlocked: false, points: 50 },
-    { id: 'master', title: 'Maestro de Paradigmas', description: 'Alcanzaste 100 puntos', icon: '👑', unlocked: false, points: 0 },
-  ];
-
-  const dailyChallenges = [
-    "Comparte tu transformación con alguien cercano",
-    "Escribe 3 evidencias que contradigan tu creencia limitante",
-    "Practica tu nueva creencia en una situación real hoy",
-    "Medita 5 minutos visualizando tu nuevo paradigma",
-    "Enseña a alguien sobre paradigmas usando tus propias palabras"
-  ];
-
-  // Load user progress from localStorage
-  useEffect(() => {
-    const savedProgress = localStorage.getItem('paradigmas-progress');
-    const savedJournal = localStorage.getItem('paradigmas-journal');
-    const savedTransformations = localStorage.getItem('paradigmas-transformations');
-    
-    if (savedProgress) {
-      const progress = JSON.parse(savedProgress);
-      setUserProgress(progress);
-    }
-    
-    if (savedJournal) {
-      setJournalEntries(JSON.parse(savedJournal));
-    }
-    
-    if (savedTransformations) {
-      setBeliefTransformations(JSON.parse(savedTransformations));
-    }
-
-    // Set daily challenge
-    const today = new Date().toDateString();
-    const savedChallenge = localStorage.getItem('paradigmas-daily-challenge');
-    const savedChallengeDate = localStorage.getItem('paradigmas-challenge-date');
-    
-    if (savedChallengeDate !== today) {
-      const randomChallenge = dailyChallenges[Math.floor(Math.random() * dailyChallenges.length)];
-      setDailyChallenge(randomChallenge);
-      localStorage.setItem('paradigmas-daily-challenge', randomChallenge);
-      localStorage.setItem('paradigmas-challenge-date', today);
-      setChallengeCompleted(false);
-      localStorage.removeItem('paradigmas-challenge-completed');
-    } else {
-      setDailyChallenge(savedChallenge || dailyChallenges[0]);
-      setChallengeCompleted(localStorage.getItem('paradigmas-challenge-completed') === 'true');
-    }
-  }, []);
-
-  // Save progress
-  useEffect(() => {
-    localStorage.setItem('paradigmas-progress', JSON.stringify(userProgress));
-  }, [userProgress]);
-
-  useEffect(() => {
-    localStorage.setItem('paradigmas-journal', JSON.stringify(journalEntries));
-  }, [journalEntries]);
-
-  useEffect(() => {
-    localStorage.setItem('paradigmas-transformations', JSON.stringify(beliefTransformations));
-  }, [beliefTransformations]);
-
-  // Calculate transformation score
-  useEffect(() => {
-    const score = Object.keys(beliefTransformations).filter(k => beliefTransformations[k]).length;
-    setTransformationScore(score);
-  }, [beliefTransformations]);
-
-  // Play sound effect
-  const playSound = (type: 'success' | 'achievement' | 'level-up') => {
-    if (!soundEnabled) return;
-    
-    // You can add actual audio files here
-    const frequencies: {[key: string]: number} = {
-      'success': 800,
-      'achievement': 1000,
-      'level-up': 1200
-    };
-    
-    // Web Audio API for simple beep
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator.frequency.value = frequencies[type];
-    oscillator.type = 'sine';
-    
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-    
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.3);
-  };
-
-  // Trigger confetti
-  const triggerConfetti = () => {
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: ['#f59e0b', '#f97316', '#ef4444', '#ec4899', '#8b5cf6']
-    });
-    playSound('achievement');
-  };
-
-  // Award points and check achievements
-  const awardPoints = (points: number, achievementId?: string) => {
-    setUserProgress(prev => {
-      const newPoints = prev.points + points;
-      const newLevel = Math.floor(newPoints / 50) + 1;
-      const leveledUp = newLevel > prev.level;
-      
-      if (leveledUp) {
-        triggerConfetti();
-        playSound('level-up');
-      } else {
-        playSound('success');
-      }
-
-      let updatedAchievements = [...prev.achievements];
-      
-      if (achievementId) {
-        const achievement = achievements.find(a => a.id === achievementId);
-        if (achievement && !prev.achievements.find(a => a.id === achievementId)) {
-          updatedAchievements.push({ ...achievement, unlocked: true });
-          setShowAchievement({ ...achievement, unlocked: true });
-          setTimeout(() => setShowAchievement(null), 3000);
-          triggerConfetti();
-        }
-      }
-
-      // Check master achievement
-      if (newPoints >= 100 && !prev.achievements.find(a => a.id === 'master')) {
-        const masterAchievement = achievements.find(a => a.id === 'master');
-        if (masterAchievement) {
-          updatedAchievements.push({ ...masterAchievement, unlocked: true });
-          setShowAchievement({ ...masterAchievement, unlocked: true });
-          setTimeout(() => setShowAchievement(null), 4000);
-          triggerConfetti();
-        }
-      }
-
-      return {
+  // ==================== HANDLERS ====================
+  const unlockNextPhase = (currentPhaseNum: number) => {
+    const nextPhase = currentPhaseNum + 1;
+    if (nextPhase <= totalPhases) {
+      setPhaseState(prev => ({
         ...prev,
-        points: newPoints,
-        level: newLevel,
-        achievements: updatedAchievements
-      };
-    });
-  };
-
-  const handleBeliefSelect = (belief: string) => {
-    setSelectedBelief(belief);
-    setShowResult(true);
-    
-    if (!userProgress.completedActions.includes('belief_selected')) {
-      awardPoints(15, 'belief_selected');
-      setUserProgress(prev => ({
-        ...prev,
-        completedActions: [...prev.completedActions, 'belief_selected']
+        completedPhases: new Set([...prev.completedPhases, currentPhaseNum]),
+        unlockedPhases: new Set([...prev.unlockedPhases, nextPhase])
       }));
+      
+      // Scroll to next phase after a small delay
+      setTimeout(() => {
+        goToPhase(nextPhase);
+      }, 300);
+    }
+  };
+
+  const goToPhase = (phaseNum: number) => {
+    if (phaseState.unlockedPhases.has(phaseNum)) {
+      setPhaseState(prev => ({ ...prev, currentPhase: phaseNum }));
+      
+      // Smooth scroll to phase
+      setTimeout(() => {
+        phaseRefs.current[phaseNum]?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }, 100);
     }
   };
 
@@ -274,1514 +92,636 @@ export const ParadigmasContent = () => {
     
     if (newAnswers.filter(a => a !== undefined).length === testQuestions.length) {
       setShowTestResult(true);
-      
-      if (!userProgress.completedActions.includes('first_test')) {
-        awardPoints(10, 'first_test');
-        setUserProgress(prev => ({
-          ...prev,
-          completedActions: [...prev.completedActions, 'first_test']
-        }));
-      }
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 2000);
     }
   };
 
-  const handleTransformBelief = (belief: string) => {
-    setBeliefTransformations(prev => ({
-      ...prev,
-      [belief]: true
-    }));
-    
-    if (!userProgress.completedActions.includes('transformation')) {
-      awardPoints(20, 'transformation');
-      setUserProgress(prev => ({
-        ...prev,
-        completedActions: [...prev.completedActions, 'transformation']
-      }));
-    }
-
-    // Check if all beliefs explored
-    const transformedCount = Object.keys({...beliefTransformations, [belief]: true}).length;
-    if (transformedCount === limitingBeliefs.length && !userProgress.completedActions.includes('all_beliefs')) {
-      setTimeout(() => {
-        awardPoints(30, 'all_beliefs');
-        setUserProgress(prev => ({
-          ...prev,
-          completedActions: [...prev.completedActions, 'all_beliefs']
-        }));
-      }, 500);
-    }
+  const handleBeliefSelect = (belief: string) => {
+    setSelectedBelief(belief);
+    setShowBeliefResult(true);
   };
-
-  const saveJournalEntry = () => {
-    if (currentJournal.trim()) {
-      const entry: JournalEntry = {
-        id: Date.now().toString(),
-        belief: selectedBelief,
-        reflection: currentJournal,
-        timestamp: Date.now()
-      };
-      
-      setJournalEntries(prev => [entry, ...prev]);
-      setCurrentJournal('');
-      
-      if (!userProgress.completedActions.includes('journal_entry')) {
-        awardPoints(25, 'journal_entry');
-        setUserProgress(prev => ({
-          ...prev,
-          completedActions: [...prev.completedActions, 'journal_entry']
-        }));
-      } else {
-        awardPoints(5);
-      }
-    }
-  };
-
-  const handleDailyChallenge = () => {
-    setChallengeCompleted(true);
-    localStorage.setItem('paradigmas-challenge-completed', 'true');
-    
-    if (!userProgress.completedActions.includes('daily_challenge')) {
-      awardPoints(50, 'daily_challenge');
-      setUserProgress(prev => ({
-        ...prev,
-        completedActions: [...prev.completedActions, 'daily_challenge']
-      }));
-    }
-  };
-
-  const countYes = testAnswers.filter(a => a === true).length;
 
   const copyPrompt = () => {
-    const prompt = "🎯 Quiero que actúes como un coach mental experto. Mostrame cuáles son mis paradigmas limitantes ocultos basándote en cómo me describo a mí mismo, mis hábitos y mis resultados. Después, ayudame a transformarlos por nuevas creencias que me permitan alcanzar mi máximo potencial. Sé directo.";
+    const prompt = "Ayudame a ver qué creencias sobre mí mismo podrían estar frenándome sin que me dé cuenta. Basate en cómo hablo de mí, de mis hábitos y resultados. Después, charlemos cómo podría verlo distinto. Sé directo pero amigable.";
     navigator.clipboard.writeText(prompt);
     setCopiedPrompt(true);
     setTimeout(() => setCopiedPrompt(false), 2000);
-    playSound('success');
   };
 
-  const shareProgress = () => {
-    const shareText = `🚀 ¡Estoy transformando mis paradigmas!\n\n📊 Nivel ${userProgress.level}\n⭐ ${userProgress.points} puntos\n✨ ${transformationScore}/${limitingBeliefs.length} creencias transformadas\n\n#DesarrolloPersonal #Paradigmas`;
-    
-    if (navigator.share) {
-      navigator.share({
-        title: 'Mi Progreso en Paradigmas',
-        text: shareText
-      });
-    } else {
-      navigator.clipboard.writeText(shareText);
-      alert('¡Texto copiado! Compartí tu progreso en redes sociales 🎉');
-    }
-  };
+  const countYes = testAnswers.filter(a => a === true).length;
+  const progressPercentage = (phaseState.completedPhases.size / totalPhases) * 100;
 
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5 }
-    }
-  };
-
-  const floatingAnimation = {
-    y: [0, -10, 0],
-    transition: {
-      duration: 3,
-      repeat: Infinity
-    }
-  };
-
-  return (
-    <div className={`relative min-h-screen transition-colors duration-500 ${
-      darkMode 
-        ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' 
-        : 'bg-gradient-to-br from-slate-50 via-white to-amber-50/30'
-    }`}>
-      {/* Fixed Progress Bar */}
-      <motion.div 
-        className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600 z-50 origin-left"
-        style={{ scaleX: scrollYProgress }}
-      />
-
-      {/* Achievement Notification */}
-      <AnimatePresence>
-        {showAchievement && (
-          <motion.div
-            initial={{ opacity: 0, y: -100, scale: 0.8 }}
-            animate={{ opacity: 1, y: 20, scale: 1 }}
-            exit={{ opacity: 0, y: -100, scale: 0.8 }}
-            className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50"
-          >
-            <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-8 py-4 rounded-2xl shadow-2xl border-2 border-white/20">
-              <div className="flex items-center gap-4">
-                <motion.div
-                  animate={{ rotate: [0, 360], scale: [1, 1.2, 1] }}
-                  transition={{ duration: 0.6 }}
-                  className="text-4xl"
-                >
-                  {showAchievement.icon}
-                </motion.div>
-                <div>
-                  <p className="font-bold text-lg">¡Logro Desbloqueado!</p>
-                  <p className="text-sm opacity-90">{showAchievement.title}</p>
-                  <p className="text-xs opacity-75">+{showAchievement.points} puntos</p>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Floating Controls */}
-      <div className="fixed top-6 right-6 z-40 flex gap-3">
-        {/* Sound Toggle */}
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => setSoundEnabled(!soundEnabled)}
-          className={`w-12 h-12 rounded-xl shadow-lg flex items-center justify-center transition-colors ${
-            soundEnabled 
-              ? 'bg-gradient-to-br from-green-400 to-emerald-500 text-white' 
-              : darkMode ? 'bg-gray-700 text-gray-300' : 'bg-white text-gray-600'
-          }`}
-        >
-          <span className="text-xl">{soundEnabled ? '🔊' : '🔇'}</span>
-        </motion.button>
-
-        {/* Dark Mode Toggle */}
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => setDarkMode(!darkMode)}
-          className={`w-12 h-12 rounded-xl shadow-lg flex items-center justify-center transition-colors ${
-            darkMode ? 'bg-gray-700 text-yellow-300' : 'bg-white text-gray-600'
-          }`}
-        >
-          <span className="text-xl">{darkMode ? '🌙' : '☀️'}</span>
-        </motion.button>
-
-        {/* Stats Toggle */}
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => setShowStats(!showStats)}
-          className={`w-12 h-12 rounded-xl shadow-lg flex items-center justify-center transition-colors ${
-            darkMode ? 'bg-gray-700 text-white' : 'bg-white text-gray-600'
-          }`}
-        >
-          <span className="text-xl">📊</span>
-        </motion.button>
+  // ==================== COMPONENTS ====================
+  const ProgressBar = () => (
+    <div className="sticky top-0 z-50 bg-white border-b-2 border-gray-200 shadow-sm">
+      <div className="max-w-4xl mx-auto px-4 py-3">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-semibold text-gray-700">
+            Progreso: {phaseState.completedPhases.size}/{totalPhases} fases
+          </span>
+          <span className="text-sm font-bold text-amber-600">
+            {Math.round(progressPercentage)}%
+          </span>
+        </div>
+        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-gradient-to-r from-amber-500 to-orange-600 transition-all duration-500 ease-out"
+            style={{ width: `${progressPercentage}%` }}
+          />
+        </div>
       </div>
+    </div>
+  );
 
-      {/* User Progress Panel */}
-      <AnimatePresence>
-        {showStats && (
-          <motion.div
-            initial={{ opacity: 0, x: 300 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 300 }}
-            className="fixed right-6 top-24 z-40 w-80 max-h-[80vh] overflow-y-auto"
-          >
-            <div className={`rounded-3xl shadow-2xl p-6 ${
-              darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
-            }`}>
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold">Tu Progreso</h3>
-                <button onClick={() => setShowStats(false)} className="text-2xl">×</button>
-              </div>
+  const PhaseIndicator = ({ phaseNum, title }: { phaseNum: number; title: string }) => {
+    const isCompleted = phaseState.completedPhases.has(phaseNum);
+    const isUnlocked = phaseState.unlockedPhases.has(phaseNum);
+    const isCurrent = phaseState.currentPhase === phaseNum;
 
-              {/* Level & XP */}
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-3xl font-bold">Nivel {userProgress.level}</span>
-                  <span className="text-lg text-amber-500">{userProgress.points} pts</span>
-                </div>
-                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${(userProgress.points % 50) * 2}%` }}
-                    className="h-full bg-gradient-to-r from-amber-400 to-orange-500"
-                  />
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  {50 - (userProgress.points % 50)} puntos para nivel {userProgress.level + 1}
-                </p>
-              </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                <div className={`p-4 rounded-xl ${darkMode ? 'bg-gray-700' : 'bg-amber-50'}`}>
-                  <p className="text-2xl font-bold">{transformationScore}/{limitingBeliefs.length}</p>
-                  <p className="text-xs opacity-75">Transformaciones</p>
-                </div>
-                <div className={`p-4 rounded-xl ${darkMode ? 'bg-gray-700' : 'bg-green-50'}`}>
-                  <p className="text-2xl font-bold">{journalEntries.length}</p>
-                  <p className="text-xs opacity-75">Reflexiones</p>
-                </div>
-              </div>
-
-              {/* Achievements */}
-              <div>
-                <h4 className="font-bold mb-3 flex items-center gap-2">
-                  <span>🏆</span> Logros ({userProgress.achievements.length}/{achievements.length})
-                </h4>
-                <div className="space-y-2">
-                  {achievements.map(achievement => {
-                    const unlocked = userProgress.achievements.find(a => a.id === achievement.id);
-                    return (
-                      <motion.div
-                        key={achievement.id}
-                        whileHover={{ scale: unlocked ? 1.03 : 1 }}
-                        className={`p-3 rounded-xl flex items-center gap-3 transition-all ${
-                          unlocked 
-                            ? darkMode ? 'bg-gradient-to-r from-amber-600 to-orange-600' : 'bg-gradient-to-r from-amber-100 to-orange-100'
-                            : darkMode ? 'bg-gray-700 opacity-50' : 'bg-gray-100 opacity-50'
-                        }`}
-                      >
-                        <span className="text-2xl">{achievement.icon}</span>
-                        <div className="flex-1">
-                          <p className="font-semibold text-sm">{achievement.title}</p>
-                          <p className="text-xs opacity-75">{achievement.description}</p>
-                        </div>
-                        {achievement.points > 0 && (
-                          <span className="text-xs font-bold">+{achievement.points}</span>
-                        )}
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Share Button */}
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={shareProgress}
-                className="w-full mt-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
-              >
-                <span>📤</span> Compartir Progreso
-              </motion.button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
-        {/* Hero Section */}
-        <motion.div 
-          style={{ opacity, scale }}
-          className="text-center py-12 relative"
-        >
-          <motion.div
-            animate={floatingAnimation}
-            className="inline-block"
-          >
-            <div className="text-7xl sm:text-8xl mb-6 filter drop-shadow-lg">
-              🎙️
-            </div>
-          </motion.div>
-          
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`text-5xl sm:text-7xl font-bold mb-6 ${
-              darkMode ? 'text-white' : 'bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent'
-            }`}
-          >
-            Paradigmas
-          </motion.h1>
-          
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className={`text-2xl sm:text-3xl font-semibold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent`}
-          >
-            El lente invisible que define tu realidad
-          </motion.p>
-        </motion.div>
-
-        {/* Test with Drag & Drop */}
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={containerVariants}
-        >
-          <motion.div variants={itemVariants}>
-            <div className="relative group">
-              <div className={`relative p-8 sm:p-10 rounded-3xl shadow-xl ${
-                darkMode 
-                  ? 'bg-gray-800 border border-gray-700' 
-                  : 'bg-white/80 backdrop-blur-xl border border-indigo-100'
-              }`}>
-                <div className="flex items-center gap-4 mb-6">
-                  <motion.div
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                    className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg"
-                  >
-                    <span className="text-3xl">🔍</span>
-                  </motion.div>
-                  <div>
-                    <h2 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                      Test rápido
-                    </h2>
-                    <p className="text-indigo-600 font-medium">¿Tenés paradigmas limitantes?</p>
-                  </div>
-                </div>
-
-                <p className={`text-lg mb-8 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Respondé con honestidad <span className="font-bold text-indigo-600">SÍ</span> o <span className="font-bold text-green-600">NO</span> a cada afirmación:
-                </p>
-                
-                <div className="space-y-4">
-                  {testQuestions.map((question, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      whileHover={{ scale: 1.01, x: 5 }}
-                      className={`p-6 rounded-2xl border-2 transition-all duration-300 ${
-                        darkMode 
-                          ? 'bg-gray-700/50 border-gray-600 hover:border-indigo-500' 
-                          : 'bg-white/60 backdrop-blur-sm border-gray-100 hover:border-indigo-200 hover:shadow-lg'
-                      }`}
-                    >
-                      <div className="flex items-start gap-3 mb-4">
-                        <motion.div
-                          animate={testAnswers[index] !== undefined ? { scale: [1, 1.2, 1] } : {}}
-                          className="flex-shrink-0 w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center"
-                        >
-                          <span className="text-sm font-bold text-indigo-600">{index + 1}</span>
-                        </motion.div>
-                        <p className={`font-medium leading-relaxed flex-1 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                          {question}
-                        </p>
-                      </div>
-                      
-                      <div className="flex gap-3">
-                        <motion.button
-                          whileHover={{ scale: 1.03 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => handleTestAnswer(index, true)}
-                          className={`flex-1 py-3 px-4 rounded-xl border-2 font-semibold transition-all duration-300 ${
-                            testAnswers[index] === true
-                              ? 'bg-gradient-to-r from-red-500 to-red-600 border-red-600 text-white shadow-lg'
-                              : darkMode
-                                ? 'bg-gray-700 border-gray-600 text-gray-300 hover:border-red-500'
-                                : 'bg-white border-gray-200 text-gray-600 hover:border-red-300 hover:bg-red-50'
-                          }`}
-                        >
-                          SÍ
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.03 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => handleTestAnswer(index, false)}
-                          className={`flex-1 py-3 px-4 rounded-xl border-2 font-semibold transition-all duration-300 ${
-                            testAnswers[index] === false
-                              ? 'bg-gradient-to-r from-green-500 to-green-600 border-green-600 text-white shadow-lg'
-                              : darkMode
-                                ? 'bg-gray-700 border-gray-600 text-gray-300 hover:border-green-500'
-                                : 'bg-white border-gray-200 text-gray-600 hover:border-green-300 hover:bg-green-50'
-                          }`}
-                        >
-                          NO
-                        </motion.button>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-
-                <AnimatePresence>
-                  {showTestResult && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      className={`mt-8 p-6 rounded-2xl border-2 ${
-                        countYes >= 3 
-                          ? darkMode ? 'bg-red-900/30 border-red-500' : 'bg-gradient-to-br from-red-50 to-red-100/50 border-red-200'
-                          : countYes >= 2 
-                          ? darkMode ? 'bg-orange-900/30 border-orange-500' : 'bg-gradient-to-br from-orange-50 to-orange-100/50 border-orange-200'
-                          : darkMode ? 'bg-green-900/30 border-green-500' : 'bg-gradient-to-br from-green-50 to-green-100/50 border-green-200'
-                      }`}
-                    >
-                      <div className="flex items-start gap-4">
-                        <motion.div
-                          animate={{ rotate: [0, 360] }}
-                          transition={{ duration: 1 }}
-                          className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${
-                            countYes >= 3 ? 'bg-red-200' :
-                            countYes >= 2 ? 'bg-orange-200' : 'bg-green-200'
-                          }`}
-                        >
-                          <span className="text-2xl">
-                            {countYes >= 3 ? '⚠️' : countYes >= 2 ? '⚡' : '✨'}
-                          </span>
-                        </motion.div>
-                        <div className="flex-1">
-                          <p className={`font-bold mb-2 text-lg ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                            📊 Resultado:
-                          </p>
-                          {countYes >= 3 && (
-                            <p className={`leading-relaxed ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                              <strong className="text-red-700">Alerta alta:</strong> Tenés varios paradigmas limitantes activos. 
-                              Este módulo es especialmente importante para vos. Seguí leyendo con atención.
-                            </p>
-                          )}
-                          {countYes === 2 && (
-                            <p className={`leading-relaxed ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                              <strong className="text-orange-700">Alerta media:</strong> Algunos paradigmas te están frenando. 
-                              Es el momento ideal para trabajar en ellos.
-                            </p>
-                          )}
-                          {countYes <= 1 && (
-                            <p className={`leading-relaxed ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                              <strong className="text-green-700">Buen camino:</strong> Tenés paradigmas saludables, pero siempre hay espacio para crecer. 
-                              Este módulo te ayudará a optimizar aún más tu mentalidad.
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-
-        {/* Hook Inicial */}
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={itemVariants}
-        >
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            className="relative group"
-          >
-            <div className={`relative p-8 rounded-3xl shadow-lg border-l-4 border-amber-500 ${
-              darkMode ? 'bg-gray-800' : 'bg-gradient-to-br from-amber-50 to-orange-50'
-            }`}>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="text-4xl">👁️</div>
-                <h2 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                  ¿Y si tu vida no fuera lo que pensás?
-                </h2>
-              </div>
-              
-              <p className={`text-xl leading-relaxed mb-4 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                ¿Alguna vez te detuviste a pensar por qué vivís lo que vivís? Tus ingresos, 
-                tus vínculos, tu nivel de confianza, tus logros o frustraciones… 
-                <strong className="text-amber-700 font-bold"> nada de eso es casual.</strong>
-              </p>
-              <p className={`text-xl leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                Todo está profundamente conectado con cómo interpretás el mundo.
-              </p>
-            </div>
-          </motion.div>
-        </motion.div>
-
-        {/* Idea Central - Quote */}
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={itemVariants}
-        >
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-12 rounded-3xl shadow-2xl text-center overflow-hidden"
-          >
-            <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500 rounded-full mix-blend-overlay filter blur-3xl opacity-20" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-orange-500 rounded-full mix-blend-overlay filter blur-3xl opacity-20" />
-              
-            <div className="relative z-10">
-              <motion.p 
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                className="text-2xl sm:text-3xl font-bold mb-3"
-              >
-                No vivís la vida que querés.
-              </motion.p>
-                
-              <motion.p 
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-amber-400 via-orange-400 to-amber-400 bg-clip-text text-transparent"
-              >
-                Vivís la vida que creés.
-              </motion.p>
-                
-              <motion.p
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="text-xl text-gray-300"
-              >
-                Y esa creencia está moldeada por una sola palabra:{' '}
-                <span className="text-amber-400 font-bold text-2xl">paradigma</span>
-              </motion.p>
-            </div>
-          </motion.div>
-        </motion.div>
-
-        {/* ¿Qué es un paradigma? */}
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={containerVariants}
-        >
-          <motion.div variants={itemVariants}>
-            <h2 className={`text-4xl font-bold mb-6 flex items-center gap-3 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              <span className="text-5xl">🧠</span>
-              ¿Qué es un paradigma?
-            </h2>
-            
-            <p className={`text-xl leading-relaxed mb-6 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-              Un paradigma no es solo una idea. Es el <strong className="text-indigo-600">lente invisible</strong> con el que mirás la vida:
-            </p>
-
-            <div className="grid sm:grid-cols-2 gap-4">
-              {[
-                { icon: "🌍", text: "Filtra qué ves y qué ignorás" },
-                { icon: "💭", text: "Da sentido a lo que te pasa" },
-                { icon: "🎯", text: "Define tus acciones (o tu parálisis)" },
-                { icon: "✨", text: "Construye tu identidad" }
-              ].map((item, index) => (
-                <motion.div
-                  key={index}
-                  variants={itemVariants}
-                  whileHover={{ scale: 1.05, rotateY: 5 }}
-                  className={`p-6 rounded-2xl shadow-lg border transition-all duration-300 ${
-                    darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gradient-to-br from-white to-gray-50 border-gray-100 hover:shadow-xl'
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <motion.div
-                      whileHover={{ scale: 1.2, rotate: 10 }}
-                      className="text-4xl"
-                    >
-                      {item.icon}
-                    </motion.div>
-                    <p className={`font-medium text-lg ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                      {item.text}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Ejemplo Visual con Transformación 3D */}
-          <motion.div variants={itemVariants} className="mt-12">
-            <div className={`relative p-8 rounded-3xl shadow-xl border ${
-              darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-purple-100'
-            }`}>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="text-4xl">🔬</div>
-                <h3 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Ejemplo práctico
-                </h3>
-              </div>
-
-              <div className="space-y-6">
-                <motion.div
-                  whileHover={{ x: -5 }}
-                  className={`p-6 rounded-2xl border-2 ${
-                    darkMode ? 'bg-red-900/20 border-red-500' : 'bg-gradient-to-br from-red-50 to-red-100/50 border-red-200'
-                  }`}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-10 h-10 bg-red-200 rounded-full flex items-center justify-center">
-                      <span className="font-bold text-red-700">A</span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-red-600 mb-1">ANTES:</p>
-                      <p className={`italic leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>
-                        "Soy malo con los números. Nunca voy a entender esto."
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-                  
-                <div className="flex items-center justify-center">
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                    className="w-12 h-12 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg"
-                  >
-                    <span className="text-white font-bold">↻</span>
-                  </motion.div>
-                </div>
-                  
-                <motion.div
-                  whileHover={{ x: 5 }}
-                  className={`p-6 rounded-2xl border-2 ${
-                    darkMode ? 'bg-green-900/20 border-green-500' : 'bg-gradient-to-br from-green-50 to-green-100/50 border-green-200'
-                  }`}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-10 h-10 bg-green-200 rounded-full flex items-center justify-center">
-                      <span className="font-bold text-green-700">D</span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-green-600 mb-1">DESPUÉS:</p>
-                      <p className={`italic leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>
-                        "Los números son un lenguaje. Puedo aprenderlo como cualquier otro."
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-              </div>
-                
-              <motion.div
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                className={`mt-6 pt-6 border-t-2 ${darkMode ? 'border-gray-700' : 'border-purple-100'}`}
-              >
-                <p className={`text-center text-lg ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  No cambiaron sus habilidades. Cambió su{' '}
-                  <span className="font-bold text-purple-600 text-xl">paradigma</span>.
-                </p>
-              </motion.div>
-            </div>
-          </motion.div>
-        </motion.div>
-
-        {/* Transformador de Creencias - DRAG & DROP VERSION */}
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={containerVariants}
-        >
-          <motion.div variants={itemVariants}>
-            <div className={`relative p-8 sm:p-10 rounded-3xl shadow-xl border ${
-              darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white/80 backdrop-blur-xl border-green-100'
-            }`}>
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
-                  <span className="text-3xl">🛠</span>
-                </div>
-                <div>
-                  <h2 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                    Transformador de creencias
-                  </h2>
-                  <p className="text-green-600 font-medium">Arrastrá para transformar</p>
-                </div>
-              </div>
-
-              <p className={`text-lg mb-6 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                Click o arrastrá una creencia limitante para descubrir su versión potenciadora:
-              </p>
-                
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
-                {limitingBeliefs.map((belief, index) => {
-                  const isTransformed = beliefTransformations[belief];
-                  return (
-                    <motion.div
-                      key={belief}
-                      drag
-                      dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-                      dragElastic={0.8}
-                      onDragEnd={(e, info) => {
-                        if (Math.abs(info.offset.x) > 100 || Math.abs(info.offset.y) > 50) {
-                          handleBeliefSelect(belief);
-                          handleTransformBelief(belief);
-                          triggerConfetti();
-                        }
-                      }}
-                      whileHover={{ scale: 1.03, y: -2 }}
-                      whileTap={{ scale: 0.98 }}
-                      whileDrag={{ scale: 1.1, rotate: 5 }}
-                      onClick={() => {
-                        handleBeliefSelect(belief);
-                        handleTransformBelief(belief);
-                      }}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className={`p-5 rounded-2xl border-2 transition-all duration-300 cursor-grab active:cursor-grabbing ${
-                        isTransformed
-                          ? 'bg-gradient-to-br from-green-500 to-emerald-600 border-green-600 text-white shadow-lg'
-                          : selectedBelief === belief
-                            ? 'bg-gradient-to-br from-amber-500 to-orange-600 border-orange-600 text-white shadow-lg'
-                            : darkMode
-                              ? 'bg-gray-700 border-gray-600 text-gray-300 hover:border-amber-500'
-                              : 'bg-white border-gray-200 hover:border-amber-300 hover:shadow-md'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <motion.span
-                          animate={isTransformed ? { rotate: [0, 360], scale: [1, 1.3, 1] } : {}}
-                          transition={{ duration: 0.5 }}
-                          className="text-lg"
-                        >
-                          {isTransformed ? '✓' : '❌'}
-                        </motion.span>
-                        <p className={`text-sm font-semibold ${
-                          isTransformed || selectedBelief === belief ? 'text-white' : darkMode ? 'text-gray-300' : 'text-gray-700'
-                        }`}>
-                          {belief}
-                        </p>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-
-              <AnimatePresence>
-                {showResult && selectedBelief && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="space-y-6"
-                  >
-                    <motion.div
-                      initial={{ scale: 0.9 }}
-                      animate={{ scale: 1 }}
-                      className={`p-8 rounded-2xl border-2 shadow-lg ${
-                        darkMode ? 'bg-green-900/20 border-green-500' : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300'
-                      }`}
-                    >
-                      <div className="flex items-start gap-6">
-                        <motion.div
-                          animate={{ rotate: [0, 10, -10, 0] }}
-                          transition={{ duration: 0.5 }}
-                          className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg"
-                        >
-                          <span className="text-3xl">✨</span>
-                        </motion.div>
-                        <div className="flex-1 space-y-3">
-                          <div>
-                            <p className="text-sm text-red-600 font-semibold mb-2 line-through opacity-75">
-                              ❌ {selectedBelief}
-                            </p>
-                            <motion.p
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className="text-xl text-green-700 font-bold leading-relaxed"
-                            >
-                              ✅ {empoweringBeliefs[selectedBelief]}
-                            </motion.p>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-
-                    {/* Action */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className={`border-2 p-6 rounded-2xl ${
-                        darkMode ? 'bg-amber-900/20 border-amber-500' : 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-300'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 bg-amber-200 rounded-xl flex items-center justify-center">
-                          <span className="text-2xl">📱</span>
-                        </div>
-                        <p className={`font-bold text-lg ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                          Acción inmediata:
-                        </p>
-                      </div>
-                        
-                      <div className="space-y-3 ml-13">
-                        {[
-                          "Configurá una alarma en tu celular",
-                          <span key="text">Que diga: <span className="italic text-green-600 font-semibold">"{empoweringBeliefs[selectedBelief]}"</span></span>,
-                          "Repetila cada día durante 21 días consecutivos"
-                        ].map((step, index) => (
-                          <motion.div
-                            key={index}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.1 * index }}
-                            className="flex items-start gap-3"
-                          >
-                            <div className="flex-shrink-0 w-7 h-7 bg-amber-200 rounded-full flex items-center justify-center mt-0.5">
-                              <span className="text-amber-700 font-bold text-sm">{index + 1}</span>
-                            </div>
-                            <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>
-                              {step}
-                            </p>
-                          </motion.div>
-                        ))}
-                      </div>
-                        
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className={`mt-5 pt-5 border-t-2 ${darkMode ? 'border-amber-700' : 'border-amber-200'}`}
-                      >
-                        <p className={`text-sm italic flex items-center gap-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                          <span className="text-lg">💡</span>
-                          La neuroplasticidad funciona con repetición. Dale tiempo a tu cerebro.
-                        </p>
-                      </motion.div>
-                    </motion.div>
-
-                    {/* Journal Button */}
-                    <motion.button
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => setShowJournal(true)}
-                      className="w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 shadow-lg"
-                    >
-                      <span className="text-xl">📔</span> Reflexionar en mi Diario
-                    </motion.button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Visual Progress of Transformations */}
-              <div className="mt-8 pt-8 border-t-2 border-dashed border-gray-300 dark:border-gray-600">
-                <div className="flex items-center justify-between mb-3">
-                  <p className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                    Creencias Transformadas
-                  </p>
-                  <p className="text-lg font-bold text-green-600">
-                    {transformationScore}/{limitingBeliefs.length}
-                  </p>
-                </div>
-                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${(transformationScore / limitingBeliefs.length) * 100}%` }}
-                    transition={{ duration: 0.5 }}
-                    className="h-full bg-gradient-to-r from-green-400 to-emerald-500"
-                  />
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-
-        {/* Journal Modal */}
-        <AnimatePresence>
-          {showJournal && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-              onClick={() => setShowJournal(false)}
-            >
-              <motion.div
-                initial={{ scale: 0.9, y: 50 }}
-                animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.9, y: 50 }}
-                onClick={(e) => e.stopPropagation()}
-                className={`max-w-2xl w-full rounded-3xl shadow-2xl p-8 ${
-                  darkMode ? 'bg-gray-800' : 'bg-white'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <span className="text-4xl">📔</span>
-                    <h3 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                      Mi Diario de Transformación
-                    </h3>
-                  </div>
-                  <button
-                    onClick={() => setShowJournal(false)}
-                    className={`text-3xl ${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-400 hover:text-gray-600'}`}
-                  >
-                    ×
-                  </button>
-                </div>
-
-                <div className={`p-4 rounded-xl mb-4 ${darkMode ? 'bg-purple-900/20' : 'bg-purple-50'}`}>
-                  <p className={`text-sm ${darkMode ? 'text-purple-300' : 'text-purple-700'}`}>
-                    <strong>Creencia seleccionada:</strong> {selectedBelief}
-                  </p>
-                </div>
-
-                <textarea
-                  ref={journalRef}
-                  value={currentJournal}
-                  onChange={(e) => setCurrentJournal(e.target.value)}
-                  placeholder="Reflexioná sobre esta transformación... ¿Qué sentís? ¿Qué te frena? ¿Cómo podés aplicar este nuevo paradigma?"
-                  className={`w-full p-6 rounded-2xl border-2 focus:outline-none min-h-[200px] text-lg resize-none transition-all ${
-                    darkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20'
-                      : 'bg-white border-purple-200 focus:border-purple-400 focus:ring-4 focus:ring-purple-100'
-                  }`}
-                />
-
-                <div className="flex gap-3 mt-6">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => {
-                      saveJournalEntry();
-                      setShowJournal(false);
-                    }}
-                    disabled={!currentJournal.trim()}
-                    className="flex-1 bg-gradient-to-r from-purple-500 to-indigo-500 text-white py-4 rounded-2xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    💾 Guardar Reflexión
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setShowTimeline(true)}
-                    className={`px-6 py-4 rounded-2xl font-semibold ${
-                      darkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'
-                    }`}
-                  >
-                    📜 Ver Historial
-                  </motion.button>
-                </div>
-              </motion.div>
-            </motion.div>
+    return (
+      <button
+        onClick={() => goToPhase(phaseNum)}
+        disabled={!isUnlocked}
+        className={`
+          flex items-center gap-3 p-3 rounded-lg transition-all duration-200
+          ${isCurrent ? 'bg-amber-100 border-2 border-amber-400' : ''}
+          ${isCompleted && !isCurrent ? 'bg-green-50 border border-green-300 hover:bg-green-100' : ''}
+          ${!isUnlocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+        `}
+      >
+        <div className={`
+          w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0
+          ${isCompleted ? 'bg-green-500' : isUnlocked ? 'bg-amber-500' : 'bg-gray-300'}
+        `}>
+          {isCompleted ? (
+            <Check size={18} className="text-white" />
+          ) : isUnlocked ? (
+            <span className="text-white font-bold text-sm">{phaseNum}</span>
+          ) : (
+            <Lock size={16} className="text-white" />
           )}
-        </AnimatePresence>
+        </div>
+        <span className={`text-sm font-medium ${isUnlocked ? 'text-gray-800' : 'text-gray-400'}`}>
+          {title}
+        </span>
+      </button>
+    );
+  };
 
-        {/* Timeline Modal */}
-        <AnimatePresence>
-          {showTimeline && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-              onClick={() => setShowTimeline(false)}
-            >
-              <motion.div
-                initial={{ scale: 0.9, y: 50 }}
-                animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.9, y: 50 }}
-                onClick={(e) => e.stopPropagation()}
-                className={`max-w-3xl w-full max-h-[80vh] overflow-y-auto rounded-3xl shadow-2xl p-8 ${
-                  darkMode ? 'bg-gray-800' : 'bg-white'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-6 sticky top-0 bg-inherit pb-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-4xl">📜</span>
-                    <h3 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                      Timeline de Transformación
-                    </h3>
-                  </div>
-                  <button
-                    onClick={() => setShowTimeline(false)}
-                    className={`text-3xl ${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-400 hover:text-gray-600'}`}
-                  >
-                    ×
-                  </button>
-                </div>
+  const ContinueButton = ({ phaseNum, label = "Continuar" }: { phaseNum: number; label?: string }) => (
+    <button
+      onClick={() => unlockNextPhase(phaseNum)}
+      className="group w-full sm:w-auto mx-auto flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+    >
+      <span>{label}</span>
+      <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+    </button>
+  );
 
-                {journalEntries.length === 0 ? (
-                  <div className="text-center py-12">
-                    <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      Aún no tenés reflexiones guardadas. ¡Empezá tu journey!
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    {journalEntries.map((entry, index) => (
-                      <motion.div
-                        key={entry.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className={`relative p-6 rounded-2xl border-l-4 ${
-                          darkMode 
-                            ? 'bg-gray-700 border-purple-500' 
-                            : 'bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-400'
-                        }`}
-                      >
-                        <div className="absolute -left-3 top-6 w-6 h-6 bg-purple-500 rounded-full border-4 border-white dark:border-gray-800" />
-                        
-                        <div className="mb-2 flex items-center justify-between">
-                          <p className={`text-sm font-semibold ${darkMode ? 'text-purple-300' : 'text-purple-700'}`}>
-                            {entry.belief}
-                          </p>
-                          <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                            {new Date(entry.timestamp).toLocaleDateString('es-AR', {
-                              day: 'numeric',
-                              month: 'short',
-                              year: 'numeric'
-                            })}
-                          </p>
-                        </div>
-                        <p className={`leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                          {entry.reflection}
-                        </p>
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+  const PhaseContainer = ({ 
+    phaseNum, 
+    title, 
+    children, 
+    icon 
+  }: { 
+    phaseNum: number; 
+    title: string; 
+    children: React.ReactNode;
+    icon?: string;
+  }) => {
+    const isUnlocked = phaseState.unlockedPhases.has(phaseNum);
+    const isCompleted = phaseState.completedPhases.has(phaseNum);
 
-        {/* Textarea - Identificá tu creencia */}
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={itemVariants}
+    if (!isUnlocked) {
+      return (
+        <div 
+          ref={el => phaseRefs.current[phaseNum] = el}
+          className="bg-gray-100 border-2 border-gray-300 rounded-xl p-8 relative overflow-hidden opacity-60"
         >
-          <motion.div
-            whileHover={{ scale: 1.01 }}
-            className="relative group"
-          >
-            <div className={`relative p-8 rounded-3xl shadow-lg border-2 ${
-              darkMode ? 'bg-gray-800 border-purple-600' : 'bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200'
-            }`}>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="text-4xl">✍️</div>
-                <h2 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Identificá tu creencia limitante
-                </h2>
-              </div>
-              
-              <p className={`text-lg mb-6 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                ¿Qué pensamiento te está frenando ahora mismo?
-              </p>
-              
-              <div className="relative">
-                <textarea
-                  value={userInput}
-                  onChange={(e) => setUserInput(e.target.value)}
-                  placeholder="Ejemplo: No puedo aprender idiomas..."
-                  className={`w-full p-6 border-2 rounded-2xl focus:outline-none min-h-[120px] text-lg transition-all resize-none ${
-                    darkMode
-                      ? 'bg-gray-700 border-gray-600 text-white focus:border-purple-400 focus:ring-4 focus:ring-purple-400/20'
-                      : 'bg-white border-purple-200 focus:border-purple-400 focus:ring-4 focus:ring-purple-100'
-                  }`}
-                />
-                <AnimatePresence>
-                  {userInput && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      exit={{ scale: 0 }}
-                      className="absolute top-4 right-4 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shadow-lg"
-                    >
-                      <span className="text-white text-xl">✓</span>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-              
-              <AnimatePresence>
-                {userInput && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="mt-6"
-                  >
-                    <div className={`p-6 rounded-2xl border-2 shadow-md ${
-                      darkMode ? 'bg-gray-700 border-purple-500' : 'bg-white border-purple-300'
-                    }`}>
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                          darkMode ? 'bg-purple-700' : 'bg-purple-200'
-                        }`}>
-                          <span className="text-2xl">💡</span>
-                        </div>
-                        <p className={`font-bold text-lg ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                          Preguntate:
-                        </p>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        {[
-                          "¿De dónde viene esta creencia?",
-                          "¿Es realmente verdad o es una interpretación?",
-                          "¿Cómo podría replantear esto de forma empoderadora?",
-                          "¿Qué evidencia tengo que contradice esta creencia?"
-                        ].map((question, index) => (
-                          <motion.div
-                            key={index}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.1 * index }}
-                            className={`flex items-start gap-3 p-3 rounded-xl transition-colors ${
-                              darkMode ? 'hover:bg-gray-600' : 'hover:bg-purple-50'
-                            }`}
-                          >
-                            <span className="text-purple-500 mt-0.5">•</span>
-                            <p className={`leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                              {question}
-                            </p>
-                          </motion.div>
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </motion.div>
-        </motion.div>
-
-        {/* Las 3 llaves */}
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={containerVariants}
-        >
-          <motion.div variants={itemVariants}>
-            <h2 className={`text-4xl font-bold mb-4 flex items-center gap-3 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              <span className="text-5xl">🗝️</span>
-              Las 3 llaves para cambiar
-            </h2>
-            
-            <p className={`text-xl mb-8 leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-              Cambiar un paradigma no es fácil. Te obliga a cuestionar todo lo que diste por hecho. 
-              Pero en ese cuestionamiento… empieza tu libertad.
-            </p>
-            
-            <div className="grid sm:grid-cols-3 gap-6">
-              {[
-                { 
-                  icon: "🙏", 
-                  title: "Humildad", 
-                  desc: "Para aceptar que podrías estar equivocado",
-                  gradient: "from-amber-500 to-orange-500"
-                },
-                { 
-                  icon: "🔁", 
-                  title: "Repetición", 
-                  desc: "Lo nuevo se instala con práctica, no con buenas intenciones",
-                  gradient: "from-orange-500 to-red-500"
-                },
-                { 
-                  icon: "📚", 
-                  title: "Conocimiento", 
-                  desc: "Para elegir nuevas ideas con conciencia y claridad",
-                  gradient: "from-red-500 to-pink-500"
-                }
-              ].map((key, index) => (
-                <motion.div
-                  key={index}
-                  variants={itemVariants}
-                  whileHover={{ 
-                    scale: 1.05, 
-                    y: -8,
-                    rotateY: 5
-                  }}
-                  className="relative group cursor-pointer"
-                >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${key.gradient} rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500`} />
-                  
-                  <div className={`relative p-8 rounded-2xl shadow-lg border-t-4 transition-all duration-300 ${
-                    darkMode 
-                      ? 'bg-gray-800 border-amber-500 hover:shadow-2xl' 
-                      : 'bg-white border-amber-500 hover:shadow-2xl'
-                  }`}>
-                    <motion.div 
-                      className="text-5xl mb-4"
-                      whileHover={{ scale: 1.2, rotate: 10 }}
-                    >
-                      {key.icon}
-                    </motion.div>
-                    <h3 className={`text-2xl font-bold mb-3 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                      {key.title}
-                    </h3>
-                    <p className={darkMode ? 'text-gray-400' : 'text-gray-600'}>
-                      {key.desc}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        </motion.div>
-
-        {/* Llamado Final */}
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={itemVariants}
-        >
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            className="relative bg-gradient-to-r from-amber-500 via-orange-500 to-orange-600 text-white p-12 rounded-3xl text-center overflow-hidden shadow-2xl"
-          >
-            <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full mix-blend-overlay filter blur-3xl opacity-10" />
-            <div className="absolute bottom-0 left-0 w-96 h-96 bg-white rounded-full mix-blend-overlay filter blur-3xl opacity-10" />
-              
-            <div className="relative z-10">
-              <motion.div
-                initial={{ scale: 0 }}
-                whileInView={{ scale: 1 }}
-                transition={{ type: "spring", duration: 0.6 }}
-                className="text-5xl mb-6"
-              >
-                📌
-              </motion.div>
-                
-              <h2 className="text-4xl font-bold mb-6">La invitación</h2>
-                
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                className="text-2xl mb-6 leading-relaxed"
-              >
-                Si cambiás la forma en que mirás las cosas, las cosas que mirás cambian.
-              </motion.p>
-                
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="text-xl"
-              >
-                No porque el mundo sea diferente, sino porque <strong>vos sos diferente.</strong>
-              </motion.p>
-            </div>
-          </motion.div>
-        </motion.div>
-
-        {/* Bonus Prompt */}
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={itemVariants}
-        >
-          <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white p-10 rounded-3xl shadow-2xl overflow-hidden">
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-0 left-0 w-full h-full" 
-                   style={{
-                     backgroundImage: `radial-gradient(circle at 1px 1px, rgba(251,191,36,0.2) 1px, transparent 0)`,
-                     backgroundSize: '40px 40px'
-                   }}
-              />
-            </div>
-              
-            <div className="relative z-10">
-              <div className="flex items-center gap-4 mb-6">
-                <motion.div
-                  animate={{ rotate: [0, 10, -10, 0] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg"
-                >
-                  <span className="text-3xl">🔓</span>
-                </motion.div>
-                <div>
-                  <h3 className="text-3xl font-bold bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
-                    BONUS: Prompt para tu IA
-                  </h3>
-                  <p className="text-gray-400 text-sm mt-1">Llevá tu transformación al siguiente nivel</p>
-                </div>
-              </div>
-                
-              <p className="text-gray-300 mb-6 text-lg">
-                Usá este prompt con ChatGPT, Claude o tu coach digital favorito:
-              </p>
-                
-              <motion.div
-                whileHover={{ scale: 1.01 }}
-                className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-2xl border border-amber-500/20 shadow-xl mb-6 relative overflow-hidden"
-              >
-                <p className="text-gray-300 leading-relaxed">
-                  🎯 Quiero que actúes como un coach mental experto. Mostrame cuáles son mis paradigmas limitantes ocultos 
-                  basándote en cómo me describo a mí mismo, mis hábitos y mis resultados. Después, ayudame a transformarlos 
-                  por nuevas creencias que me permitan alcanzar mi máximo potencial. Sé directo.
-                </p>
-              </motion.div>
-                
-              <motion.button 
-                onClick={copyPrompt}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-gray-900 font-bold px-8 py-4 rounded-2xl transition-all w-full sm:w-auto flex items-center justify-center gap-3 shadow-lg group"
-              >
-                <AnimatePresence mode="wait">
-                  {copiedPrompt ? (
-                    <motion.div
-                      key="copied"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      exit={{ scale: 0 }}
-                      className="flex items-center gap-2"
-                    >
-                      <span className="text-xl">✓</span>
-                      <span className="text-lg">¡Copiado!</span>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="copy"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      exit={{ scale: 0 }}
-                      className="flex items-center gap-2"
-                    >
-                      <span className="text-xl group-hover:scale-110 transition-transform">📋</span>
-                      <span className="text-lg">Copiar prompt</span>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.button>
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-200/50 to-gray-300/50 backdrop-blur-sm flex items-center justify-center">
+            <div className="text-center">
+              <Lock size={48} className="text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-600 font-semibold">Completa la fase anterior</p>
             </div>
           </div>
-        </motion.div>
+          <div className="blur-sm">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              {icon} {title}
+            </h2>
+            <div className="h-32 bg-gray-200 rounded" />
+          </div>
+        </div>
+      );
+    }
 
-        {/* Daily Challenge - Final */}
-        {dailyChallenge && (
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={itemVariants}
-          >
-            <div className="relative">
-              <div className={`absolute inset-0 bg-gradient-to-r rounded-3xl blur-xl opacity-20 ${
-                challengeCompleted ? 'from-green-400 to-emerald-500' : 'from-purple-400 to-indigo-500'
-              }`} />
+    return (
+      <div 
+        ref={el => phaseRefs.current[phaseNum] = el}
+        className={`
+          bg-white border-2 rounded-xl p-6 sm:p-8 transition-all duration-500
+          ${isCompleted ? 'border-green-400 shadow-md' : 'border-amber-400 shadow-xl'}
+          animate-fade-in-up
+        `}
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            {icon} {title}
+          </h2>
+          {isCompleted && (
+            <div className="flex items-center gap-2 text-green-600 font-semibold animate-scale-in">
+              <Check size={20} />
+              <span className="hidden sm:inline">Completado</span>
+            </div>
+          )}
+        </div>
+        {children}
+      </div>
+    );
+  };
+
+  // ==================== RENDER ====================
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+      <ProgressBar />
+
+      {showConfetti && (
+        <div className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center">
+          <div className="text-6xl animate-bounce">🎉</div>
+        </div>
+      )}
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid lg:grid-cols-4 gap-8">
+          {/* Sidebar - Phase Navigator */}
+          <div className="lg:col-span-1 lg:sticky lg:top-24 lg:self-start">
+            <div className="bg-white rounded-xl shadow-md p-4 space-y-2">
+              <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                <Sparkles size={18} className="text-amber-500" />
+                Fases del Módulo
+              </h3>
+              <PhaseIndicator phaseNum={1} title="Test Inicial" />
+              <PhaseIndicator phaseNum={2} title="Tu Resultado" />
+              <PhaseIndicator phaseNum={3} title="El Concepto" />
+              <PhaseIndicator phaseNum={4} title="Ejemplo Real" />
+              <PhaseIndicator phaseNum={5} title="Transforma Creencias" />
+              <PhaseIndicator phaseNum={6} title="Plan de Acción" />
+              <PhaseIndicator phaseNum={7} title="Reflexión Personal" />
+              <PhaseIndicator phaseNum={8} title="Cierre + Bonus" />
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="lg:col-span-3 space-y-8">
+            {/* Hero */}
+            <div className="text-center py-6 animate-fade-in">
+              <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+                🎙️ Paradigmas
+              </h1>
+              <p className="text-xl text-gray-600 font-medium leading-relaxed">
+                Cuando algo te sale mal, ¿pensás "mala suerte" o "lo sabía, no soy para esto"?
+                <br />
+                <span className="text-gray-800 font-semibold">Esa diferencia lo cambia todo.</span>
+              </p>
+            </div>
+
+            {/* FASE 1: Test Inicial */}
+            <PhaseContainer phaseNum={1} title="Pregunta honesta antes de seguir" icon="🤔">
+              <p className="text-gray-700 mb-6">
+                No es un test. Es simplemente para que veas si te identificás con algo de esto. Respondé honesto (nadie más lo ve):
+              </p>
               
-              <div className={`relative p-10 rounded-3xl shadow-2xl border-2 ${
-                challengeCompleted
-                  ? darkMode 
-                    ? 'bg-gradient-to-br from-green-900/30 to-emerald-900/30 border-green-500'
-                    : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300'
-                  : darkMode 
-                    ? 'bg-gradient-to-br from-purple-900/30 to-indigo-900/30 border-purple-500'
-                    : 'bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-300'
+              <div className="space-y-4">
+                {testQuestions.map((question, index) => (
+                  <div key={index} className="bg-gray-50 p-4 rounded-lg border-2 border-gray-200 animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
+                    <p className="text-gray-800 mb-3 font-medium">{question}</p>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => handleTestAnswer(index, true)}
+                        className={`flex-1 py-3 px-4 rounded-lg border-2 font-medium transition-all transform hover:scale-105 ${
+                          testAnswers[index] === true
+                            ? 'bg-amber-100 border-amber-400 text-amber-800 shadow-md'
+                            : 'bg-white border-gray-300 text-gray-600 hover:border-amber-300'
+                        }`}
+                      >
+                        Sí
+                      </button>
+                      <button
+                        onClick={() => handleTestAnswer(index, false)}
+                        className={`flex-1 py-3 px-4 rounded-lg border-2 font-medium transition-all transform hover:scale-105 ${
+                          testAnswers[index] === false
+                            ? 'bg-green-100 border-green-400 text-green-700 shadow-md'
+                            : 'bg-white border-gray-300 text-gray-600 hover:border-green-300'
+                        }`}
+                      >
+                        No
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {showTestResult && (
+                <div className="mt-6 animate-fade-in-up">
+                  <ContinueButton phaseNum={1} label="Ver mi resultado" />
+                </div>
+              )}
+            </PhaseContainer>
+
+            {/* FASE 2: Resultado del Test */}
+            <PhaseContainer phaseNum={2} title="Tu resultado" icon="📊">
+              <div className={`p-6 rounded-lg border-2 ${
+                countYes >= 3 ? 'bg-amber-50 border-amber-300' :
+                countYes >= 2 ? 'bg-blue-50 border-blue-300' :
+                'bg-green-50 border-green-300'
               }`}>
-                <div className="flex flex-col sm:flex-row items-center gap-6">
-                  <motion.div
-                    animate={{ 
-                      rotate: challengeCompleted ? [0, 360] : [0, -10, 10, -10, 0],
-                      scale: challengeCompleted ? [1, 1.2, 1] : 1
-                    }}
-                    transition={{ 
-                      duration: challengeCompleted ? 0.6 : 0.5, 
-                      repeat: challengeCompleted ? 1 : Infinity, 
-                      repeatDelay: 3 
-                    }}
-                    className={`flex-shrink-0 w-20 h-20 rounded-2xl flex items-center justify-center shadow-xl ${
-                      challengeCompleted
-                        ? 'bg-gradient-to-br from-green-400 to-emerald-500'
-                        : 'bg-gradient-to-br from-purple-500 to-indigo-500'
-                    }`}
-                  >
-                    <span className="text-5xl">{challengeCompleted ? '✓' : '🎯'}</span>
-                  </motion.div>
-                  
-                  <div className="flex-1 text-center sm:text-left">
-                    <h3 className={`text-3xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                      {challengeCompleted ? '¡Desafío Completado!' : 'Tu Desafío de Hoy'}
-                    </h3>
-                    <p className={`text-lg mb-4 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                      {dailyChallenge}
-                    </p>
-                    
-                    {!challengeCompleted && (
-                      <motion.button
-                        whileHover={{ scale: 1.05, y: -2 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={handleDailyChallenge}
-                        className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all"
-                      >
-                        ✓ Marcar como completado
-                      </motion.button>
-                    )}
-                    
-                    {challengeCompleted && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="inline-flex items-center gap-2 text-green-600 font-bold text-xl"
-                      >
-                        <span className="text-3xl">🎉</span> 
-                        <span>+50 puntos ganados</span>
-                      </motion.div>
-                    )}
+                <p className="text-gray-800 leading-relaxed text-lg">
+                  {countYes >= 3 && (
+                    <>
+                      <strong className="text-xl">Si contestaste "sí" a varias:</strong><br /><br />
+                      No voy a decirte "tranqui, es normal". Porque sí, es común, pero que sea común no significa que esté bueno.
+                      <br /><br />
+                      Lo que sí te digo: esto no es un diagnóstico de "algo está mal con vos". Es simplemente que en algún momento 
+                      tu cerebro aprendió a protegerte de una forma que ahora te limita. Tipo, cuando eras pibe y evitabas ciertas 
+                      situaciones porque genuinamente no estabas listo. Pero ahora sos adulto y ese mecanismo sigue activado.
+                      <br /><br />
+                      Este módulo no va a "arreglarte". Va a mostrarte cómo funciona ese mecanismo para que vos decidas si querés ajustarlo.
+                    </>
+                  )}
+                  {countYes === 2 && (
+                    <>
+                      <strong className="text-xl">Interesante:</strong><br /><br />
+                      Hay algunos patrones ahí que capaz nunca miraste de cerca. 
+                      Seguí leyendo, puede que entiendas algo que no tenías en el radar.
+                    </>
+                  )}
+                  {countYes <= 1 && (
+                    <>
+                      <strong className="text-xl">Bien ahí:</strong><br /><br />
+                      Parece que tenés bastante claridad mental sobre estas cosas. 
+                      Igual el módulo puede darte un par de herramientas para afinar lo que ya tenés.
+                    </>
+                  )}
+                </p>
+              </div>
+
+              <div className="mt-8">
+                <ContinueButton phaseNum={2} label="Entender por qué pasa esto" />
+              </div>
+            </PhaseContainer>
+
+            {/* FASE 3: ¿Qué es un paradigma? */}
+            <PhaseContainer phaseNum={3} title="Fijate si te pasa esto" icon="🧩">
+              <div className="space-y-6">
+                <p className="text-lg text-gray-700 leading-relaxed">
+                  ¿Alguna vez estuviste por mandar un mensaje, aplicar a un laburo o arrancar algo... y justo antes pensaste "mejor no"?
+                </p>
+                <p className="text-lg text-gray-700 leading-relaxed">
+                  Y después, cuando no pasó nada, te dijiste: "Claro, sabía que no iba a funcionar".
+                </p>
+                <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white p-6 rounded-xl">
+                  <p className="text-lg font-semibold">
+                    Eso. Eso que acabás de sentir leyendo esto tiene un nombre: <span className="text-amber-400">paradigma</span>.
+                  </p>
+                </div>
+
+                <div className="bg-blue-50 border-2 border-blue-300 p-6 rounded-xl">
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">Un paradigma es el filtro con el que mirás todo:</h3>
+                  <div className="space-y-3">
+                    <div className="flex gap-3 items-start bg-white p-4 rounded-lg">
+                      <span className="text-blue-500 text-xl mt-1">→</span>
+                      <span className="text-gray-700"><strong>Si creés que sos malo para algo</strong> → ni lo intentás (o lo intentás esperando fallar)</span>
+                    </div>
+                    <div className="flex gap-3 items-start bg-white p-4 rounded-lg">
+                      <span className="text-green-500 text-xl mt-1">→</span>
+                      <span className="text-gray-700"><strong>Si creés que la gente no te valora</strong> → buscás confirmación de eso en cada interacción</span>
+                    </div>
+                    <div className="flex gap-3 items-start bg-white p-4 rounded-lg">
+                      <span className="text-orange-500 text-xl mt-1">→</span>
+                      <span className="text-gray-700"><strong>Si creés que "ya es tarde para vos"</strong> → cada año que pasa lo confirma</span>
+                    </div>
                   </div>
                 </div>
-                
-                {!challengeCompleted && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                    className={`mt-6 pt-6 border-t-2 ${
-                      darkMode ? 'border-purple-700/50' : 'border-purple-200'
-                    }`}
-                  >
-                    <p className={`text-sm text-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      💡 Completá este desafío para ganar <strong className="text-purple-600">50 puntos extra</strong> y desbloquear el logro especial
-                    </p>
-                  </motion.div>
-                )}
-              </div>
-            </div>
-          </motion.div>
-        )}
 
-        {/* Completion Badge */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center py-12"
-        >
-          <motion.div
-            whileHover={{ scale: 1.1, rotate: 5 }}
-            animate={floatingAnimation}
-            className="inline-block"
-          >
-            <div className="w-24 h-24 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center shadow-2xl mx-auto mb-4">
-              <span className="text-5xl">🏆</span>
-            </div>
-          </motion.div>
-          <p className={`font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            Has completado el módulo sobre Paradigmas
-          </p>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="text-amber-600 font-bold mt-2 text-lg"
-          >
-            +{userProgress.points} puntos totales • Nivel {userProgress.level}
-          </motion.p>
-        </motion.div>
+                <div className="bg-amber-50 border-2 border-amber-400 p-5 rounded-lg">
+                  <p className="text-gray-800 leading-relaxed font-medium">
+                    <strong>Acá está el tema:</strong> No es que seas pesimista. Es que tu cerebro está configurado para ver una versión de la realidad. 
+                    Y lo jodido es que cuanto más tiempo operás con ese filtro, más pruebas encontrás de que "tenés razón".
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-8">
+                <ContinueButton phaseNum={3} label="Ver ejemplo concreto" />
+              </div>
+            </PhaseContainer>
+
+            {/* FASE 4: Ejemplo Visceral */}
+            <PhaseContainer phaseNum={4} title="Ejemplo concreto" icon="💡">
+              <div className="space-y-4">
+                <div className="bg-gradient-to-br from-red-50 to-pink-50 p-6 rounded-xl border-2 border-red-300">
+                  <p className="font-semibold text-gray-900 mb-3 text-lg">Situación: Te llega una llamada de un número que no conocés</p>
+                  <div className="bg-white p-5 rounded-lg border-l-4 border-red-400 mb-4">
+                    <p className="text-gray-700 mb-3 font-semibold">Paradigma A (desconfianza):</p>
+                    <ul className="space-y-2 text-gray-600 ml-4">
+                      <li>• Pensás: "Seguro es spam" o "Va a ser algo malo"</li>
+                      <li>• No atendés</li>
+                      <li>• Confirmación: "Menos mal que no atendí, seguro era una boludez"</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="bg-white p-5 rounded-lg border-l-4 border-green-400">
+                    <p className="text-gray-700 mb-3 font-semibold">Paradigma B (curiosidad neutral):</p>
+                    <ul className="space-y-2 text-gray-600 ml-4">
+                      <li>• Pensás: "No sé quién es, veamos"</li>
+                      <li>• Atendés</li>
+                      <li>• Era una oportunidad que ni sabías que existía (o sí era spam, cortás y listo)</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-xl border-4 border-amber-400 shadow-lg">
+                  <p className="text-xl font-bold text-gray-900 text-center">
+                    Misma llamada. Misma realidad. Resultados completamente diferentes.
+                  </p>
+                  <p className="text-lg text-amber-700 text-center mt-2 font-semibold">
+                    Eso es un paradigma en acción.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-8">
+                <ContinueButton phaseNum={4} label="Transformar mis creencias" />
+              </div>
+            </PhaseContainer>
+
+            {/* FASE 5: Selector de Creencias */}
+            <PhaseContainer phaseNum={5} title="Mismo tema, filtros distintos" icon="🔄">
+              <p className="text-gray-700 mb-6 text-lg">
+                Elegí una de estas creencias y fijate cómo cambia cuando la mirás con otro filtro:
+              </p>
+              
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+                {limitingBeliefs.map((belief, index) => (
+                  <button
+                    key={belief}
+                    onClick={() => handleBeliefSelect(belief)}
+                    className={`p-4 rounded-lg border-2 transition-all transform hover:scale-105 text-left animate-fade-in ${
+                      selectedBelief === belief
+                        ? 'bg-amber-100 border-amber-400 shadow-lg'
+                        : 'bg-white border-gray-300 hover:border-amber-300'
+                    }`}
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <p className="text-sm font-medium text-gray-800">{belief}</p>
+                  </button>
+                ))}
+              </div>
+
+              {showBeliefResult && selectedBelief && (
+                <div className="space-y-4 animate-fade-in-up">
+                  <div className="bg-white p-6 rounded-lg border-2 border-green-400 shadow-lg">
+                    <div className="space-y-4">
+                      <div className="flex items-start gap-3">
+                        <div className="text-3xl">🔴</div>
+                        <div className="flex-1">
+                          <p className="text-sm text-gray-600 mb-1">Lo que venías creyendo:</p>
+                          <p className="text-gray-800 font-bold text-lg">{selectedBelief}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-center">
+                        <ChevronRight size={32} className="text-gray-400 animate-pulse" />
+                      </div>
+                      
+                      <div className="flex items-start gap-3">
+                        <div className="text-3xl">🟢</div>
+                        <div className="flex-1">
+                          <p className="text-sm text-gray-600 mb-1">Mismo tema, otro filtro:</p>
+                          <p className="text-green-700 font-bold text-xl">{empoweringBeliefs[selectedBelief]}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <ContinueButton phaseNum={5} label="Crear mi plan de acción" />
+                </div>
+              )}
+            </PhaseContainer>
+
+            {/* FASE 6: Plan de Acción */}
+            {selectedBelief && (
+              <PhaseContainer phaseNum={6} title="Tu plan de 7 días" icon="📱">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-300 p-6 rounded-xl space-y-4">
+                  <div className="bg-white p-5 rounded-lg shadow-md">
+                    <p className="font-bold text-gray-900 mb-3 flex items-center gap-2 text-lg">
+                      <span>🎯</span> Tu frase de transformación:
+                    </p>
+                    <p className="text-green-700 font-bold text-xl italic border-l-4 border-green-500 pl-4 py-2 bg-green-50 rounded">
+                      "{empoweringBeliefs[selectedBelief]}"
+                    </p>
+                  </div>
+
+                  <div className="space-y-3 text-gray-700">
+                    <div className="bg-white p-4 rounded-lg">
+                      <p className="font-semibold mb-2">Paso 1: Configurá tu alarma</p>
+                      <p className="text-sm">Guardate una alarma en el celu con esta frase de nombre. Que suene todos los días a una hora random.</p>
+                    </div>
+
+                    <div className="bg-white p-4 rounded-lg">
+                      <p className="font-semibold mb-2">Paso 2: Cuando suene, hacé esto</p>
+                      <p className="text-sm">No la repitas como robot. Leela y preguntate: <span className="font-semibold">"¿En qué cosa chiquita de hoy puedo ver esto?"</span></p>
+                    </div>
+
+                    <div className="bg-white p-4 rounded-lg">
+                      <p className="font-semibold mb-2">Ejemplo:</p>
+                      <p className="text-sm italic">Si tu frase es "Estoy aprendiendo cada día", cuando suene pensá: "¿Qué aprendí hoy, aunque sea algo pelotudo?" (tipo "aprendí que el café frío me cae mal" cuenta).</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-amber-50 border-2 border-amber-300 p-4 rounded-lg">
+                    <p className="text-sm font-semibold text-gray-800 mb-2">¿Por qué 7 días y no 21?</p>
+                    <p className="text-sm text-gray-700">
+                      Porque 21 días suena a compromiso de gym en enero. 7 días suena a "puedo hacer esto". 
+                      Y si después de una semana funciona, lo vas a seguir solo. Si no, al menos probaste.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-8">
+                  <ContinueButton phaseNum={6} label="Reflexión personal" />
+                </div>
+              </PhaseContainer>
+            )}
+
+            {/* FASE 7: Reflexión Personal */}
+            <PhaseContainer phaseNum={7} title="Tu turno de reflexionar" icon="✍️">
+              <p className="text-gray-700 mb-6 text-lg">
+                ¿Hay algo que te repetís seguido y que capaz te está cagando? Escribilo acá abajo. 
+                A veces solo el hecho de ponerlo en palabras ya cambia algo.
+              </p>
+              
+              <textarea
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                placeholder="Ej: No puedo aprender a programar porque..."
+                className="w-full p-5 border-2 border-purple-300 rounded-xl focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 min-h-[120px] text-lg transition-all"
+              />
+
+              {userInput && (
+                <div className="mt-6 bg-white p-6 rounded-xl border-2 border-purple-400 shadow-md animate-fade-in-up">
+                  <p className="text-sm text-gray-700 mb-4 font-semibold text-lg">Preguntate esto (en serio, tomate un minuto):</p>
+                  <ul className="space-y-3 text-gray-700">
+                    <li className="flex gap-3 items-start p-3 bg-purple-50 rounded-lg">
+                      <span className="text-purple-600 font-bold text-xl">•</span>
+                      <span>¿Desde cuándo pienso esto? ¿Me lo dijeron o lo concluí yo?</span>
+                    </li>
+                    <li className="flex gap-3 items-start p-3 bg-purple-50 rounded-lg">
+                      <span className="text-purple-600 font-bold text-xl">•</span>
+                      <span>¿Es una verdad universal o una interpretación mía de algo que pasó?</span>
+                    </li>
+                    <li className="flex gap-3 items-start p-3 bg-purple-50 rounded-lg">
+                      <span className="text-purple-600 font-bold text-xl">•</span>
+                      <span>¿Cómo lo diría alguien que cree en sí mismo? (no hace falta que lo creas, solo pensá cómo lo diría)</span>
+                    </li>
+                    <li className="flex gap-3 items-start p-3 bg-purple-50 rounded-lg">
+                      <span className="text-purple-600 font-bold text-xl">•</span>
+                      <span>¿Hubo alguna vez algo que contradice esta creencia? Aunque sea chiquito.</span>
+                    </li>
+                  </ul>
+                </div>
+              )}
+
+              <div className="mt-8">
+                <ContinueButton phaseNum={7} label="Ir al cierre" />
+              </div>
+            </PhaseContainer>
+
+            {/* FASE 8: Cierre + Bonus */}
+            <PhaseContainer phaseNum={8} title="Para cerrar" icon="🎯">
+              <div className="space-y-6">
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-8 rounded-xl text-center shadow-xl">
+                  <p className="text-2xl font-bold mb-4 leading-relaxed">
+                    Cambiar cómo pensás no es lo mismo que "pensar positivo".
+                  </p>
+                  <p className="text-xl mb-4">
+                    Es ver las mismas cosas de siempre y darte cuenta de que hay otra forma de leerlas.
+                  </p>
+                  <div className="h-px bg-blue-400 my-6" />
+                  <p className="text-lg text-blue-100 mb-4">
+                    No te va a cambiar la vida en una semana. Pero en seis meses, cuando mires para atrás, 
+                    vas a ver que empezaste a tomar decisiones distintas sin darte cuenta.
+                  </p>
+                  <p className="text-2xl font-bold">
+                    Y eso sí te cambia la vida.
+                  </p>
+                </div>
+
+                <div className="bg-gray-900 text-white p-6 rounded-xl">
+                  <h3 className="text-2xl font-bold mb-4 text-blue-400">🤖 Bonus: Usá IA para autoconocimiento</h3>
+                  <p className="text-gray-300 mb-4">
+                    Si querés ir más profundo en entender tus propios patrones, probá este prompt con ChatGPT, Claude o tu asistente favorito:
+                  </p>
+                  <div className="bg-gray-800 p-5 rounded-lg border border-gray-700">
+                    <p className="text-sm text-gray-300 leading-relaxed">
+                      Ayudame a ver qué creencias sobre mí mismo podrían estar frenándome sin que me dé cuenta. 
+                      Basate en cómo hablo de mí, de mis hábitos y resultados. 
+                      Después, charlemos cómo podría verlo distinto. Sé directo pero amigable.
+                    </p>
+                  </div>
+                  <button 
+                    onClick={copyPrompt}
+                    className="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg transition-all w-full flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:scale-105"
+                  >
+                    {copiedPrompt ? (
+                      <>
+                        <Check size={20} />
+                        <span>¡Copiado!</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>📋</span>
+                        <span>Copiar prompt</span>
+                      </>
+                    )}
+                  </button>
+                  <p className="text-gray-400 text-sm mt-3">
+                    💡 Cuanto más honesto seas en tu conversación, más útil va a ser el feedback que recibas.
+                  </p>
+                </div>
+
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-400 p-6 rounded-xl text-center">
+                  <div className="text-5xl mb-3">🎉</div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">¡Completaste el módulo!</h3>
+                  <p className="text-gray-700">
+                    Ahora tenés las herramientas para empezar a ver las cosas de otra forma. El resto depende de vos.
+                  </p>
+                </div>
+
+                <div className="bg-gray-100 border-l-4 border-gray-500 p-5 rounded-lg">
+                  <p className="text-gray-700 leading-relaxed text-sm">
+                    <strong>Aclaración importante:</strong> Esto no es terapia ni ciencia con papers detrás. Es una herramienta de 
+                    autoconocimiento basada en cómo funciona el pensamiento. Si sentís que necesitás ayuda más profunda, 
+                    un terapeuta va a poder hacer mucho más que un módulo. Esto es complementario, no sustituto.
+                  </p>
+                </div>
+              </div>
+            </PhaseContainer>
+          </div>
+        </div>
       </div>
 
+      {/* Styles */}
       <style>{`
-        @keyframes blob {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
         }
-        .animate-blob {
-          animation: blob 7s infinite;
+
+        @keyframes fade-in-up {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
-        .animation-delay-2000 {
-          animation-delay: 2s;
+
+        @keyframes scale-in {
+          from {
+            transform: scale(0.8);
+            opacity: 0;
+          }
+          to {
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
+
+        .animate-fade-in {
+          animation: fade-in 0.5s ease-out forwards;
+        }
+
+        .animate-fade-in-up {
+          animation: fade-in-up 0.5s ease-out forwards;
+        }
+
+        .animate-scale-in {
+          animation: scale-in 0.3s ease-out forwards;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          * {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+          }
         }
       `}</style>
     </div>
@@ -1792,5 +732,5 @@ export const paradigmasMetadata = {
   id: 1,
   title: "Paradigmas",
   type: "document" as const,
-  duration: "15 min"
+  duration: "15-20 min"
 };

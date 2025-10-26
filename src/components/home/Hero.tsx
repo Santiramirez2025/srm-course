@@ -1,5 +1,5 @@
-import React from 'react';
-import { Play, BookOpen, Clock, Award, Sparkles } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Play, BookOpen, Clock, Award, Sparkles, TrendingUp } from 'lucide-react';
 
 interface HeroProps {
   title: string;
@@ -26,186 +26,261 @@ export const Hero: React.FC<HeroProps> = ({
   stats,
   logo = 'S'
 }) => {
+  const [mounted, setMounted] = useState(false);
   const hasStarted = courseProgress && courseProgress.completed > 0;
   const isCompleted = courseProgress && courseProgress.percentage === 100;
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Mensaje motivacional dinámico
+  const getMotivationalMessage = () => {
+    if (!courseProgress) return '';
+    const { percentage } = courseProgress;
+    
+    if (percentage < 25) return 'Excelente inicio. Cada paso cuenta';
+    if (percentage < 50) return 'Vas por buen camino. Mantén el ritmo';
+    if (percentage < 75) return 'Más de la mitad. Ya casi llegas';
+    if (percentage < 100) return 'La meta está cerca. ¡Último empujón!';
+    return 'Logro desbloqueado';
+  };
+
   return (
-    <section className="relative max-w-6xl mx-auto px-3 sm:px-4 md:px-6 py-12 sm:py-16 md:py-20 lg:py-24">
-      {/* Safe Area Top */}
-      <div className="safe-area-top" />
+    <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 lg:pt-24 pb-12 sm:pb-16 lg:pb-20">
       
-      {/* Decoración de fondo animada - optimizada para móvil */}
-      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-40 h-40 sm:w-64 sm:h-64 md:w-72 md:h-72 bg-amber-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 sm:opacity-30 animate-blob" />
-        <div className="absolute top-0 right-1/4 w-40 h-40 sm:w-64 sm:h-64 md:w-72 md:h-72 bg-orange-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 sm:opacity-30 animate-blob animation-delay-2000" />
-        <div className="absolute bottom-0 left-1/3 w-40 h-40 sm:w-64 sm:h-64 md:w-72 md:h-72 bg-yellow-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 sm:opacity-30 animate-blob animation-delay-4000" />
+      {/* Ambient Background - Optimizado */}
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute top-20 left-1/4 w-[500px] h-[500px] bg-amber-200/30 rounded-full blur-3xl opacity-60" 
+             style={{ transform: mounted ? 'scale(1)' : 'scale(0.8)', transition: 'transform 2s cubic-bezier(0.34, 1.56, 0.64, 1)' }} />
+        <div className="absolute top-40 right-1/4 w-[600px] h-[600px] bg-orange-200/20 rounded-full blur-3xl opacity-40" 
+             style={{ transform: mounted ? 'scale(1)' : 'scale(0.8)', transition: 'transform 2.5s cubic-bezier(0.34, 1.56, 0.64, 1)' }} />
       </div>
 
-      <div className="text-center">
-        {/* Logo optimizado responsive */}
-        <div className="mb-6 sm:mb-8 inline-block">
+      <div className="relative text-center">
+        
+        {/* Logo con reveal cinemático */}
+        <div className="mb-8 sm:mb-10 inline-block">
           <div className="relative group">
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl sm:rounded-2xl blur-lg sm:blur-xl opacity-50 sm:opacity-60 group-hover:opacity-75 sm:group-hover:opacity-90 transition-all duration-500" />
-            <div className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 bg-gradient-to-br from-amber-500 via-orange-500 to-orange-600 rounded-xl sm:rounded-2xl flex items-center justify-center text-white font-black text-3xl sm:text-4xl md:text-5xl lg:text-6xl shadow-xl sm:shadow-2xl transform group-hover:scale-105 sm:group-hover:scale-110 group-hover:rotate-3 sm:group-hover:rotate-6 transition-all duration-500">
-              {logo.length === 1 ? (
-                logo
-              ) : (
-                <img src={logo} alt="Logo del curso" className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 object-contain" />
-              )}
+            {/* Glow layer */}
+            <div 
+              className="absolute -inset-4 bg-gradient-to-br from-amber-400 to-orange-500 rounded-3xl blur-2xl opacity-0 transition-opacity duration-1000"
+              style={{ opacity: mounted ? 0.4 : 0 }}
+            />
+            
+            {/* Logo container */}
+            <div 
+              className="relative w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 bg-gradient-to-br from-amber-500 via-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-2xl transition-all duration-700 ease-out group-hover:shadow-amber-500/50"
+              style={{ 
+                transform: mounted ? 'scale(1) rotate(0deg)' : 'scale(0.8) rotate(-10deg)',
+                opacity: mounted ? 1 : 0
+              }}
+            >
+              <span className="text-white font-black text-4xl sm:text-5xl lg:text-6xl transition-transform duration-300 group-hover:scale-110">
+                {logo.length === 1 ? logo : <img src={logo} alt="Logo" className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 object-contain" />}
+              </span>
+              
+              {/* Shine effect */}
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
             </div>
-            <div className="absolute -inset-1 bg-gradient-to-r from-amber-400 to-orange-500 rounded-xl sm:rounded-2xl opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-500" />
           </div>
         </div>
 
-        {/* Badge de estado responsive */}
+        {/* Status Badge */}
         {hasStarted && !isCompleted && (
-          <div className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 bg-white/90 backdrop-blur-sm border border-amber-200 text-amber-700 rounded-full text-sm sm:text-base font-semibold mb-4 sm:mb-5 animate-fadeIn shadow-sm min-h-[40px]">
-            <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse flex-shrink-0" />
-            <span>En Progreso</span>
+          <div 
+            className="inline-flex items-center gap-2.5 px-5 py-2.5 bg-white/80 backdrop-blur-xl border border-amber-200/50 text-amber-700 rounded-full text-sm font-semibold mb-6 shadow-lg shadow-amber-100/50 transition-all duration-300 hover:shadow-xl"
+            style={{ 
+              opacity: mounted ? 1 : 0,
+              transform: mounted ? 'translateY(0)' : 'translateY(-10px)',
+              transitionDelay: '0.2s'
+            }}
+          >
+            <div className="relative flex items-center justify-center">
+              <div className="absolute w-3 h-3 bg-amber-400 rounded-full animate-ping opacity-75" />
+              <div className="relative w-2 h-2 bg-amber-500 rounded-full" />
+            </div>
+            <span className="tracking-tight">En progreso</span>
           </div>
         )}
 
         {isCompleted && (
-          <div className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 bg-white/90 backdrop-blur-sm border border-green-200 text-green-700 rounded-full text-sm sm:text-base font-semibold mb-4 sm:mb-5 animate-fadeIn shadow-sm min-h-[40px]">
-            <Award size={16} className="sm:w-5 sm:h-5 animate-bounce flex-shrink-0" />
-            <span>¡Curso Completado!</span>
+          <div 
+            className="inline-flex items-center gap-2.5 px-5 py-2.5 bg-gradient-to-r from-green-50 to-emerald-50 backdrop-blur-xl border border-green-200/50 text-green-700 rounded-full text-sm font-semibold mb-6 shadow-lg shadow-green-100/50"
+            style={{ 
+              opacity: mounted ? 1 : 0,
+              transform: mounted ? 'translateY(0)' : 'translateY(-10px)',
+              transitionDelay: '0.2s'
+            }}
+          >
+            <Award size={18} className="text-green-600" />
+            <span className="tracking-tight">Curso completado</span>
           </div>
         )}
 
-        {/* Título responsive - optimizado para móvil */}
-        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-gray-900 mb-4 sm:mb-5 md:mb-6 leading-tight px-2 sm:px-4 animate-fadeInUp">
-          <span className="bg-gradient-to-r from-amber-600 via-orange-600 to-orange-700 bg-clip-text text-transparent">
+        {/* Title con efecto gradiente animado */}
+        <h1 
+          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-6 leading-[1.1] tracking-tight"
+          style={{ 
+            opacity: mounted ? 1 : 0,
+            transform: mounted ? 'translateY(0)' : 'translateY(20px)',
+            transitionDelay: '0.3s',
+            transition: 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)'
+          }}
+        >
+          <span className="bg-gradient-to-br from-amber-600 via-orange-600 to-orange-700 bg-clip-text text-transparent">
             {title}
           </span>
         </h1>
 
-        {/* Subtítulo responsive - mejorado legibilidad */}
-        <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 mb-8 sm:mb-10 md:mb-12 max-w-xl sm:max-w-2xl lg:max-w-3xl mx-auto leading-relaxed px-4 sm:px-6 animate-fadeInUp animation-delay-200">
+        {/* Subtitle mejorado */}
+        <p 
+          className="text-lg sm:text-xl lg:text-2xl text-gray-600 mb-10 sm:mb-12 max-w-2xl lg:max-w-3xl mx-auto leading-relaxed font-medium"
+          style={{ 
+            opacity: mounted ? 1 : 0,
+            transform: mounted ? 'translateY(0)' : 'translateY(20px)',
+            transitionDelay: '0.4s',
+            transition: 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)'
+          }}
+        >
           {subtitle}
         </p>
 
-        {/* Barra de progreso responsive - CON BACKDROP BLUR */}
+        {/* Progress Card Premium */}
         {hasStarted && courseProgress && (
-          <div className="max-w-sm sm:max-w-md mx-auto mb-6 sm:mb-8 md:mb-10 px-3 sm:px-0 animate-fadeInUp animation-delay-300">
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-5 sm:p-6 shadow-lg border border-gray-200">
-              <div className="flex items-center justify-between text-sm sm:text-base text-gray-600 mb-3">
-                <span className="font-medium flex items-center gap-2">
-                  <Sparkles size={16} className="sm:w-5 sm:h-5 text-amber-500 flex-shrink-0" />
-                  <span>Tu Progreso</span>
-                </span>
-                <span className="font-bold text-amber-600">
-                  {courseProgress.completed}/{courseProgress.total}
+          <div 
+            className="max-w-md mx-auto mb-10 sm:mb-12"
+            style={{ 
+              opacity: mounted ? 1 : 0,
+              transform: mounted ? 'translateY(0)' : 'translateY(20px)',
+              transitionDelay: '0.5s',
+              transition: 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)'
+            }}
+          >
+            <div className="bg-white/70 backdrop-blur-2xl rounded-3xl p-6 sm:p-7 shadow-xl border border-gray-200/50 hover:shadow-2xl transition-all duration-500">
+              
+              {/* Header */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center">
+                    <TrendingUp size={18} className="text-white" />
+                  </div>
+                  <span className="font-bold text-gray-900 text-lg">Tu progreso</span>
+                </div>
+                <span className="text-2xl font-black bg-gradient-to-br from-amber-600 to-orange-600 bg-clip-text text-transparent">
+                  {courseProgress.percentage}%
                 </span>
               </div>
               
-              {/* Progress bar más alta en móvil */}
-              <div className="relative w-full bg-gray-200 rounded-full h-4 sm:h-5 overflow-hidden shadow-inner">
+              {/* Progress Bar Premium */}
+              <div className="relative w-full h-3 bg-gray-100 rounded-full overflow-hidden mb-4">
+                {/* Background gradient */}
+                <div className="absolute inset-0 bg-gradient-to-r from-gray-100 to-gray-50" />
+                
+                {/* Progress fill con animación */}
                 <div
-                  className="absolute inset-0 bg-gradient-to-r from-amber-400 via-amber-500 to-orange-600 rounded-full transition-all duration-1000 ease-out flex items-center justify-end"
-                  style={{ width: `${courseProgress.percentage}%` }}
-                  role="progressbar"
-                  aria-valuenow={courseProgress.percentage}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-label={`Progreso del curso: ${courseProgress.percentage}%`}
+                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-400 via-amber-500 to-orange-600 rounded-full transition-all duration-1000 ease-out"
+                  style={{ 
+                    width: `${courseProgress.percentage}%`,
+                    boxShadow: '0 0 20px rgba(251, 191, 36, 0.4)'
+                  }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
-                  {courseProgress.percentage > 10 && (
-                    <span className="text-xs sm:text-sm font-bold text-white mr-2 sm:mr-3 relative z-10">
-                      {courseProgress.percentage}%
-                    </span>
-                  )}
+                  {/* Shimmer effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer" />
                 </div>
               </div>
               
-              {/* Mensajes motivacionales */}
-              {courseProgress.percentage < 100 && (
-                <p className="text-xs sm:text-sm text-gray-500 mt-3 sm:mt-4 text-center leading-relaxed">
-                  {courseProgress.percentage < 25 && "¡Excelente inicio! Sigue así 🚀"}
-                  {courseProgress.percentage >= 25 && courseProgress.percentage < 50 && "¡Vas por buen camino! 💪"}
-                  {courseProgress.percentage >= 50 && courseProgress.percentage < 75 && "¡Más de la mitad! Ya casi 🔥"}
-                  {courseProgress.percentage >= 75 && courseProgress.percentage < 100 && "¡Casi lo logras! 🎯"}
-                </p>
-              )}
+              {/* Stats row */}
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-500 font-medium">
+                  {courseProgress.completed} de {courseProgress.total} módulos
+                </span>
+                <span className="text-amber-600 font-semibold flex items-center gap-1.5">
+                  <Sparkles size={14} />
+                  {getMotivationalMessage()}
+                </span>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Botón principal responsive - TOUCH TARGET OPTIMIZADO */}
-        <div className="flex justify-center items-center mb-8 sm:mb-10 md:mb-12 px-3 sm:px-4 animate-fadeInUp animation-delay-400">
+        {/* CTA Button Premium con glow animado */}
+        <div 
+          className="flex justify-center mb-12 sm:mb-16"
+          style={{ 
+            opacity: mounted ? 1 : 0,
+            transform: mounted ? 'translateY(0)' : 'translateY(20px)',
+            transitionDelay: '0.6s',
+            transition: 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)'
+          }}
+        >
           <button
             onClick={onStartCourse}
-            className="group relative w-full sm:w-auto px-6 py-4 sm:px-8 sm:py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-base sm:text-lg rounded-xl sm:rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 active:scale-95 transition-all duration-300 max-w-sm sm:max-w-none sm:min-w-[280px] overflow-hidden touch-manipulation min-h-[56px] sm:min-h-[60px]"
+            className="group relative px-8 py-4 sm:px-10 sm:py-5 bg-gradient-to-r from-amber-500 via-orange-500 to-orange-600 text-white font-bold text-lg rounded-2xl shadow-2xl shadow-orange-500/30 hover:shadow-orange-500/50 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] min-w-[280px] overflow-hidden"
             type="button"
-            aria-label={isCompleted ? "Revisar curso completo" : hasStarted ? "Continuar con el curso" : "Comenzar curso ahora"}
+            aria-label={isCompleted ? "Revisar curso" : hasStarted ? "Continuar curso" : "Comenzar curso"}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+            {/* Animated glow */}
+            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
             
-            <span className="relative flex items-center justify-center gap-2 sm:gap-3">
-              <Play size={20} className="sm:w-6 sm:h-6 group-hover:scale-110 transition-transform flex-shrink-0" />
-              <span className="truncate">
-                {isCompleted 
-                  ? "Revisar Curso"
-                  : hasStarted 
-                    ? "Continuar Curso" 
-                    : "Comenzar Curso"}
-              </span>
+            {/* Pulsing ring on hover */}
+            <div className="absolute inset-0 rounded-2xl bg-white/20 scale-0 group-hover:scale-100 opacity-0 group-hover:opacity-100 transition-all duration-500 blur-xl" />
+            
+            <span className="relative flex items-center justify-center gap-3 font-bold tracking-tight">
+              <Play size={22} className="group-hover:scale-110 transition-transform duration-300" fill="white" />
+              {isCompleted ? 'Revisar curso' : hasStarted ? 'Continuar curso' : 'Comenzar curso'}
             </span>
           </button>
         </div>
 
-        {/* Estadísticas responsive - TOUCH TARGETS OPTIMIZADOS */}
+        {/* Stats Grid Premium */}
         {stats && (
-          <div className="grid grid-cols-1 min-[380px]:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6 pt-8 sm:pt-10 md:pt-12 border-t border-gray-200/50 animate-fadeInUp animation-delay-500 max-w-4xl mx-auto px-3 sm:px-4 md:px-0">
+          <div 
+            className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 max-w-4xl mx-auto"
+            style={{ 
+              opacity: mounted ? 1 : 0,
+              transform: mounted ? 'translateY(0)' : 'translateY(20px)',
+              transitionDelay: '0.7s',
+              transition: 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)'
+            }}
+          >
             {stats.totalModules && (
-              <div className="group">
-                <div className="flex items-center gap-3 sm:gap-4 bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl p-5 sm:p-6 shadow-md hover:shadow-xl border border-gray-100 transition-all duration-300 hover:-translate-y-1 min-h-[88px] sm:min-h-[96px]">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner flex-shrink-0">
-                    <BookOpen size={24} className="sm:w-7 sm:h-7 text-amber-600" />
+              <div className="group bg-white/60 backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-gray-200/50 hover:shadow-xl hover:border-amber-200/50 transition-all duration-300 hover:-translate-y-1">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <BookOpen size={26} className="text-amber-600" />
                   </div>
-                  <div className="text-left flex-1 min-w-0">
-                    <div className="text-3xl sm:text-4xl font-black text-gray-900 truncate">
-                      {stats.totalModules}
-                    </div>
-                    <div className="text-sm sm:text-base font-medium text-gray-500">
-                      Módulos
-                    </div>
+                  <div className="text-left">
+                    <div className="text-3xl font-black text-gray-900">{stats.totalModules}</div>
+                    <div className="text-sm font-semibold text-gray-500">Módulos</div>
                   </div>
                 </div>
               </div>
             )}
 
             {stats.estimatedHours && (
-              <div className="group">
-                <div className="flex items-center gap-3 sm:gap-4 bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl p-5 sm:p-6 shadow-md hover:shadow-xl border border-gray-100 transition-all duration-300 hover:-translate-y-1 min-h-[88px] sm:min-h-[96px]">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner flex-shrink-0">
-                    <Clock size={24} className="sm:w-7 sm:h-7 text-blue-600" />
+              <div className="group bg-white/60 backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-gray-200/50 hover:shadow-xl hover:border-blue-200/50 transition-all duration-300 hover:-translate-y-1">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <Clock size={26} className="text-blue-600" />
                   </div>
-                  <div className="text-left flex-1 min-w-0">
-                    <div className="text-3xl sm:text-4xl font-black text-gray-900 truncate">
-                      {stats.estimatedHours}h
-                    </div>
-                    <div className="text-sm sm:text-base font-medium text-gray-500">
-                      Duración
-                    </div>
+                  <div className="text-left">
+                    <div className="text-3xl font-black text-gray-900">{stats.estimatedHours}h</div>
+                    <div className="text-sm font-semibold text-gray-500">Duración</div>
                   </div>
                 </div>
               </div>
             )}
 
             {stats.completionRate !== undefined && (
-              <div className="group min-[380px]:col-span-2 lg:col-span-1">
-                <div className="flex items-center gap-3 sm:gap-4 bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl p-5 sm:p-6 shadow-md hover:shadow-xl border border-gray-100 transition-all duration-300 hover:-translate-y-1 min-h-[88px] sm:min-h-[96px]">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner flex-shrink-0">
-                    <Award size={24} className="sm:w-7 sm:h-7 text-green-600" />
+              <div className="group bg-white/60 backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-gray-200/50 hover:shadow-xl hover:border-green-200/50 transition-all duration-300 hover:-translate-y-1 sm:col-span-1">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <Award size={26} className="text-green-600" />
                   </div>
-                  <div className="text-left flex-1 min-w-0">
-                    <div className="text-3xl sm:text-4xl font-black text-gray-900 truncate">
-                      {stats.completionRate}%
-                    </div>
-                    <div className="text-sm sm:text-base font-medium text-gray-500">
-                      Completado
-                    </div>
+                  <div className="text-left">
+                    <div className="text-3xl font-black text-gray-900">{stats.completionRate}%</div>
+                    <div className="text-sm font-semibold text-gray-500">Completado</div>
                   </div>
                 </div>
               </div>
@@ -214,113 +289,40 @@ export const Hero: React.FC<HeroProps> = ({
         )}
       </div>
 
-      {/* Safe Area Bottom */}
-      <div className="safe-area-bottom" />
-
-      {/* Estilos optimizados */}
       <style>{`
-        /* Safe Area Support */
-        .safe-area-top {
-          height: env(safe-area-inset-top);
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(200%); }
         }
-        .safe-area-bottom {
-          height: env(safe-area-inset-bottom);
+        
+        .animate-shimmer {
+          animation: shimmer 3s infinite;
         }
 
-        /* Touch manipulation */
-        .touch-manipulation {
+        @media (prefers-reduced-motion: reduce) {
+          * {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+          }
+        }
+
+        /* Mejora de contraste para accesibilidad */
+        @media (prefers-contrast: high) {
+          .bg-white\\/60, .bg-white\\/70, .bg-white\\/80 {
+            background-color: white;
+          }
+        }
+
+        /* Optimización touch targets */
+        button {
           -webkit-tap-highlight-color: transparent;
           touch-action: manipulation;
         }
 
-        /* Animaciones optimizadas */
-        @keyframes blob {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
-        }
-        
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-        
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .animate-blob {
-          animation: blob 7s infinite;
+        /* GPU acceleration */
+        .group:hover > * {
           will-change: transform;
-        }
-        
-        .animate-shimmer {
-          animation: shimmer 2s infinite;
-        }
-        
-        .animate-fadeIn {
-          animation: fadeIn 0.6s ease-out;
-        }
-        
-        .animate-fadeInUp {
-          animation: fadeInUp 0.6s ease-out;
-        }
-        
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-        
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-        
-        .animation-delay-200 {
-          animation-delay: 0.2s;
-          opacity: 0;
-          animation-fill-mode: forwards;
-        }
-        
-        .animation-delay-300 {
-          animation-delay: 0.3s;
-          opacity: 0;
-          animation-fill-mode: forwards;
-        }
-        
-        .animation-delay-400 {
-          animation-delay: 0.4s;
-          opacity: 0;
-          animation-fill-mode: forwards;
-        }
-        
-        .animation-delay-500 {
-          animation-delay: 0.5s;
-          opacity: 0;
-          animation-fill-mode: forwards;
-        }
-
-        /* Reducir movimiento para usuarios con preferencia */
-        @media (prefers-reduced-motion: reduce) {
-          .animate-blob,
-          .animate-shimmer,
-          .animate-fadeIn,
-          .animate-fadeInUp {
-            animation: none;
-            opacity: 1;
-            transform: none;
-          }
-        }
-
-        /* Optimización para pantallas pequeñas */
-        @media (max-width: 360px) {
-          .text-3xl {
-            font-size: 1.75rem;
-          }
         }
       `}</style>
     </section>
