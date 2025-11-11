@@ -1,25 +1,14 @@
-// data/modules/capitulo1/01-paradigmas.tsx
+// src/components/Paradigmas/ParadigmasContent.tsx
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Check, ChevronRight } from 'lucide-react';
+import { Check, ChevronRight, Sparkles } from 'lucide-react';
+import { usePhaseState } from './hooks/usePhaseState';
+import { ProgressBar, ContinueButton } from './PhaseElements';
+import { PhaseContainer } from './PhaseContainer';
+import { PhaseNavigator } from './PhaseNavigator';
+import { TestQuestion } from './TestQuestion';
 
-// ==================== AJUSTE DE IMPORTACIONES MODULARES ====================
-// Rutas relativas corregidas (saliendo de data/modules/capitulo1/ hacia src/components/...)
-import { usePhaseState } from '../../../components/Paradigmas/hooks/usePhaseState'; 
-import { ProgressBar, ContinueButton } from '../../../components/Paradigmas/PhaseElements';
-import { PhaseContainer } from '../../../components/Paradigmas/PhaseContainer';
-import { PhaseNavigator } from '../../../components/Paradigmas/PhaseNavigator';
-import { TestQuestion } from '../../../components/Paradigmas/TestQuestion';
-
-// ==================== EXPORTACIÓN REQUERIDA: METADATA ====================
-export const paradigmasMetadata = {
-    title: "Paradigmas",
-    icon: "🎙️",
-    chapter: 1,
-    description: "Identifica y reconfigura las creencias que limitan tu potencial.",
-};
-
-// ==================== DATA GLOBAL ====================
+// ==================== DATA ====================
 const limitingBeliefs = [
     "No soy bueno para esto", "No tengo suerte", "Soy malo con el dinero", 
     "No tengo tiempo", "Ya es muy tarde para mí", "No soy creativo"
@@ -42,14 +31,12 @@ const testQuestions = [
 ];
 const totalPhases = 8;
 
-// ==================== MAIN COMPONENT (COORDINADOR) ====================
-// Nombre de la exportación corregido a 'ParadigmasContent' para tu importación
-export const ParadigmasContent: React.FC = () => { 
-
-    // Phase Management (usa useReducer a través del custom hook)
+// ==================== MAIN COMPONENT ====================
+export const ParadigmasContent: React.FC = () => {
+    // Phase Management (useReducer)
     const { phaseState, unlockNextPhase, goToPhase } = usePhaseState(totalPhases);
     
-    // Secondary States
+    // Secondary States (useState)
     const [testAnswers, setTestAnswers] = useState<boolean[]>([]);
     const [showTestResult, setShowTestResult] = useState(false);
     const [selectedBelief, setSelectedBelief] = useState<string>('');
@@ -58,29 +45,27 @@ export const ParadigmasContent: React.FC = () => {
     const [copiedPrompt, setCopiedPrompt] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
     
-    // Referencias para el scroll
     const phaseRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
 
-    // ==================== EFFECTS (Manejo del Scroll) ====================
+    // ==================== EFFECTS (Scroll) ====================
     useEffect(() => {
-        if (phaseState.currentPhase > 0) {
-            const targetRef = phaseRefs.current[phaseState.currentPhase];
-            if (targetRef) {
-                targetRef.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'start' 
-                });
-            }
+        // Scroll to current phase when it changes
+        const targetRef = phaseRefs.current[phaseState.currentPhase];
+        if (targetRef) {
+            targetRef.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
         }
     }, [phaseState.currentPhase]);
 
     // ==================== HANDLERS ====================
-    
     const handleTestAnswer = useCallback((index: number, answer: boolean) => {
         setTestAnswers(prev => {
             const newAnswers = [...prev];
             newAnswers[index] = answer;
             
+            // Check if all questions are answered
             if (newAnswers.filter(a => a !== undefined).length === testQuestions.length) {
                 setShowTestResult(true);
                 setShowConfetti(true);
@@ -98,6 +83,7 @@ export const ParadigmasContent: React.FC = () => {
 
     const copyPrompt = useCallback(() => {
         const prompt = "Ayudame a ver qué creencias sobre mí mismo podrían estar frenándome sin que me dé cuenta. Basate en cómo hablo de mí, de mis hábitos y resultados. Después, charlemos cómo podría verlo distinto. Sé directo pero amigable.";
+        // Nota: navigator.clipboard.writeText solo funciona en entornos seguros (https)
         navigator.clipboard.writeText(prompt);
         setCopiedPrompt(true);
         setTimeout(() => setCopiedPrompt(false), 2000);
@@ -109,7 +95,6 @@ export const ParadigmasContent: React.FC = () => {
     // ==================== RENDER ====================
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-            {/* Componente de la barra de progreso */}
             <ProgressBar 
                 completed={phaseState.completedPhases.size} 
                 total={totalPhases} 
@@ -123,13 +108,11 @@ export const ParadigmasContent: React.FC = () => {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="grid lg:grid-cols-4 gap-8">
-                    
                     {/* Sidebar - Phase Navigator */}
                     <PhaseNavigator phaseState={phaseState} goToPhase={goToPhase} />
 
                     {/* Main Content */}
                     <div className="lg:col-span-3 space-y-8">
-                        
                         {/* Hero */}
                         <div className="text-center py-6 animate-fade-in">
                             <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
@@ -168,11 +151,7 @@ export const ParadigmasContent: React.FC = () => {
 
                             {showTestResult && (
                                 <div className="mt-6 animate-fade-in-up">
-                                    <ContinueButton 
-                                        phaseNum={1} 
-                                        label="Ver mi resultado" 
-                                        onClick={unlockNextPhase}
-                                    />
+                                    <ContinueButton phaseNum={1} label="Ver mi resultado" onClick={unlockNextPhase} />
                                 </div>
                             )}
                         </PhaseContainer>
@@ -410,47 +389,52 @@ export const ParadigmasContent: React.FC = () => {
                         )}
 
                         {/* FASE 7: Reflexión Personal */}
-                        <PhaseContainer phaseNum={7} title="Tu turno de reflexionar" icon="✍️" phaseState={phaseState} phaseRefs={phaseRefs}>
-                            <p className="text-gray-700 mb-6 text-lg">
-                                ¿Hay algo que te repetís seguido y que capaz te está cagando? Escribilo acá abajo. 
-                                A veces solo el hecho de ponerlo en palabras ya cambia algo.
-                            </p>
-                            
-                            <textarea
-                                value={userInput}
-                                onChange={(e) => setUserInput(e.target.value)}
-                                placeholder="Ej: No puedo aprender a programar porque..."
-                                className="w-full p-5 border-2 border-purple-300 rounded-xl focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 min-h-[120px] text-lg transition-all"
-                            />
+            <PhaseContainer phaseNum={7} title="Tu turno de reflexionar" icon="✍️" phaseState={phaseState} phaseRefs={phaseRefs}>
+                <p className="text-gray-700 mb-6 text-lg">
+                    ¿Hay algo que te repetís seguido y que capaz te está cagando? Escribilo acá abajo. 
+                    A veces solo el hecho de ponerlo en palabras ya cambia algo.
+                </p>
+                
+                <textarea
+                    value={userInput}
+                    onChange={(e) => setUserInput(e.target.value)}
+                    placeholder="Ej: No puedo aprender a programar porque..."
+                    className="w-full p-5 border-2 border-purple-300 rounded-xl focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 min-h-[120px] text-lg transition-all"
+                />
 
-                            {userInput && (
-                                <div className="mt-6 bg-white p-6 rounded-xl border-2 border-purple-400 shadow-md animate-fade-in-up">
-                                    <p className="text-sm text-gray-700 mb-4 font-semibold text-lg">Preguntate esto (en serio, tomate un minuto):</p>
-                                    <ul className="space-y-3 text-gray-700">
-                                        <li className="flex gap-3 items-start p-3 bg-purple-50 rounded-lg">
-                                            <span className="text-purple-600 font-bold text-xl">•</span>
-                                            <span>¿Desde cuándo pienso esto? ¿Me lo dijeron o lo concluí yo?</span>
-                                        </li>
-                                        <li className="flex gap-3 items-start p-3 bg-purple-50 rounded-lg">
-                                            <span className="text-purple-600 font-bold text-xl">•</span>
-                                            <span>¿Es una verdad universal o una interpretación mía de algo que pasó?</span>
-                                        </li>
-                                        <li className="flex gap-3 items-start p-3 bg-purple-50 rounded-lg">
-                                            <span className="text-purple-600 font-bold text-xl">•</span>
-                                            <span>¿Cómo lo diría alguien que cree en sí mismo? (no hace falta que lo creas, solo pensá cómo lo diría)</span>
-                                        </li>
-                                        <li className="flex gap-3 items-start p-3 bg-purple-50 rounded-lg">
-                                            <span className="text-purple-600 font-bold text-xl">•</span>
-                                            <span>¿Hubo alguna vez algo que contradice esta creencia? Aunque sea chiquito.</span>
-                                        </li>
-                                    </ul>
-                                </div>
-                            )}
+                {/* SOLUCIÓN: Usamos una clase 'hidden' y una transición si es necesario, 
+                    o simplemente dejamos que el bloque se renderice si userInput tiene algo. 
+                    El problema estaba en la inyección de un nuevo elemento grande. */}
+                <div className={`
+                    mt-6 bg-white p-6 rounded-xl border-2 border-purple-400 shadow-md
+                    transition-all duration-300 ease-out
+                    ${userInput ? 'opacity-100 h-auto block' : 'opacity-0 h-0 overflow-hidden'}
+                `}>
+                    <p className="text-sm text-gray-700 mb-4 font-semibold text-lg">Preguntate esto (en serio, tomate un minuto):</p>
+                    <ul className="space-y-3 text-gray-700">
+                        <li className="flex gap-3 items-start p-3 bg-purple-50 rounded-lg">
+                            <span className="text-purple-600 font-bold text-xl">•</span>
+                            <span>¿Desde cuándo pienso esto? ¿Me lo dijeron o lo concluí yo?</span>
+                        </li>
+                        <li className="flex gap-3 items-start p-3 bg-purple-50 rounded-lg">
+                            <span className="text-purple-600 font-bold text-xl">•</span>
+                            <span>¿Es una verdad universal o una interpretación mía de algo que pasó?</span>
+                        </li>
+                        <li className="flex gap-3 items-start p-3 bg-purple-50 rounded-lg">
+                            <span className="text-purple-600 font-bold text-xl">•</span>
+                            <span>¿Cómo lo diría alguien que cree en sí mismo? (no hace falta que lo creas, solo pensá cómo lo diría)</span>
+                        </li>
+                        <li className="flex gap-3 items-start p-3 bg-purple-50 rounded-lg">
+                            <span className="text-purple-600 font-bold text-xl">•</span>
+                            <span>¿Hubo alguna vez algo que contradice esta creencia? Aunque sea chiquito.</span>
+                        </li>
+                    </ul>
+                </div>
 
-                            <div className="mt-8">
-                                <ContinueButton phaseNum={7} label="Ir al cierre" onClick={unlockNextPhase} />
-                            </div>
-                        </PhaseContainer>
+                <div className="mt-8">
+                    <ContinueButton phaseNum={7} label="Ir al cierre" onClick={unlockNextPhase} />
+                </div>
+            </PhaseContainer>
 
                         {/* FASE 8: Cierre + Bonus */}
                         <PhaseContainer phaseNum={8} title="Para cerrar" icon="🎯" phaseState={phaseState} phaseRefs={phaseRefs}>
