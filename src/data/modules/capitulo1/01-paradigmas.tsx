@@ -196,7 +196,7 @@ export const ParadigmasContent = () => {
     if (!isUnlocked) {
       return (
         <div 
-          ref={el => phaseRefs.current[phaseNum] = el}
+        ref={el => { if (el) phaseRefs.current[phaseNum] = el }}
           className="bg-gray-100 border-2 border-gray-300 rounded-xl p-8 relative overflow-hidden opacity-60"
         >
           <div className="absolute inset-0 bg-gradient-to-br from-gray-200/50 to-gray-300/50 backdrop-blur-sm flex items-center justify-center">
