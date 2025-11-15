@@ -1,10 +1,11 @@
+// src/App.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Navigation } from '@components/layout/Navigation';
 import { Footer } from '@components/layout/Footer';
 import { HomePage } from '@pages/HomePage';
-import { CoursePage } from '@pages/CoursePage';
+import { GalacticCoursePage } from '@pages/CoursePage'; 
 import { AuthModal } from '@components/auth/AuthModal';
 import { PricingModal } from '@components/subscription/PricingModal';
 import { SubscriptionGate } from '@components/subscription/SubscriptionGate';
@@ -13,7 +14,7 @@ import { useCourseNavigation } from '@hooks/useCourseNavigation';
 import { useAuth } from '@hooks/useAuth';
 import { useSubscription } from '@hooks/useSubscription';
 
-// 🎬 Variantes de animación profesionales (TypeScript fix)
+// 🎬 Variantes de animación profesionales
 const pageTransition = {
   duration: 0.4,
   ease: [0.22, 1, 0.36, 1] as const
@@ -83,7 +84,7 @@ const App: React.FC = () => {
     courseProgress,
   } = useCourseNavigation();
 
-  // Initialize chapters
+  // Initialize chapters - NO auto-seleccionar módulo
   useEffect(() => {
     if (courseData?.chapters) {
       initializeChapters(courseData.chapters);
@@ -103,6 +104,19 @@ const App: React.FC = () => {
       console.error('Error loading bookmarks:', error);
     }
   }, [user]);
+
+  // Forzar el scroll de la ventana al tope cuando la vista cambia (home <-> course)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+        window.scrollTo({ 
+            top: 0, 
+            behavior: 'instant' 
+        });
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [currentView]);
+
 
   // Bookmark handler
   const handleBookmark = (moduleId: number) => {
@@ -167,25 +181,24 @@ const App: React.FC = () => {
     }
   };
 
-  // Start course
   const handleStartCourse = () => {
     navigateTo('course');
-    if (courseData.chapters?.[0]?.modules?.[0]) {
-      selectModule(courseData.chapters[0], courseData.chapters[0].modules[0]);
-    }
+    // Usuario debe elegir el módulo manualmente
   };
 
-  // Chapter navigation
   const handleChapterClick = (chapterId: number) => {
     navigateTo('course');
-    const chapter = courseData.chapters.find(ch => ch.id === chapterId);
-    if (chapter) {
-      toggleChapter(chapterId);
-      if (chapter.modules?.[0]) {
-        selectModule(chapter, chapter.modules[0]);
-      }
-    }
+    toggleChapter(chapterId);
+    // Usuario debe elegir el módulo manualmente
   };
+
+  // ✅ CORRECCIÓN CLAVE: Función para volver al mapa
+  const handleBackToMap = () => {
+    // Llama a selectModule con null, que ahora limpia el estado en useCourseNavigation.ts
+    selectModule(null as any, null as any); 
+    navigateTo('course'); 
+  };
+
 
   // Plan selection
   const handleSelectPlan = async (planId: string) => {
@@ -353,7 +366,7 @@ const App: React.FC = () => {
                   animate="animate"
                   exit="exit"
                 >
-                  <CoursePage
+                  <GalacticCoursePage
                     courseData={courseData}
                     expandedChapter={expandedChapter}
                     selectedModule={selectedModule}
@@ -370,6 +383,8 @@ const App: React.FC = () => {
                     totalModules={totalModules}
                     courseProgress={courseProgress}
                     isLoading={false}
+                    // ✅ CORRECCIÓN CLAVE: Pasamos la nueva función para volver al mapa
+                    onBackToMap={handleBackToMap} 
                   />
                 </motion.div>
               )}

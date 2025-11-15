@@ -17,30 +17,38 @@ export const useCourseNavigation = () => {
   const [expandedChapter, setExpandedChapter] = useState<number | null>(null);
   const [selectedModule, setSelectedModule] = useState<SelectedModule | null>(null);
   const [completedModules, setCompletedModules] = useState<Set<number>>(new Set());
+  const [bookmarkedModules, setBookmarkedModules] = useState<Set<number>>(new Set());
   const [allChapters, setAllChapters] = useState<Chapter[]>([]);
 
-  // Cargar módulos completados desde localStorage al iniciar
+  // Cargar datos desde localStorage al iniciar
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('completedModules');
-      if (saved) {
-        const ids = JSON.parse(saved) as number[];
+      // Cargar módulos completados
+      const savedCompleted = localStorage.getItem('completedModules');
+      if (savedCompleted) {
+        const ids = JSON.parse(savedCompleted) as number[];
         setCompletedModules(new Set(ids));
       }
+
+      // Cargar módulos marcados
+      const savedBookmarked = localStorage.getItem('bookmarkedModules');
+      if (savedBookmarked) {
+        const ids = JSON.parse(savedBookmarked) as number[];
+        setBookmarkedModules(new Set(ids));
+      }
     } catch (error) {
-      console.error('Error loading completed modules:', error);
+      console.error('Error loading saved data:', error);
     }
   }, []);
 
-  // Inicializar capítulos
+  // Inicializar capítulos - Solo expandir el primero, NO seleccionar módulo
   const initializeChapters = useCallback((chapters: Chapter[]) => {
     setAllChapters(chapters);
     
-    // Auto-expandir primer capítulo y seleccionar primer módulo
-    if (chapters.length > 0 && chapters[0].modules && chapters[0].modules.length > 0) {
+    // Solo expandir el primer capítulo para mostrar la lista de módulos
+    // pero NO seleccionar ningún módulo automáticamente
+    if (chapters.length > 0) {
       setExpandedChapter(chapters[0].id);
-      // Opcional: auto-seleccionar primer módulo
-      // selectModule(chapters[0], chapters[0].modules[0]);
     }
   }, []);
 
@@ -96,8 +104,13 @@ export const useCourseNavigation = () => {
     setExpandedChapter(prev => prev === chapterId ? null : chapterId);
   }, []);
 
-  // Seleccionar módulo
-  const selectModule = useCallback((chapter: Chapter, module: Module) => {
+  // Seleccionar módulo (CORREGIDO: Ahora acepta null para deseleccionar y eliminó scroll forzado)
+  const selectModule = useCallback((chapter: Chapter | null, module: Module | null) => {
+    if (chapter === null || module === null) {
+      setSelectedModule(null);
+      return;
+    }
+    
     const newSelectedModule: SelectedModule = {
       ...module,
       chapterTitle: chapter.title,
@@ -107,10 +120,7 @@ export const useCourseNavigation = () => {
     setSelectedModule(newSelectedModule);
     setExpandedChapter(chapter.id);
     
-    // Scroll suave al inicio
-    setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 100);
+    // ❌ Scroll forzado eliminado. El scroll es manejado por GalacticCoursePage.tsx (block: 'nearest').
   }, []);
 
   // Navegar a otra vista
@@ -118,34 +128,18 @@ export const useCourseNavigation = () => {
     setCurrentView(view);
   }, []);
 
-  // ✨ NAVEGACIÓN ENTRE MÓDULOS - OPTIMIZADA
+  // Navegación entre módulos (CORREGIDO: Eliminó scroll forzado)
   const navigateModule = useCallback((direction: 'prev' | 'next') => {
-    if (currentModuleIndex === -1 || flatModules.length === 0) {
-      console.warn('⚠️ No hay módulo seleccionado o lista vacía');
-      return;
-    }
+    if (currentModuleIndex === -1 || flatModules.length === 0) return;
 
     const newIndex = direction === 'next' 
       ? currentModuleIndex + 1 
       : currentModuleIndex - 1;
 
     // Validar rango
-    if (newIndex < 0 || newIndex >= flatModules.length) {
-      console.warn('⚠️ No hay más módulos en esa dirección');
-      return;
-    }
+    if (newIndex < 0 || newIndex >= flatModules.length) return;
 
     const { module, chapter } = flatModules[newIndex];
-    
-    // Debug info (comentar en producción)
-    console.log('✅ Navegando:', {
-      direction,
-      from: selectedModule?.title,
-      to: module.title,
-      chapter: chapter.title,
-      newIndex: newIndex + 1,
-      total: flatModules.length
-    });
 
     // Actualizar estado
     setExpandedChapter(chapter.id);
@@ -155,21 +149,18 @@ export const useCourseNavigation = () => {
       chapterId: chapter.id
     });
 
-    // Scroll suave al inicio
-    setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 100);
-  }, [currentModuleIndex, flatModules, selectedModule]);
+    // ❌ Scroll forzado eliminado. El scroll es manejado por GalacticCoursePage.tsx (block: 'nearest').
+  }, [currentModuleIndex, flatModules]);
 
-  // Marcar módulo como completado
+  // Marcar módulo como completado (toggle)
   const markModuleComplete = useCallback((moduleId: number) => {
     setCompletedModules(prev => {
       const newSet = new Set(prev);
       
       if (newSet.has(moduleId)) {
-        newSet.delete(moduleId); // Toggle off
+        newSet.delete(moduleId);
       } else {
-        newSet.add(moduleId); // Toggle on
+        newSet.add(moduleId);
       }
       
       // Guardar en localStorage
@@ -183,10 +174,37 @@ export const useCourseNavigation = () => {
     });
   }, []);
 
+  // Marcar módulo como favorito (toggle)
+  const toggleModuleBookmark = useCallback((moduleId: number) => {
+    setBookmarkedModules(prev => {
+      const newSet = new Set(prev);
+      
+      if (newSet.has(moduleId)) {
+        newSet.delete(moduleId);
+      } else {
+        newSet.add(moduleId);
+      }
+      
+      // Guardar en localStorage
+      try {
+        localStorage.setItem('bookmarkedModules', JSON.stringify([...newSet]));
+      } catch (error) {
+        console.error('Error saving bookmarked modules:', error);
+      }
+      
+      return newSet;
+    });
+  }, []);
+
   // Verificar si un módulo está completado
   const isModuleCompleted = useCallback((moduleId: number) => {
     return completedModules.has(moduleId);
   }, [completedModules]);
+
+  // Verificar si un módulo está marcado
+  const isModuleBookmarked = useCallback((moduleId: number) => {
+    return bookmarkedModules.has(moduleId);
+  }, [bookmarkedModules]);
 
   // Calcular progreso del curso (MEMOIZADO)
   const courseProgress = useMemo(() => ({
@@ -209,15 +227,38 @@ export const useCourseNavigation = () => {
     return flatModules[currentModuleIndex - 1];
   }, [hasPrevious, currentModuleIndex, flatModules]);
 
-  // Resetear progreso (útil para testing)
+  // Obtener todos los módulos completados en un capítulo
+  const getChapterProgress = useCallback((chapterId: number) => {
+    const chapter = allChapters.find(ch => ch.id === chapterId);
+    if (!chapter || !chapter.modules) return { completed: 0, total: 0, percentage: 0 };
+
+    const total = chapter.modules.length;
+    const completed = chapter.modules.filter(m => completedModules.has(m.id)).length;
+    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+    return { completed, total, percentage };
+  }, [allChapters, completedModules]);
+
+  // Resetear progreso (útil para testing o comenzar de nuevo)
   const resetProgress = useCallback(() => {
     setCompletedModules(new Set());
+    setBookmarkedModules(new Set());
     try {
       localStorage.removeItem('completedModules');
+      localStorage.removeItem('bookmarkedModules');
     } catch (error) {
       console.error('Error resetting progress:', error);
     }
   }, []);
+
+  // Ir al siguiente módulo no completado
+  const goToNextIncompleteModule = useCallback(() => {
+    const nextIncomplete = flatModules.find(({ module }) => !completedModules.has(module.id));
+    
+    if (nextIncomplete) {
+      selectModule(nextIncomplete.chapter, nextIncomplete.module);
+    }
+  }, [flatModules, completedModules, selectModule]);
 
   return {
     // Estados básicos
@@ -247,9 +288,14 @@ export const useCourseNavigation = () => {
     
     // Sistema de progreso
     markModuleComplete,
+    toggleModuleBookmark,
     isModuleCompleted,
+    isModuleBookmarked,
     courseProgress,
     completedModules,
+    bookmarkedModules,
+    getChapterProgress,
     resetProgress,
+    goToNextIncompleteModule,
   };
 };

@@ -8,11 +8,10 @@ import { DesarrolloPersonalGame, desarrolloPersonalGameMetadata } from './module
 import CadenasGame, { cadenasGameMetadata } from './modules/capitulo1/05-cadenas';
 import { HonestidadContent, honestidadMetadata } from './modules/capitulo1/06-honestidad';
 import { ResistenciaContent, resistenciaMetadata } from './modules/capitulo1/07-resistencia';
-import PolaridadContent, { energiaMetadata } from './modules/capitulo1/08-polaridad';
+import PolaridadContent, { polaridadMetadata } from './modules/capitulo1/08-polaridad';
 import { ConstantesContent, constantesMetadata } from './modules/capitulo1/09-constantes';
 
 // Capítulo 2 - Trabajar Online
-import { FuerzasIrracionalidadContent, fuerzasIrracionalidadMetadata } from './modules/capitulo2/01-fuerzas-irracionalidad';
 import { EntornoTrabajoContent, entornoTrabajoMetadata } from './modules/capitulo2/02-entorno-trabajo';
 import { NichoIdealContent, nichoIdealMetadata } from './modules/capitulo2/03-nicho-ideal';
 import { DominarNichoContent, dominarNichoMetadata } from './modules/capitulo2/04-dominar-nicho';
@@ -35,7 +34,7 @@ import { ScriptFeedbackFormContent, scriptFeedbackFormMetadata } from './modules
 import { EntrevistarContratarContent, entrevistarContratarMetadata } from './modules/capitulo3/09-entrevistar-contratar';
 
 export const courseData: CourseData = {
-  title: "Curso SRM",
+  title: "SRM Academy",
   subtitle: "Aprendé a vivir mejor, trabajar online y vender con propósito",
   description: "Un curso completo para transformar tu vida personal y profesional",
   chapters: [
@@ -51,16 +50,18 @@ export const courseData: CourseData = {
         { ...cadenasGameMetadata, content: CadenasGame, driveUrl: "" },
         { ...honestidadMetadata, content: HonestidadContent, driveUrl: "" },
         { ...resistenciaMetadata, content: ResistenciaContent, driveUrl: "" },
-        { ...energiaMetadata, content: PolaridadContent, driveUrl: "" },
+        { ...polaridadMetadata, content: PolaridadContent, driveUrl: "" },
         { ...constantesMetadata, content: ConstantesContent, driveUrl: "" }
       ]
     },
+    // Nota: Aquí continúa el Capítulo 2 y Capítulo 3 (que no incluiste en tu última copia, 
+    // pero que estaban en el archivo completo anterior)
     {
       id: 2,
       title: "Trabajar Online",
       description: "Construye tu carrera digital desde cero",
       modules: [
-        { ...fuerzasIrracionalidadMetadata, content: FuerzasIrracionalidadContent, driveUrl: "" },
+        // Módulos del Capítulo 2
         { ...entornoTrabajoMetadata, content: EntornoTrabajoContent, driveUrl: "" },
         { ...nichoIdealMetadata, content: NichoIdealContent, driveUrl: "" },
         { ...dominarNichoMetadata, content: DominarNichoContent, driveUrl: "" },
@@ -77,6 +78,7 @@ export const courseData: CourseData = {
       title: "Aprender a Vender",
       description: "Domina el arte de la venta con propósito",
       modules: [
+        // Módulos del Capítulo 3
         { ...conquistarVentasMetadata, content: ConquistarVentasContent, driveUrl: "" },
         { ...laBaseRealMetadata, content: LaBaseRealContent, driveUrl: "" },
         { ...guiaVozCerrarMetadata, content: GuiaVozCerrarContent, driveUrl: "" },

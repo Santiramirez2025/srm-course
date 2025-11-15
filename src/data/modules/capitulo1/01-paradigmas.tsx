@@ -1,10 +1,9 @@
 // data/modules/capitulo1/01-paradigmas.tsx
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Check, ChevronRight } from 'lucide-react';
+import { Check, ChevronRight, Sparkles, Zap, Target, Brain, Lightbulb } from 'lucide-react';
 
 // ==================== AJUSTE DE IMPORTACIONES MODULARES ====================
-// Rutas relativas corregidas (saliendo de data/modules/capitulo1/ hacia src/components/...)
 import { usePhaseState } from '../../../components/Paradigmas/hooks/usePhaseState'; 
 import { ProgressBar, ContinueButton } from '../../../components/Paradigmas/PhaseElements';
 import { PhaseContainer } from '../../../components/Paradigmas/PhaseContainer';
@@ -13,6 +12,8 @@ import { TestQuestion } from '../../../components/Paradigmas/TestQuestion';
 
 // ==================== EXPORTACIÓN REQUERIDA: METADATA ====================
 export const paradigmasMetadata = {
+    id: 1,
+    type: "game" as const,
     title: "Paradigmas",
     icon: "🎙️",
     chapter: 1,
@@ -43,13 +44,10 @@ const testQuestions = [
 const totalPhases = 8;
 
 // ==================== MAIN COMPONENT (COORDINADOR) ====================
-// Nombre de la exportación corregido a 'ParadigmasContent' para tu importación
 export const ParadigmasContent: React.FC = () => { 
 
-    // Phase Management (usa useReducer a través del custom hook)
     const { phaseState, unlockNextPhase, goToPhase } = usePhaseState(totalPhases);
     
-    // Secondary States
     const [testAnswers, setTestAnswers] = useState<boolean[]>([]);
     const [showTestResult, setShowTestResult] = useState(false);
     const [selectedBelief, setSelectedBelief] = useState<string>('');
@@ -58,10 +56,9 @@ export const ParadigmasContent: React.FC = () => {
     const [copiedPrompt, setCopiedPrompt] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
     
-    // Referencias para el scroll
     const phaseRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
 
-    // ==================== EFFECTS (Manejo del Scroll) ====================
+    // ==================== EFFECTS ====================
     useEffect(() => {
         if (phaseState.currentPhase > 0) {
             const targetRef = phaseRefs.current[phaseState.currentPhase];
@@ -75,7 +72,6 @@ export const ParadigmasContent: React.FC = () => {
     }, [phaseState.currentPhase]);
 
     // ==================== HANDLERS ====================
-    
     const handleTestAnswer = useCallback((index: number, answer: boolean) => {
         setTestAnswers(prev => {
             const newAnswers = [...prev];
@@ -84,7 +80,7 @@ export const ParadigmasContent: React.FC = () => {
             if (newAnswers.filter(a => a !== undefined).length === testQuestions.length) {
                 setShowTestResult(true);
                 setShowConfetti(true);
-                setTimeout(() => setShowConfetti(false), 2000);
+                setTimeout(() => setShowConfetti(false), 3000);
             }
             
             return newAnswers;
@@ -100,46 +96,96 @@ export const ParadigmasContent: React.FC = () => {
         const prompt = "Ayudame a ver qué creencias sobre mí mismo podrían estar frenándome sin que me dé cuenta. Basate en cómo hablo de mí, de mis hábitos y resultados. Después, charlemos cómo podría verlo distinto. Sé directo pero amigable.";
         navigator.clipboard.writeText(prompt);
         setCopiedPrompt(true);
-        setTimeout(() => setCopiedPrompt(false), 2000);
+        setTimeout(() => setCopiedPrompt(false), 2500);
     }, []);
 
-    // ==================== CALCULATIONS ====================
     const countYes = testAnswers.filter(a => a === true).length;
     
     // ==================== RENDER ====================
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-            {/* Componente de la barra de progreso */}
+        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 relative overflow-hidden">
+            
+            {/* Animated Background Orbs - Premium */}
+            <div className="fixed inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute top-1/4 -left-48 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
+                <div className="absolute bottom-1/4 -right-48 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+            </div>
+
+            {/* Grain Texture Overlay */}
+            <div className="fixed inset-0 pointer-events-none opacity-[0.03]" 
+                 style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 400 400\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }} 
+            />
+
             <ProgressBar 
                 completed={phaseState.completedPhases.size} 
                 total={totalPhases} 
             />
 
+            {/* Confetti Premium */}
             {showConfetti && (
                 <div className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center">
-                    <div className="text-6xl animate-bounce">🎉</div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        {[...Array(12)].map((_, i) => (
+                            <div
+                                key={i}
+                                className="absolute text-4xl animate-ping"
+                                style={{
+                                    left: `${50 + Math.cos((i * Math.PI * 2) / 12) * 30}%`,
+                                    top: `${50 + Math.sin((i * Math.PI * 2) / 12) * 30}%`,
+                                    animationDelay: `${i * 0.1}s`,
+                                    animationDuration: '1.5s'
+                                }}
+                            >
+                                {['🎉', '✨', '🌟', '💫'][i % 4]}
+                            </div>
+                        ))}
+                    </div>
+                    <div className="text-8xl animate-bounce z-10">🎊</div>
                 </div>
             )}
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
                 <div className="grid lg:grid-cols-4 gap-8">
                     
-                    {/* Sidebar - Phase Navigator */}
+                    {/* Sidebar */}
                     <PhaseNavigator phaseState={phaseState} goToPhase={goToPhase} />
 
                     {/* Main Content */}
                     <div className="lg:col-span-3 space-y-8">
                         
-                        {/* Hero */}
-                        <div className="text-center py-6 animate-fade-in">
-                            <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-                                🎙️ Paradigmas
-                            </h1>
-                            <p className="text-xl text-gray-600 font-medium leading-relaxed">
-                                Cuando algo te sale mal, ¿pensás "mala suerte" o "lo sabía, no soy para esto"?
-                                <br />
-                                <span className="text-gray-800 font-semibold">Esa diferencia lo cambia todo.</span>
-                            </p>
+                        {/* Hero Premium */}
+                        <div className="relative group">
+                            <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-violet-600 to-fuchsia-600 rounded-3xl blur-2xl opacity-25 group-hover:opacity-40 transition-opacity duration-1000" />
+                            
+                            <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 sm:p-12 overflow-hidden shadow-2xl">
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-purple-500/20 to-transparent rounded-full blur-3xl" />
+                                
+                                <div className="relative text-center space-y-6">
+                                    <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-500 to-fuchsia-600 rounded-2xl mb-4 shadow-lg shadow-purple-500/50 animate-pulse">
+                                        <span className="text-4xl">🎙️</span>
+                                    </div>
+                                    
+                                    <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-fuchsia-200 leading-tight tracking-tight">
+                                        Paradigmas
+                                    </h1>
+                                    
+                                    <div className="max-w-3xl mx-auto space-y-4">
+                                        <p className="text-xl sm:text-2xl text-gray-300 font-medium leading-relaxed">
+                                            Cuando algo te sale mal, ¿pensás{' '}
+                                            <span className="text-red-400 font-bold">"mala suerte"</span> o{' '}
+                                            <span className="text-red-400 font-bold">"lo sabía, no soy para esto"</span>?
+                                        </p>
+                                        <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-purple-500/20 to-fuchsia-500/20 border border-purple-400/30 rounded-full backdrop-blur-sm">
+                                            <Sparkles className="w-5 h-5 text-purple-300" />
+                                            <span className="text-lg font-bold text-white">
+                                                Esa diferencia lo cambia todo
+                                            </span>
+                                            <Sparkles className="w-5 h-5 text-fuchsia-300" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         {/* FASE 1: Test Inicial */}
@@ -150,31 +196,37 @@ export const ParadigmasContent: React.FC = () => {
                             phaseState={phaseState}
                             phaseRefs={phaseRefs}
                         >
-                            <p className="text-gray-700 mb-6">
-                                No es un test. Es simplemente para que veas si te identificás con algo de esto. Respondé honesto (nadie más lo ve):
-                            </p>
-                            
-                            <div className="space-y-4">
-                                {testQuestions.map((question, index) => (
-                                    <TestQuestion
-                                        key={index}
-                                        index={index}
-                                        question={question}
-                                        currentAnswer={testAnswers[index]}
-                                        handleAnswer={handleTestAnswer}
-                                    />
-                                ))}
-                            </div>
-
-                            {showTestResult && (
-                                <div className="mt-6 animate-fade-in-up">
-                                    <ContinueButton 
-                                        phaseNum={1} 
-                                        label="Ver mi resultado" 
-                                        onClick={unlockNextPhase}
-                                    />
+                            <div className="space-y-6">
+                                <div className="flex items-start gap-4 p-6 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-400/20 rounded-2xl backdrop-blur-sm">
+                                    <Brain className="w-6 h-6 text-blue-400 flex-shrink-0 mt-1" />
+                                    <p className="text-gray-300 text-lg leading-relaxed">
+                                        No es un test. Es simplemente para que veas si te identificás con algo de esto. 
+                                        <span className="block mt-2 text-white font-semibold">Respondé honesto (nadie más lo ve):</span>
+                                    </p>
                                 </div>
-                            )}
+                                
+                                <div className="space-y-4">
+                                    {testQuestions.map((question, index) => (
+                                        <TestQuestion
+                                            key={index}
+                                            index={index}
+                                            question={question}
+                                            currentAnswer={testAnswers[index]}
+                                            handleAnswer={handleTestAnswer}
+                                        />
+                                    ))}
+                                </div>
+
+                                {showTestResult && (
+                                    <div className="mt-8 animate-fade-in-up">
+                                        <ContinueButton 
+                                            phaseNum={1} 
+                                            label="Ver mi resultado" 
+                                            onClick={unlockNextPhase}
+                                        />
+                                    </div>
+                                )}
+                            </div>
                         </PhaseContainer>
 
                         {/* FASE 2: Resultado del Test */}
@@ -185,39 +237,87 @@ export const ParadigmasContent: React.FC = () => {
                             phaseState={phaseState}
                             phaseRefs={phaseRefs}
                         >
-                            <div className={`p-6 rounded-lg border-2 ${
-                                countYes >= 3 ? 'bg-amber-50 border-amber-300' :
-                                countYes >= 2 ? 'bg-blue-50 border-blue-300' :
-                                'bg-green-50 border-green-300'
-                            }`}>
-                                <p className="text-gray-800 leading-relaxed text-lg">
-                                    {countYes >= 3 && (
-                                        <>
-                                            <strong className="text-xl">Si contestaste "sí" a varias:</strong><br /><br />
-                                            No voy a decirte "tranqui, es normal". Porque sí, es común, pero que sea común no significa que esté bueno.
-                                            <br /><br />
-                                            Lo que sí te digo: esto no es un diagnóstico de "algo está mal con vos". Es simplemente que en algún momento 
-                                            tu cerebro aprendió a protegerte de una forma que ahora te limita. Tipo, cuando eras pibe y evitabas ciertas 
-                                            situaciones porque genuinamente no estabas listo. Pero ahora sos adulto y ese mecanismo sigue activado.
-                                            <br /><br />
-                                            Este módulo no va a "arreglarte". Va a mostrarte cómo funciona ese mecanismo para que vos decidas si querés ajustarlo.
-                                        </>
-                                    )}
-                                    {countYes === 2 && (
-                                        <>
-                                            <strong className="text-xl">Interesante:</strong><br /><br />
-                                            Hay algunos patrones ahí que capaz nunca miraste de cerca. 
-                                            Seguí leyendo, puede que entiendas algo que no tenías en el radar.
-                                        </>
-                                    )}
-                                    {countYes <= 1 && (
-                                        <>
-                                            <strong className="text-xl">Bien ahí:</strong><br /><br />
-                                            Parece que tenés bastante claridad mental sobre estas cosas. 
-                                            Igual el módulo puede darte un par de herramientas para afinar lo que ya tenés.
-                                        </>
-                                    )}
-                                </p>
+                            <div className={`relative group overflow-hidden rounded-3xl ${
+                                countYes >= 3 ? 'bg-gradient-to-br from-amber-500/20 to-orange-500/20 border-amber-400/30' :
+                                countYes >= 2 ? 'bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border-blue-400/30' :
+                                'bg-gradient-to-br from-green-500/20 to-emerald-500/20 border-green-400/30'
+                            } border-2 backdrop-blur-xl`}>
+                                
+                                {/* Glow effect */}
+                                <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${
+                                    countYes >= 3 ? 'bg-gradient-to-r from-amber-500/10 to-orange-500/10' :
+                                    countYes >= 2 ? 'bg-gradient-to-r from-blue-500/10 to-cyan-500/10' :
+                                    'bg-gradient-to-r from-green-500/10 to-emerald-500/10'
+                                }`} />
+                                
+                                <div className="relative p-8 space-y-6">
+                                    <div className={`inline-flex items-center gap-3 px-5 py-2.5 rounded-full ${
+                                        countYes >= 3 ? 'bg-amber-500/20 border border-amber-400/40' :
+                                        countYes >= 2 ? 'bg-blue-500/20 border border-blue-400/40' :
+                                        'bg-green-500/20 border border-green-400/40'
+                                    }`}>
+                                        <Target className={`w-5 h-5 ${
+                                            countYes >= 3 ? 'text-amber-400' :
+                                            countYes >= 2 ? 'text-blue-400' :
+                                            'text-green-400'
+                                        }`} />
+                                        <span className="text-white font-bold text-sm uppercase tracking-wide">
+                                            {countYes >= 3 ? 'Área de oportunidad' : countYes >= 2 ? 'Zona de reflexión' : 'Buen punto de partida'}
+                                        </span>
+                                    </div>
+
+                                    <div className="prose prose-invert prose-lg max-w-none">
+                                        {countYes >= 3 && (
+                                            <div className="space-y-4 text-gray-200 leading-relaxed">
+                                                <p className="text-2xl font-bold text-white flex items-center gap-3">
+                                                    <Zap className="w-7 h-7 text-amber-400" />
+                                                    Si contestaste "sí" a varias:
+                                                </p>
+                                                
+                                                <p className="text-lg">
+                                                    No voy a decirte "tranqui, es normal". Porque sí, es común, pero que sea común no significa que esté bueno.
+                                                </p>
+                                                
+                                                <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
+                                                    <p className="text-lg">
+                                                        Lo que sí te digo: esto no es un diagnóstico de "algo está mal con vos". Es simplemente que en algún momento 
+                                                        tu cerebro aprendió a protegerte de una forma que <span className="text-amber-300 font-bold">ahora te limita</span>.
+                                                    </p>
+                                                </div>
+                                                
+                                                <p className="text-lg">
+                                                    Tipo, cuando eras pibe y evitabas ciertas situaciones porque genuinamente no estabas listo. 
+                                                    Pero ahora sos adulto y ese mecanismo sigue activado.
+                                                </p>
+                                                
+                                                <div className="flex items-start gap-4 p-5 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-400/20 rounded-xl">
+                                                    <Sparkles className="w-6 h-6 text-amber-400 flex-shrink-0 mt-1" />
+                                                    <p className="text-lg font-semibold text-white">
+                                                        Este módulo no va a "arreglarte". Va a mostrarte cómo funciona ese mecanismo para que vos decidas si querés ajustarlo.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
+                                        {countYes === 2 && (
+                                            <div className="space-y-4 text-gray-200">
+                                                <p className="text-2xl font-bold text-white">Interesante:</p>
+                                                <p className="text-lg leading-relaxed">
+                                                    Hay algunos patrones ahí que capaz nunca miraste de cerca. 
+                                                    Seguí leyendo, puede que entiendas algo que no tenías en el radar.
+                                                </p>
+                                            </div>
+                                        )}
+                                        {countYes <= 1 && (
+                                            <div className="space-y-4 text-gray-200">
+                                                <p className="text-2xl font-bold text-white">Bien ahí:</p>
+                                                <p className="text-lg leading-relaxed">
+                                                    Parece que tenés bastante claridad mental sobre estas cosas. 
+                                                    Igual el módulo puede darte un par de herramientas para afinar lo que ya tenés.
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="mt-8">
@@ -227,183 +327,409 @@ export const ParadigmasContent: React.FC = () => {
 
                         {/* FASE 3: ¿Qué es un paradigma? */}
                         <PhaseContainer phaseNum={3} title="Fijate si te pasa esto" icon="🧩" phaseState={phaseState} phaseRefs={phaseRefs}>
-                            <div className="space-y-6">
-                                <p className="text-lg text-gray-700 leading-relaxed">
-                                    ¿Alguna vez estuviste por mandar un mensaje, aplicar a un laburo o arrancar algo... y justo antes pensaste "mejor no"?
-                                </p>
-                                <p className="text-lg text-gray-700 leading-relaxed">
-                                    Y después, cuando no pasó nada, te dijiste: "Claro, sabía que no iba a funcionar".
-                                </p>
-                                <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white p-6 rounded-xl">
-                                    <p className="text-lg font-semibold">
-                                        Eso. Eso que acabás de sentir leyendo esto tiene un nombre: <span className="text-amber-400">paradigma</span>.
+                            <div className="space-y-8">
+                                {/* Intro con gradiente */}
+                                <div className="space-y-6">
+                                    <p className="text-xl text-gray-300 leading-relaxed">
+                                        ¿Alguna vez estuviste por mandar un mensaje, aplicar a un laburo o arrancar algo... 
+                                        <span className="text-white font-bold"> y justo antes pensaste "mejor no"?</span>
+                                    </p>
+                                    <p className="text-xl text-gray-300 leading-relaxed">
+                                        Y después, cuando no pasó nada, te dijiste:{' '}
+                                        <span className="text-red-400 font-bold italic">"Claro, sabía que no iba a funcionar"</span>.
                                     </p>
                                 </div>
 
-                                <div className="bg-blue-50 border-2 border-blue-300 p-6 rounded-xl">
-                                    <h3 className="text-xl font-bold text-gray-900 mb-4">Un paradigma es el filtro con el que mirás todo:</h3>
-                                    <div className="space-y-3">
-                                        <div className="flex gap-3 items-start bg-white p-4 rounded-lg">
-                                            <span className="text-blue-500 text-xl mt-1">→</span>
-                                            <span className="text-gray-700"><strong>Si creés que sos malo para algo</strong> → ni lo intentás (o lo intentás esperando fallar)</span>
-                                        </div>
-                                        <div className="flex gap-3 items-start bg-white p-4 rounded-lg">
-                                            <span className="text-green-500 text-xl mt-1">→</span>
-                                            <span className="text-gray-700"><strong>Si creés que la gente no te valora</strong> → buscás confirmación de eso en cada interacción</span>
-                                        </div>
-                                        <div className="flex gap-3 items-start bg-white p-4 rounded-lg">
-                                            <span className="text-orange-500 text-xl mt-1">→</span>
-                                            <span className="text-gray-700"><strong>Si creés que "ya es tarde para vos"</strong> → cada año que pasa lo confirma</span>
+                                {/* Definición impactante */}
+                                <div className="relative group">
+                                    <div className="absolute -inset-1 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition-opacity duration-500" />
+                                    <div className="relative bg-gradient-to-br from-slate-900 via-purple-900/50 to-slate-900 border border-purple-500/30 p-8 rounded-2xl backdrop-blur-xl">
+                                        <div className="flex items-start gap-4">
+                                            <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-purple-500 to-fuchsia-600 rounded-xl flex items-center justify-center shadow-lg">
+                                                <Brain className="w-7 h-7 text-white" />
+                                            </div>
+                                            <div>
+                                                <p className="text-2xl font-bold text-white mb-3">
+                                                    Eso. Eso que acabás de sentir leyendo esto tiene un nombre:
+                                                </p>
+                                                <p className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-pink-400">
+                                                    Paradigma
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="bg-amber-50 border-2 border-amber-400 p-5 rounded-lg">
-                                    <p className="text-gray-800 leading-relaxed font-medium">
-                                        <strong>Acá está el tema:</strong> No es que seas pesimista. Es que tu cerebro está configurado para ver una versión de la realidad. 
-                                        Y lo jodido es que cuanto más tiempo operás con ese filtro, más pruebas encontrás de que "tenés razón".
-                                    </p>
+                                {/* Explicación con cards */}
+                                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 space-y-6">
+                                    <h3 className="text-2xl font-bold text-white flex items-center gap-3">
+                                        <span className="text-3xl">🔍</span>
+                                        Un paradigma es el filtro con el que mirás todo:
+                                    </h3>
+                                    
+                                    <div className="grid gap-4">
+                                        {[
+                                            { 
+                                                color: 'from-blue-500 to-cyan-500',
+                                                text: 'Si creés que sos malo para algo',
+                                                result: 'ni lo intentás (o lo intentás esperando fallar)',
+                                                icon: '🚫'
+                                            },
+                                            { 
+                                                color: 'from-green-500 to-emerald-500',
+                                                text: 'Si creés que la gente no te valora',
+                                                result: 'buscás confirmación de eso en cada interacción',
+                                                icon: '👥'
+                                            },
+                                            { 
+                                                color: 'from-orange-500 to-red-500',
+                                                text: 'Si creés que "ya es tarde para vos"',
+                                                result: 'cada año que pasa lo confirma',
+                                                icon: '⏰'
+                                            }
+                                        ].map((item, i) => (
+                                            <div key={i} className="group relative">
+                                                <div className={`absolute -inset-0.5 bg-gradient-to-r ${item.color} rounded-xl opacity-20 group-hover:opacity-40 transition-opacity duration-300 blur`} />
+                                                <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 p-6 rounded-xl hover:bg-white/10 transition-all duration-300">
+                                                    <div className="flex items-start gap-4">
+                                                        <span className="text-3xl flex-shrink-0">{item.icon}</span>
+                                                        <div className="space-y-2 flex-1">
+                                                            <p className="text-white font-bold text-lg">
+                                                                {item.text}
+                                                            </p>
+                                                            <div className="flex items-center gap-3">
+                                                                <ChevronRight className="w-5 h-5 text-gray-400" />
+                                                                <p className="text-gray-300">
+                                                                    {item.result}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Callout importante */}
+                                <div className="relative">
+                                    <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-orange-500/20 rounded-2xl blur-xl" />
+                                    <div className="relative bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-2 border-amber-400/30 p-8 rounded-2xl backdrop-blur-xl">
+                                        <div className="flex items-start gap-4">
+                                            <Zap className="w-8 h-8 text-amber-400 flex-shrink-0 animate-pulse" />
+                                            <div className="space-y-3">
+                                                <p className="text-xl font-black text-white">Acá está el tema:</p>
+                                                <p className="text-lg text-gray-200 leading-relaxed">
+                                                    No es que seas pesimista. Es que tu cerebro está <span className="text-amber-300 font-bold">configurado</span> para ver una versión de la realidad.
+                                                </p>
+                                                <p className="text-lg text-gray-200 leading-relaxed">
+                                                    Y lo jodido es que cuanto más tiempo operás con ese filtro,{' '}
+                                                    <span className="text-orange-300 font-bold">más pruebas encontrás de que "tenés razón"</span>.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="mt-8">
+                            <div className="mt-10">
                                 <ContinueButton phaseNum={3} label="Ver ejemplo concreto" onClick={unlockNextPhase} />
                             </div>
                         </PhaseContainer>
 
                         {/* FASE 4: Ejemplo Visceral */}
                         <PhaseContainer phaseNum={4} title="Ejemplo concreto" icon="💡" phaseState={phaseState} phaseRefs={phaseRefs}>
-                            <div className="space-y-4">
-                                <div className="bg-gradient-to-br from-red-50 to-pink-50 p-6 rounded-xl border-2 border-red-300">
-                                    <p className="font-semibold text-gray-900 mb-3 text-lg">Situación: Te llega una llamada de un número que no conocés</p>
-                                    <div className="bg-white p-5 rounded-lg border-l-4 border-red-400 mb-4">
-                                        <p className="text-gray-700 mb-3 font-semibold">Paradigma A (desconfianza):</p>
-                                        <ul className="space-y-2 text-gray-600 ml-4">
-                                            <li>• Pensás: "Seguro es spam" o "Va a ser algo malo"</li>
-                                            <li>• No atendés</li>
-                                            <li>• Confirmación: "Menos mal que no atendí, seguro era una boludez"</li>
-                                        </ul>
+                            <div className="space-y-8">
+                                {/* Situación */}
+                                <div className="bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-400/30 p-8 rounded-3xl backdrop-blur-xl">
+                                    <div className="flex items-center gap-4 mb-8">
+                                        <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                                            <span className="text-3xl">📱</span>
+                                        </div>
+                                        <p className="text-2xl font-bold text-white">
+                                            Situación: Te llega una llamada de un número que no conocés
+                                        </p>
                                     </div>
-                                    
-                                    <div className="bg-white p-5 rounded-lg border-l-4 border-green-400">
-                                        <p className="text-gray-700 mb-3 font-semibold">Paradigma B (curiosidad neutral):</p>
-                                        <ul className="space-y-2 text-gray-600 ml-4">
-                                            <li>• Pensás: "No sé quién es, veamos"</li>
-                                            <li>• Atendés</li>
-                                            <li>• Era una oportunidad que ni sabías que existía (o sí era spam, cortás y listo)</li>
-                                        </ul>
+
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        {/* Paradigma A */}
+                                        <div className="relative group">
+                                            <div className="absolute -inset-1 bg-gradient-to-r from-red-500 to-pink-500 rounded-2xl opacity-20 group-hover:opacity-30 transition-opacity blur" />
+                                            <div className="relative bg-white/5 backdrop-blur-sm border border-red-400/30 p-6 rounded-2xl space-y-4 h-full">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
+                                                        <span className="text-xl">🚫</span>
+                                                    </div>
+                                                    <p className="text-lg font-bold text-red-400">Paradigma A: Desconfianza</p>
+                                                </div>
+                                                
+                                                <div className="space-y-3 text-gray-300">
+                                                    <div className="flex items-start gap-3">
+                                                        <span className="text-red-400 mt-1">→</span>
+                                                        <p>Pensás: "Seguro es spam" o "Va a ser algo malo"</p>
+                                                    </div>
+                                                    <div className="flex items-start gap-3">
+                                                        <span className="text-red-400 mt-1">→</span>
+                                                        <p>No atendés</p>
+                                                    </div>
+                                                    <div className="flex items-start gap-3">
+                                                        <span className="text-red-400 mt-1">→</span>
+                                                        <p className="italic text-red-300">Confirmación: "Menos mal que no atendí, seguro era una boludez"</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Paradigma B */}
+                                        <div className="relative group">
+                                            <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl opacity-20 group-hover:opacity-30 transition-opacity blur" />
+                                            <div className="relative bg-white/5 backdrop-blur-sm border border-green-400/30 p-6 rounded-2xl space-y-4 h-full">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                                                        <span className="text-xl">✅</span>
+                                                    </div>
+                                                    <p className="text-lg font-bold text-green-400">Paradigma B: Curiosidad</p>
+                                                </div>
+                                                
+                                                <div className="space-y-3 text-gray-300">
+                                                    <div className="flex items-start gap-3">
+                                                        <span className="text-green-400 mt-1">→</span>
+                                                        <p>Pensás: "No sé quién es, veamos"</p>
+                                                    </div>
+                                                    <div className="flex items-start gap-3">
+                                                        <span className="text-green-400 mt-1">→</span>
+                                                        <p>Atendés</p>
+                                                    </div>
+                                                    <div className="flex items-start gap-3">
+                                                        <span className="text-green-400 mt-1">→</span>
+                                                        <p className="italic text-green-300">Era una oportunidad (o spam, cortás y listo)</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="bg-white p-6 rounded-xl border-4 border-amber-400 shadow-lg">
-                                    <p className="text-xl font-bold text-gray-900 text-center">
-                                        Misma llamada. Misma realidad. Resultados completamente diferentes.
-                                    </p>
-                                    <p className="text-lg text-amber-700 text-center mt-2 font-semibold">
-                                        Eso es un paradigma en acción.
-                                    </p>
+                                {/* Conclusión impactante */}
+                                <div className="relative group">
+                                    <div className="absolute -inset-1 bg-gradient-to-r from-amber-500 via-orange-500 to-pink-500 rounded-3xl blur-2xl opacity-50 group-hover:opacity-75 transition-opacity duration-500" />
+                                    <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 border border-amber-400/50 p-10 rounded-3xl backdrop-blur-xl text-center space-y-4">
+                                        <Lightbulb className="w-16 h-16 text-amber-400 mx-auto animate-pulse" />
+                                        <p className="text-3xl md:text-4xl font-black text-white leading-tight">
+                                            Misma llamada.<br />
+                                            Misma realidad.<br />
+                                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-pink-400">
+                                                Resultados completamente diferentes.
+                                            </span>
+                                        </p>
+                                        <div className="inline-flex items-center gap-2 px-6 py-3 bg-amber-500/20 border border-amber-400/30 rounded-full">
+                                            <Sparkles className="w-5 h-5 text-amber-400" />
+                                            <p className="text-xl font-bold text-amber-300">
+                                                Eso es un paradigma en acción
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="mt-8">
+                            <div className="mt-10">
                                 <ContinueButton phaseNum={4} label="Transformar mis creencias" onClick={unlockNextPhase} />
                             </div>
                         </PhaseContainer>
 
                         {/* FASE 5: Selector de Creencias */}
                         <PhaseContainer phaseNum={5} title="Mismo tema, filtros distintos" icon="🔄" phaseState={phaseState} phaseRefs={phaseRefs}>
-                            <p className="text-gray-700 mb-6 text-lg">
-                                Elegí una de estas creencias y fijate cómo cambia cuando la mirás con otro filtro:
-                            </p>
-                            
-                            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
-                                {limitingBeliefs.map((belief, index) => (
-                                    <button
-                                        key={belief}
-                                        onClick={() => handleBeliefSelect(belief)}
-                                        className={`p-4 rounded-lg border-2 transition-all transform hover:scale-105 text-left animate-fade-in ${
-                                            selectedBelief === belief
-                                                ? 'bg-amber-100 border-amber-400 shadow-lg'
-                                                : 'bg-white border-gray-300 hover:border-amber-300'
-                                        }`}
-                                        style={{ animationDelay: `${index * 50}ms` }}
-                                    >
-                                        <p className="text-sm font-medium text-gray-800">{belief}</p>
-                                    </button>
-                                ))}
-                            </div>
-
-                            {showBeliefResult && selectedBelief && (
-                                <div className="space-y-4 animate-fade-in-up">
-                                    <div className="bg-white p-6 rounded-lg border-2 border-green-400 shadow-lg">
-                                        <div className="space-y-4">
-                                            <div className="flex items-start gap-3">
-                                                <div className="text-3xl">🔴</div>
-                                                <div className="flex-1">
-                                                    <p className="text-sm text-gray-600 mb-1">Lo que venías creyendo:</p>
-                                                    <p className="text-gray-800 font-bold text-lg">{selectedBelief}</p>
+                            <div className="space-y-8">
+                                <p className="text-xl text-gray-300 leading-relaxed">
+                                    Elegí una de estas creencias y fijate cómo cambia cuando la mirás con{' '}
+                                    <span className="text-purple-400 font-bold">otro filtro</span>:
+                                </p>
+                                
+                                {/* Grid de creencias con hover effect premium */}
+                                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {limitingBeliefs.map((belief, index) => (
+                                        <button
+                                            key={belief}
+                                            onClick={() => handleBeliefSelect(belief)}
+                                            className={`group relative p-6 rounded-2xl border-2 transition-all duration-500 text-left transform hover:scale-105 ${
+                                                selectedBelief === belief
+                                                    ? 'bg-gradient-to-br from-amber-500/20 to-orange-500/20 border-amber-400/50 shadow-2xl shadow-amber-500/20'
+                                                    : 'bg-white/5 border-white/10 hover:border-purple-400/50 hover:bg-white/10'
+                                            }`}
+                                            style={{ 
+                                                animationDelay: `${index * 75}ms`,
+                                                animation: 'fadeInUp 0.6s ease-out both'
+                                            }}
+                                        >
+                                            {selectedBelief === belief && (
+                                                <div className="absolute -inset-1 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl opacity-50 blur-xl group-hover:opacity-75 transition-opacity" />
+                                            )}
+                                            <div className="relative flex items-start gap-3">
+                                                <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${
+                                                    selectedBelief === belief 
+                                                        ? 'bg-amber-500/30 text-amber-300' 
+                                                        : 'bg-white/10 text-gray-400 group-hover:text-purple-400'
+                                                }`}>
+                                                    {selectedBelief === belief ? <Check className="w-5 h-5" /> : <span className="font-bold">{index + 1}</span>}
                                                 </div>
+                                                <p className={`text-base font-semibold ${
+                                                    selectedBelief === belief ? 'text-white' : 'text-gray-300 group-hover:text-white'
+                                                }`}>
+                                                    {belief}
+                                                </p>
                                             </div>
-                                            
-                                            <div className="flex items-center justify-center">
-                                                <ChevronRight size={32} className="text-gray-400 animate-pulse" />
-                                            </div>
-                                            
-                                            <div className="flex items-start gap-3">
-                                                <div className="text-3xl">🟢</div>
-                                                <div className="flex-1">
-                                                    <p className="text-sm text-gray-600 mb-1">Mismo tema, otro filtro:</p>
-                                                    <p className="text-green-700 font-bold text-xl">{empoweringBeliefs[selectedBelief]}</p>
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* Resultado de transformación */}
+                                {showBeliefResult && selectedBelief && (
+                                    <div className="space-y-6 animate-fade-in-up">
+                                        <div className="relative">
+                                            <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-3xl opacity-30 blur-xl" />
+                                            <div className="relative bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-xl border border-white/20 p-8 rounded-3xl space-y-8">
+                                                
+                                                {/* Creencia limitante */}
+                                                <div className="flex items-start gap-6">
+                                                    <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-red-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-red-500/30">
+                                                        <span className="text-3xl">🔴</span>
+                                                    </div>
+                                                    <div className="flex-1 space-y-2">
+                                                        <p className="text-sm font-bold text-red-400 uppercase tracking-wide">Lo que venías creyendo</p>
+                                                        <p className="text-2xl font-bold text-white leading-tight">
+                                                            {selectedBelief}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Separador animado */}
+                                                <div className="flex items-center justify-center py-4">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="h-px w-16 bg-gradient-to-r from-transparent to-purple-400" />
+                                                        <div className="relative">
+                                                            <div className="absolute inset-0 bg-purple-500 blur-xl opacity-50 animate-pulse" />
+                                                            <ChevronRight className="relative w-10 h-10 text-purple-400 animate-pulse" />
+                                                        </div>
+                                                        <div className="h-px w-16 bg-gradient-to-l from-transparent to-green-400" />
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Creencia potenciadora */}
+                                                <div className="flex items-start gap-6">
+                                                    <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/30 animate-pulse">
+                                                        <span className="text-3xl">🟢</span>
+                                                    </div>
+                                                    <div className="flex-1 space-y-2">
+                                                        <p className="text-sm font-bold text-green-400 uppercase tracking-wide">Mismo tema, otro filtro</p>
+                                                        <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 leading-tight">
+                                                            {empoweringBeliefs[selectedBelief]}
+                                                        </p>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
+                                        
+                                        <ContinueButton phaseNum={5} label="Crear mi plan de acción" onClick={unlockNextPhase} />
                                     </div>
-                                    
-                                    <ContinueButton phaseNum={5} label="Crear mi plan de acción" onClick={unlockNextPhase} />
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </PhaseContainer>
 
                         {/* FASE 6: Plan de Acción */}
                         {selectedBelief && (
                             <PhaseContainer phaseNum={6} title="Tu plan de 7 días" icon="📱" phaseState={phaseState} phaseRefs={phaseRefs}>
-                                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-300 p-6 rounded-xl space-y-4">
-                                    <div className="bg-white p-5 rounded-lg shadow-md">
-                                        <p className="font-bold text-gray-900 mb-3 flex items-center gap-2 text-lg">
-                                            <span>🎯</span> Tu frase de transformación:
-                                        </p>
-                                        <p className="text-green-700 font-bold text-xl italic border-l-4 border-green-500 pl-4 py-2 bg-green-50 rounded">
-                                            "{empoweringBeliefs[selectedBelief]}"
-                                        </p>
-                                    </div>
-
-                                    <div className="space-y-3 text-gray-700">
-                                        <div className="bg-white p-4 rounded-lg">
-                                            <p className="font-semibold mb-2">Paso 1: Configurá tu alarma</p>
-                                            <p className="text-sm">Guardate una alarma en el celu con esta frase de nombre. Que suene todos los días a una hora random.</p>
-                                        </div>
-
-                                        <div className="bg-white p-4 rounded-lg">
-                                            <p className="font-semibold mb-2">Paso 2: Cuando suene, hacé esto</p>
-                                            <p className="text-sm">No la repitas como robot. Leela y preguntate: <span className="font-semibold">"¿En qué cosa chiquita de hoy puedo ver esto?"</span></p>
-                                        </div>
-
-                                        <div className="bg-white p-4 rounded-lg">
-                                            <p className="font-semibold mb-2">Ejemplo:</p>
-                                            <p className="text-sm italic">Si tu frase es "Estoy aprendiendo cada día", cuando suene pensá: "¿Qué aprendí hoy, aunque sea algo pelotudo?" (tipo "aprendí que el café frío me cae mal" cuenta).</p>
+                                <div className="space-y-8">
+                                    {/* Frase de transformación destacada */}
+                                    <div className="relative group">
+                                        <div className="absolute -inset-1 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 rounded-3xl opacity-50 blur-2xl group-hover:opacity-75 transition-opacity duration-500" />
+                                        <div className="relative bg-gradient-to-br from-green-500/10 to-emerald-500/10 backdrop-blur-xl border-2 border-green-400/30 p-8 rounded-3xl">
+                                            <div className="flex items-start gap-4 mb-6">
+                                                <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+                                                    <Target className="w-7 h-7 text-white" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-bold text-green-400 uppercase tracking-wide mb-2">Tu frase de transformación</p>
+                                                    <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 leading-tight">
+                                                        "{empoweringBeliefs[selectedBelief]}"
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div className="bg-amber-50 border-2 border-amber-300 p-4 rounded-lg">
-                                        <p className="text-sm font-semibold text-gray-800 mb-2">¿Por qué 7 días y no 21?</p>
-                                        <p className="text-sm text-gray-700">
-                                            Porque 21 días suena a compromiso de gym en enero. 7 días suena a "puedo hacer esto". 
-                                            Y si después de una semana funciona, lo vas a seguir solo. Si no, al menos probaste.
-                                        </p>
+                                    {/* Pasos del plan */}
+                                    <div className="grid gap-5">
+                                        {[
+                                            {
+                                                step: 1,
+                                                title: "Configurá tu alarma",
+                                                description: "Guardate una alarma en el celu con esta frase de nombre. Que suene todos los días a una hora random.",
+                                                icon: "⏰",
+                                                color: "from-blue-500 to-cyan-500"
+                                            },
+                                            {
+                                                step: 2,
+                                                title: "Cuando suene, hacé esto",
+                                                description: "No la repitas como robot. Leela y preguntate:",
+                                                highlight: "\"¿En qué cosa chiquita de hoy puedo ver esto?\"",
+                                                icon: "🤔",
+                                                color: "from-purple-500 to-fuchsia-500"
+                                            },
+                                            {
+                                                step: 3,
+                                                title: "Ejemplo práctico",
+                                                description: "Si tu frase es \"Estoy aprendiendo cada día\", cuando suene pensá: \"¿Qué aprendí hoy, aunque sea algo pelotudo?\"",
+                                                subtext: "(tipo \"aprendí que el café frío me cae mal\" cuenta)",
+                                                icon: "💡",
+                                                color: "from-amber-500 to-orange-500"
+                                            }
+                                        ].map((item, i) => (
+                                            <div key={i} className="relative group">
+                                                <div className={`absolute -inset-0.5 bg-gradient-to-r ${item.color} rounded-2xl opacity-20 group-hover:opacity-40 transition-opacity blur`} />
+                                                <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 p-6 rounded-2xl hover:bg-white/10 transition-all duration-300">
+                                                    <div className="flex items-start gap-5">
+                                                        <div className="flex-shrink-0">
+                                                            <div className={`w-12 h-12 bg-gradient-to-br ${item.color} rounded-xl flex items-center justify-center shadow-lg mb-2`}>
+                                                                <span className="text-2xl">{item.icon}</span>
+                                                            </div>
+                                                            <div className="w-12 h-8 bg-white/10 rounded-lg flex items-center justify-center">
+                                                                <span className="text-lg font-black text-white">{item.step}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex-1 space-y-2">
+                                                            <p className="text-xl font-bold text-white">{item.title}</p>
+                                                            <p className="text-gray-300 leading-relaxed">{item.description}</p>
+                                                            {item.highlight && (
+                                                                <p className="text-lg font-bold text-purple-300 italic pl-4 border-l-2 border-purple-400">
+                                                                    {item.highlight}
+                                                                </p>
+                                                            )}
+                                                            {item.subtext && (
+                                                                <p className="text-sm text-gray-400 italic">{item.subtext}</p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Nota importante */}
+                                    <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-2 border-amber-400/30 p-6 rounded-2xl backdrop-blur-sm">
+                                        <div className="flex items-start gap-4">
+                                            <Sparkles className="w-6 h-6 text-amber-400 flex-shrink-0 mt-1" />
+                                            <div className="space-y-2">
+                                                <p className="text-lg font-bold text-white">¿Por qué 7 días y no 21?</p>
+                                                <p className="text-gray-300 leading-relaxed">
+                                                    Porque 21 días suena a compromiso de gym en enero. 7 días suena a "puedo hacer esto". 
+                                                    Y si después de una semana funciona, lo vas a seguir solo. Si no, al menos probaste.
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="mt-8">
+                                <div className="mt-10">
                                     <ContinueButton phaseNum={6} label="Reflexión personal" onClick={unlockNextPhase} />
                                 </div>
                             </PhaseContainer>
@@ -411,108 +737,265 @@ export const ParadigmasContent: React.FC = () => {
 
                         {/* FASE 7: Reflexión Personal */}
                         <PhaseContainer phaseNum={7} title="Tu turno de reflexionar" icon="✍️" phaseState={phaseState} phaseRefs={phaseRefs}>
-                            <p className="text-gray-700 mb-6 text-lg">
-                                ¿Hay algo que te repetís seguido y que capaz te está cagando? Escribilo acá abajo. 
-                                A veces solo el hecho de ponerlo en palabras ya cambia algo.
-                            </p>
-                            
-                            <textarea
-                                value={userInput}
-                                onChange={(e) => setUserInput(e.target.value)}
-                                placeholder="Ej: No puedo aprender a programar porque..."
-                                className="w-full p-5 border-2 border-purple-300 rounded-xl focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 min-h-[120px] text-lg transition-all"
-                            />
-
-                            {userInput && (
-                                <div className="mt-6 bg-white p-6 rounded-xl border-2 border-purple-400 shadow-md animate-fade-in-up">
-                                    <p className="text-sm text-gray-700 mb-4 font-semibold text-lg">Preguntate esto (en serio, tomate un minuto):</p>
-                                    <ul className="space-y-3 text-gray-700">
-                                        <li className="flex gap-3 items-start p-3 bg-purple-50 rounded-lg">
-                                            <span className="text-purple-600 font-bold text-xl">•</span>
-                                            <span>¿Desde cuándo pienso esto? ¿Me lo dijeron o lo concluí yo?</span>
-                                        </li>
-                                        <li className="flex gap-3 items-start p-3 bg-purple-50 rounded-lg">
-                                            <span className="text-purple-600 font-bold text-xl">•</span>
-                                            <span>¿Es una verdad universal o una interpretación mía de algo que pasó?</span>
-                                        </li>
-                                        <li className="flex gap-3 items-start p-3 bg-purple-50 rounded-lg">
-                                            <span className="text-purple-600 font-bold text-xl">•</span>
-                                            <span>¿Cómo lo diría alguien que cree en sí mismo? (no hace falta que lo creas, solo pensá cómo lo diría)</span>
-                                        </li>
-                                        <li className="flex gap-3 items-start p-3 bg-purple-50 rounded-lg">
-                                            <span className="text-purple-600 font-bold text-xl">•</span>
-                                            <span>¿Hubo alguna vez algo que contradice esta creencia? Aunque sea chiquito.</span>
-                                        </li>
-                                    </ul>
+                            <div className="space-y-8">
+                                <div className="flex items-start gap-4 p-6 bg-gradient-to-r from-purple-500/10 to-fuchsia-500/10 border border-purple-400/20 rounded-2xl">
+                                    <Brain className="w-6 h-6 text-purple-400 flex-shrink-0 mt-1" />
+                                    <p className="text-gray-300 text-lg leading-relaxed">
+                                        ¿Hay algo que te repetís seguido y que capaz te está cagando?{' '}
+                                        <span className="text-white font-bold">Escribilo acá abajo.</span>
+                                        <span className="block mt-2 text-gray-400 text-base">
+                                            A veces solo el hecho de ponerlo en palabras ya cambia algo.
+                                        </span>
+                                    </p>
                                 </div>
-                            )}
+                                
+                                <div className="relative group">
+                                    <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 to-fuchsia-500 rounded-2xl opacity-20 group-focus-within:opacity-40 transition-opacity blur" />
+                                    <textarea
+                                        value={userInput}
+                                        onChange={(e) => setUserInput(e.target.value)}
+                                        placeholder="Ej: No puedo aprender a programar porque..."
+                                        className="relative w-full p-6 bg-white/5 backdrop-blur-sm border-2 border-white/10 focus:border-purple-400/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 min-h-[160px] text-lg text-white placeholder-gray-500 transition-all duration-300 resize-none"
+                                    />
+                                </div>
 
-                            <div className="mt-8">
+                                {userInput && (
+                                    <div className="space-y-6 animate-fade-in-up">
+                                        <div className="bg-gradient-to-br from-purple-500/10 to-fuchsia-500/10 backdrop-blur-xl border border-purple-400/30 rounded-3xl p-8">
+                                            <div className="flex items-center gap-3 mb-6">
+                                                <Lightbulb className="w-7 h-7 text-purple-400" />
+                                                <p className="text-xl font-bold text-white">
+                                                    Preguntate esto (en serio, tomate un minuto):
+                                                </p>
+                                            </div>
+                                            
+                                            <div className="space-y-4">
+                                                {[
+                                                    "¿Desde cuándo pienso esto? ¿Me lo dijeron o lo concluí yo?",
+                                                    "¿Es una verdad universal o una interpretación mía de algo que pasó?",
+                                                    "¿Cómo lo diría alguien que cree en sí mismo? (no hace falta que lo creas, solo pensá cómo lo diría)",
+                                                    "¿Hubo alguna vez algo que contradice esta creencia? Aunque sea chiquito."
+                                                ].map((question, i) => (
+                                                    <div key={i} className="group/item relative">
+                                                        <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 to-fuchsia-500 rounded-xl opacity-0 group-hover/item:opacity-20 transition-opacity blur" />
+                                                        <div className="relative flex items-start gap-4 p-5 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl hover:bg-white/10 transition-all duration-300">
+                                                            <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-500 to-fuchsia-600 rounded-lg flex items-center justify-center font-bold text-white shadow-lg">
+                                                                {i + 1}
+                                                            </div>
+                                                            <p className="text-gray-200 leading-relaxed pt-1">{question}</p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="mt-10">
                                 <ContinueButton phaseNum={7} label="Ir al cierre" onClick={unlockNextPhase} />
                             </div>
                         </PhaseContainer>
 
                         {/* FASE 8: Cierre + Bonus */}
                         <PhaseContainer phaseNum={8} title="Para cerrar" icon="🎯" phaseState={phaseState} phaseRefs={phaseRefs}>
-                            <div className="space-y-6">
-                                <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-8 rounded-xl text-center shadow-xl">
-                                    <p className="text-2xl font-bold mb-4 leading-relaxed">
-                                        Cambiar cómo pensás no es lo mismo que "pensar positivo".
-                                    </p>
-                                    <p className="text-xl mb-4">
-                                        Es ver las mismas cosas de siempre y darte cuenta de que hay otra forma de leerlas.
-                                    </p>
-                                    <div className="h-px bg-blue-400 my-6" />
-                                    <p className="text-lg text-blue-100 mb-4">
-                                        No te va a cambiar la vida en una semana. Pero en seis meses, cuando mires para atrás, 
-                                        vas a ver que empezaste a tomar decisiones distintas sin darte cuenta.
-                                    </p>
-                                    <p className="text-2xl font-bold">
-                                        Y eso sí te cambia la vida.
-                                    </p>
-                                </div>
-
-                                <div className="bg-gray-900 text-white p-6 rounded-xl">
-                                    <h3 className="text-2xl font-bold mb-4 text-blue-400">🤖 Bonus: Usá IA para autoconocimiento</h3>
-                                    <p className="text-gray-300 mb-4">
-                                        Si querés ir más profundo en entender tus propios patrones, probá este prompt con ChatGPT, Claude o tu asistente favorito:
-                                    </p>
-                                    <div className="bg-gray-800 p-5 rounded-lg border border-gray-700">
-                                        <p className="text-sm text-gray-300 leading-relaxed">
-                                            Ayudame a ver qué creencias sobre mí mismo podrían estar frenándome sin que me dé cuenta. 
-                                            Basate en cómo hablo de mí, de mis hábitos y resultados. 
-                                            Después, charlemos cómo podría verlo distinto. Sé directo pero amigable.
+                            <div className="space-y-8">
+                                {/* Mensaje principal */}
+                                <div className="relative group">
+                                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 via-purple-500 to-fuchsia-500 rounded-3xl opacity-50 blur-2xl group-hover:opacity-75 transition-opacity duration-1000" />
+                                    <div className="relative bg-gradient-to-br from-blue-600/20 to-purple-600/20 backdrop-blur-xl border border-blue-400/30 p-12 rounded-3xl text-center space-y-6">
+                                        <div className="flex justify-center mb-4">
+                                            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-purple-500/50 animate-pulse">
+                                                <Target className="w-10 h-10 text-white" />
+                                            </div>
+                                        </div>
+                                        
+                                        <p className="text-4xl md:text-5xl font-black text-white leading-tight">
+                                            Cambiar cómo pensás no es lo mismo que{' '}
+                                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-red-400">
+                                                "pensar positivo"
+                                            </span>
                                         </p>
+                                        
+                                        <p className="text-2xl text-gray-200 font-medium leading-relaxed max-w-3xl mx-auto">
+                                            Es ver las mismas cosas de siempre y darte cuenta de que hay{' '}
+                                            <span className="text-blue-300 font-bold">otra forma de leerlas</span>.
+                                        </p>
+                                        
+                                        <div className="h-px bg-gradient-to-r from-transparent via-blue-400 to-transparent my-8" />
+                                        
+                                        <p className="text-xl text-blue-200 leading-relaxed max-w-2xl mx-auto">
+                                            No te va a cambiar la vida en una semana. Pero en seis meses, cuando mires para atrás, 
+                                            vas a ver que empezaste a tomar decisiones distintas{' '}
+                                            <span className="text-white font-bold">sin darte cuenta</span>.
+                                        </p>
+                                        
+                                        <div className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-400/30 rounded-full backdrop-blur-sm">
+                                            <Sparkles className="w-6 h-6 text-blue-300" />
+                                            <p className="text-2xl font-black text-white">
+                                                Y eso sí te cambia la vida
+                                            </p>
+                                            <Sparkles className="w-6 h-6 text-purple-300" />
+                                        </div>
                                     </div>
-                                    <button 
-                                        onClick={copyPrompt}
-                                        className="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg transition-all w-full flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:scale-105"
-                                    >
-                                        {copiedPrompt ? (
-                                            <>
-                                                <Check size={20} />
-                                                <span>¡Copiado!</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <span>📋</span>
-                                                <span>Copiar prompt</span>
-                                            </>
-                                        )}
-                                    </button>
-                                    <p className="text-gray-400 text-sm mt-3">
-                                        💡 Cuanto más honesto seas en tu conversación, más útil va a ser el feedback que recibas.
-                                    </p>
                                 </div>
 
-                                <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-400 p-6 rounded-xl text-center">
-                                    <p className="text-2xl font-bold text-gray-800">¡Módulo completado! 🎉</p>
+                                {/* Bonus IA */}
+                                <div className="relative group">
+                                    <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-3xl opacity-20 blur-xl" />
+                                    <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 border border-green-400/30 rounded-3xl overflow-hidden">
+                                        <div className="p-8 space-y-6">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+                                                    <span className="text-3xl">🤖</span>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-bold text-green-400 uppercase tracking-wide">Bonus</p>
+                                                    <p className="text-2xl font-bold text-white">Usá IA para autoconocimiento</p>
+                                                </div>
+                                            </div>
+                                            
+                                            <p className="text-gray-300 text-lg leading-relaxed">
+                                                Si querés ir más profundo en entender tus propios patrones, probá este prompt con ChatGPT, Claude o tu asistente favorito:
+                                            </p>
+                                            
+                                            <div className="bg-slate-950/50 backdrop-blur-sm border border-white/10 p-6 rounded-2xl">
+                                                <p className="text-gray-300 leading-relaxed font-mono text-sm">
+                                                    Ayudame a ver qué creencias sobre mí mismo podrían estar frenándome sin que me dé cuenta. 
+                                                    Basate en cómo hablo de mí, de mis hábitos y resultados. 
+                                                    Después, charlemos cómo podría verlo distinto. Sé directo pero amigable.
+                                                </p>
+                                            </div>
+                                            
+                                            <button 
+                                                onClick={copyPrompt}
+                                                className="group/btn w-full relative overflow-hidden"
+                                            >
+                                                <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl opacity-100 group-hover/btn:opacity-90 transition-opacity" />
+                                                <div className="relative flex items-center justify-center gap-3 px-8 py-4 text-white font-bold text-lg">
+                                                    {copiedPrompt ? (
+                                                        <>
+                                                            <Check className="w-6 h-6" />
+                                                            <span>¡Copiado al portapapeles!</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <span className="text-2xl">📋</span>
+                                                            <span>Copiar prompt</span>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </button>
+                                            
+                                            <div className="flex items-start gap-3 p-4 bg-green-500/10 border border-green-400/20 rounded-xl">
+                                                <Lightbulb className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                                                <p className="text-sm text-gray-300">
+                                                    <span className="font-bold text-white">Tip pro:</span> Cuanto más honesto seas en tu conversación, más útil va a ser el feedback que recibas.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Módulo completado */}
+                                <div className="relative">
+                                    <div className="absolute inset-0 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 rounded-3xl opacity-50 blur-2xl animate-pulse" />
+                                    <div className="relative bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-xl border-2 border-green-400/50 p-12 rounded-3xl text-center">
+                                        <div className="space-y-6">
+                                            <div className="flex justify-center">
+                                                <div className="w-24 h-24 bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-green-500/50 animate-bounce">
+                                                    <span className="text-5xl">🎉</span>
+                                                </div>
+                                            </div>
+                                            <p className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400">
+                                                ¡Módulo completado!
+                                            </p>
+                                            <p className="text-xl text-gray-300">
+                                                Has dado el primer paso para reconfigurar tus paradigmas
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </PhaseContainer>
                     </div>
                 </div>
             </div>
+
+            {/* Estilos personalizados */}
+            <style>{`
+                @keyframes fadeInUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(30px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+
+                @keyframes fade-in {
+                    from {
+                        opacity: 0;
+                    }
+                    to {
+                        opacity: 1;
+                    }
+                }
+
+                @keyframes fade-in-up {
+                    from {
+                        opacity: 0;
+                        transform: translateY(20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+
+                .animate-fade-in {
+                    animation: fade-in 0.6s ease-out;
+                }
+
+                .animate-fade-in-up {
+                    animation: fade-in-up 0.6s ease-out;
+                }
+
+                /* Smooth scrolling */
+                html {
+                    scroll-behavior: smooth;
+                }
+
+                /* Custom scrollbar */
+                ::-webkit-scrollbar {
+                    width: 10px;
+                }
+
+                ::-webkit-scrollbar-track {
+                    background: rgba(255, 255, 255, 0.05);
+                }
+
+                ::-webkit-scrollbar-thumb {
+                    background: rgba(147, 51, 234, 0.5);
+                    border-radius: 5px;
+                }
+
+                ::-webkit-scrollbar-thumb:hover {
+                    background: rgba(147, 51, 234, 0.7);
+                }
+
+                @media (prefers-reduced-motion: reduce) {
+                    *,
+                    *::before,
+                    *::after {
+                        animation-duration: 0.01ms !important;
+                        animation-iteration-count: 1 !important;
+                        transition-duration: 0.01ms !important;
+                    }
+                }
+            `}</style>
         </div>
     );
 };

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Mail, Lock, Loader2, AlertCircle } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
+import { X, Mail, Lock, Loader2, AlertCircle, Sparkles, Zap } from 'lucide-react';
 
 interface AuthModalProps {
   onClose: () => void;
@@ -20,7 +20,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -36,9 +36,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     } else {
       setError(result.error || 'Error desconocido');
     }
-  };
+  }, [isLogin, email, password, onLogin, onRegister, onClose]);
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = useCallback(async () => {
     setError('');
     setLoading(true);
     
@@ -51,187 +51,240 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     } else {
       setError(result.error || 'Error con Google');
     }
-  };
+  }, [onGoogleLogin, onClose]);
+
+  const toggleMode = useCallback(() => {
+    setIsLogin(!isLogin);
+    setError('');
+    setEmail('');
+    setPassword('');
+  }, [isLogin]);
 
   return (
     <div 
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 animate-fadeIn overflow-y-auto"
+      className="fixed inset-0 bg-gradient-to-br from-black/80 via-purple-900/40 to-black/80 backdrop-blur-xl flex items-center justify-center z-50 p-4 animate-fadeIn overflow-y-auto"
       onClick={(e) => {
         if (e.target === e.currentTarget && !loading) {
           onClose();
         }
       }}
     >
-      {/* Safe Area Top */}
-      <div className="safe-area-top" />
+      {/* Decorative elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+      </div>
 
-      <div className="bg-white rounded-2xl sm:rounded-3xl max-w-md w-full p-6 sm:p-8 md:p-10 relative shadow-2xl animate-slideUp my-auto">
-        {/* Close button - TOUCH TARGET OPTIMIZADO */}
+      <div className="relative bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 rounded-3xl max-w-md w-full p-8 md:p-10 shadow-2xl border border-white/10 backdrop-blur-2xl animate-slideUp my-auto">
+        
+        {/* Glow effect */}
+        <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-cyan-600 to-purple-600 rounded-3xl blur-xl opacity-20 animate-pulse" />
+        
+        {/* Close button */}
         <button 
           onClick={onClose} 
-          className="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-gray-600 transition-colors w-11 h-11 sm:w-12 sm:h-12 rounded-xl hover:bg-gray-100 flex items-center justify-center touch-manipulation min-h-[44px]"
+          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-all w-12 h-12 rounded-xl hover:bg-white/10 flex items-center justify-center touch-manipulation backdrop-blur-sm group z-10"
           aria-label="Cerrar modal"
           disabled={loading}
           type="button"
         >
-          <X size={24} className="sm:w-7 sm:h-7" />
+          <X className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
         </button>
         
-        {/* Header - RESPONSIVE */}
-        <div className="text-center mb-6 sm:mb-8">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-5 shadow-lg">
-            <span className="text-white font-black text-2xl sm:text-3xl">S</span>
+        {/* Header */}
+        <div className="text-center mb-8 relative">
+          {/* Logo con efecto holográfico */}
+          <div className="relative inline-block mb-5">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-2xl blur-2xl opacity-60 animate-pulse" />
+            <div className="relative w-20 h-20 bg-gradient-to-br from-purple-600 via-purple-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-2xl">
+              <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent rounded-2xl" />
+              <Sparkles className="w-10 h-10 text-white relative z-10" />
+            </div>
           </div>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 mb-2">
-            {isLogin ? 'Bienvenido' : 'Crear Cuenta'}
+
+          <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-cyan-200 mb-2 leading-tight">
+            {isLogin ? 'Bienvenido de Nuevo' : 'Únete a Nosotros'}
           </h2>
-          <p className="text-gray-600 text-sm sm:text-base">
-            {isLogin ? 'Continúa tu aprendizaje' : 'Comienza tu viaje de aprendizaje'}
+          <p className="text-gray-400 text-base font-medium">
+            {isLogin ? 'Continúa tu viaje de aprendizaje' : 'Comienza tu aventura educativa'}
           </p>
         </div>
 
-        {/* Botón de Google - TOUCH TARGET OPTIMIZADO */}
+        {/* Google Button Premium */}
         <button
           onClick={handleGoogleLogin}
           disabled={loading}
-          className="w-full flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-5 py-3.5 sm:py-4 bg-white hover:bg-gray-50 border-2 border-gray-300 hover:border-gray-400 rounded-xl sm:rounded-2xl font-semibold text-sm sm:text-base text-gray-700 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed group mb-5 sm:mb-6 touch-manipulation active:scale-95 min-h-[52px] sm:min-h-[56px]"
+          className="relative w-full group overflow-hidden rounded-2xl mb-6 touch-manipulation"
           type="button"
           aria-label="Continuar con Google"
         >
-          {loading ? (
-            <Loader2 size={20} className="sm:w-6 sm:h-6 animate-spin" />
-          ) : (
-            <>
-              <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
-              <span>Continuar con Google</span>
-            </>
-          )}
-        </button>
-
-        {/* Divisor - MEJORADO */}
-        <div className="relative mb-5 sm:mb-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t-2 border-gray-200"></div>
-          </div>
-          <div className="relative flex justify-center text-xs sm:text-sm">
-            <span className="px-3 sm:px-4 bg-white text-gray-500 font-semibold">O continúa con email</span>
-          </div>
-        </div>
-
-        {/* Formulario de Email/Password - OPTIMIZADO */}
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-          {/* Email Input */}
-          <div>
-            <label className="flex items-center gap-2 text-sm sm:text-base font-semibold text-gray-700 mb-2">
-              <Mail size={16} className="sm:w-[18px] sm:h-[18px] text-amber-600 flex-shrink-0" /> 
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 sm:px-5 py-3 sm:py-4 border-2 border-gray-200 rounded-xl sm:rounded-2xl focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none transition-all text-base sm:text-lg min-h-[52px] sm:min-h-[56px] touch-manipulation"
-              placeholder="tu@email.com"
-              required
-              disabled={loading}
-              aria-label="Correo electrónico"
-            />
-          </div>
-
-          {/* Password Input */}
-          <div>
-            <label className="flex items-center gap-2 text-sm sm:text-base font-semibold text-gray-700 mb-2">
-              <Lock size={16} className="sm:w-[18px] sm:h-[18px] text-amber-600 flex-shrink-0" /> 
-              Contraseña
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 sm:px-5 py-3 sm:py-4 border-2 border-gray-200 rounded-xl sm:rounded-2xl focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none transition-all text-base sm:text-lg min-h-[52px] sm:min-h-[56px] touch-manipulation"
-              placeholder="••••••••"
-              required
-              minLength={6}
-              disabled={loading}
-              aria-label="Contraseña"
-            />
-            {!isLogin && (
-              <p className="text-xs sm:text-sm text-gray-500 mt-2 font-medium">Mínimo 6 caracteres</p>
+          {/* Gradient border */}
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-cyan-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
+          
+          {/* Button content */}
+          <div className="relative flex items-center justify-center gap-3 px-6 py-4 bg-white/10 hover:bg-white/15 border border-white/20 hover:border-white/30 rounded-2xl font-bold text-base text-white transition-all duration-300 backdrop-blur-sm min-h-[56px] group-active:scale-95">
+            {loading ? (
+              <Loader2 className="w-6 h-6 animate-spin" />
+            ) : (
+              <>
+                <svg className="w-6 h-6 flex-shrink-0" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                <span>Continuar con Google</span>
+              </>
             )}
           </div>
 
-          {/* Error Message - MEJORADO */}
+          {/* Shine effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
+        </button>
+
+        {/* Divider Premium */}
+        <div className="relative mb-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-white/10"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-4 bg-gradient-to-r from-slate-900 via-purple-900/20 to-slate-900 text-gray-400 font-bold">
+              O continúa con email
+            </span>
+          </div>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Email Input Premium */}
+          <div className="relative group">
+            <label className="flex items-center gap-2 text-sm font-bold text-gray-300 mb-2">
+              <Mail className="w-4 h-4 text-purple-400" /> 
+              Correo Electrónico
+            </label>
+            <div className="relative">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-5 py-4 bg-white/5 border-2 border-white/10 rounded-xl focus:border-purple-500 focus:bg-white/10 focus:outline-none transition-all text-white text-lg placeholder:text-gray-500 min-h-[56px] touch-manipulation backdrop-blur-sm"
+                placeholder="tu@email.com"
+                required
+                disabled={loading}
+                aria-label="Correo electrónico"
+              />
+              {/* Focus glow */}
+              <div className="absolute inset-0 -z-10 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-xl opacity-0 group-focus-within:opacity-20 blur-xl transition-opacity" />
+            </div>
+          </div>
+
+          {/* Password Input Premium */}
+          <div className="relative group">
+            <label className="flex items-center gap-2 text-sm font-bold text-gray-300 mb-2">
+              <Lock className="w-4 h-4 text-purple-400" /> 
+              Contraseña
+            </label>
+            <div className="relative">
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-5 py-4 bg-white/5 border-2 border-white/10 rounded-xl focus:border-purple-500 focus:bg-white/10 focus:outline-none transition-all text-white text-lg placeholder:text-gray-500 min-h-[56px] touch-manipulation backdrop-blur-sm"
+                placeholder="••••••••"
+                required
+                minLength={6}
+                disabled={loading}
+                aria-label="Contraseña"
+              />
+              {/* Focus glow */}
+              <div className="absolute inset-0 -z-10 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-xl opacity-0 group-focus-within:opacity-20 blur-xl transition-opacity" />
+            </div>
+            {!isLogin && (
+              <p className="text-xs text-gray-500 mt-2 font-medium flex items-center gap-1">
+                <Zap className="w-3 h-3" />
+                Mínimo 6 caracteres
+              </p>
+            )}
+          </div>
+
+          {/* Error Message Premium */}
           {error && (
-            <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-red-50 border-2 border-red-200 rounded-xl sm:rounded-2xl text-red-700 text-sm sm:text-base animate-shake">
-              <AlertCircle size={18} className="sm:w-5 sm:h-5 flex-shrink-0 mt-0.5" />
-              <span className="font-medium">{error}</span>
+            <div className="relative overflow-hidden rounded-xl bg-red-500/10 border-2 border-red-500/30 backdrop-blur-sm animate-shake">
+              <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 to-transparent" />
+              <div className="relative flex items-start gap-3 p-4 text-red-300 text-sm">
+                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                <span className="font-semibold">{error}</span>
+              </div>
             </div>
           )}
 
-          {/* Submit Button - TOUCH TARGET OPTIMIZADO */}
+          {/* Submit Button Premium */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 sm:py-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2 sm:gap-3 min-h-[52px] sm:min-h-[56px] touch-manipulation"
+            className="relative w-full group overflow-hidden rounded-2xl touch-manipulation"
             aria-label={isLogin ? 'Iniciar sesión' : 'Crear cuenta'}
           >
-            {loading ? (
-              <>
-                <Loader2 size={20} className="sm:w-6 sm:h-6 animate-spin" />
-                <span>Procesando...</span>
-              </>
-            ) : (
-              <span>{isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}</span>
-            )}
+            {/* Animated gradient background */}
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-purple-500 to-cyan-500 opacity-100 group-hover:opacity-90 transition-opacity" />
+            
+            {/* Moving gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
+            
+            {/* Button content */}
+            <div className="relative py-4 font-black text-lg text-white shadow-2xl min-h-[56px] flex items-center justify-center gap-3 group-active:scale-95 transition-transform">
+              {loading ? (
+                <>
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                  <span>Procesando...</span>
+                </>
+              ) : (
+                <>
+                  <Zap className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                  <span>{isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}</span>
+                </>
+              )}
+            </div>
+
+            {/* Bottom glow */}
+            <div className="absolute -bottom-1 inset-x-0 h-2 bg-gradient-to-r from-purple-500 to-cyan-500 blur-lg opacity-60" />
           </button>
         </form>
 
-        {/* Toggle Login/Register - TOUCH TARGET OPTIMIZADO */}
-        <div className="mt-5 sm:mt-6 text-center">
+        {/* Toggle Mode Premium */}
+        <div className="mt-6 text-center">
           <button
-            onClick={() => {
-              setIsLogin(!isLogin);
-              setError('');
-            }}
-            className="text-sm sm:text-base text-gray-600 hover:text-amber-600 transition-colors font-medium inline-flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-amber-50 touch-manipulation min-h-[44px]"
+            onClick={toggleMode}
+            className="relative group inline-flex items-center gap-1.5 px-4 py-3 rounded-xl text-sm font-bold text-gray-400 hover:text-white transition-all touch-manipulation overflow-hidden"
             disabled={loading}
             type="button"
           >
-            {isLogin ? (
-              <>¿No tienes cuenta? <span className="font-bold">Regístrate</span></>
-            ) : (
-              <>¿Ya tienes cuenta? <span className="font-bold">Inicia sesión</span></>
-            )}
+            {/* Hover background */}
+            <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+            
+            <span className="relative">
+              {isLogin ? (
+                <>¿No tienes cuenta? <span className="text-purple-400 group-hover:text-purple-300">Regístrate</span></>
+              ) : (
+                <>¿Ya tienes cuenta? <span className="text-purple-400 group-hover:text-purple-300">Inicia sesión</span></>
+              )}
+            </span>
           </button>
         </div>
+
+        {/* Decorative bottom accent */}
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-50" />
       </div>
 
-      {/* Safe Area Bottom */}
-      <div className="safe-area-bottom" />
-
-      {/* Estilos */}
+      {/* Styles */}
       <style>{`
-        /* Safe Area Support */
-        .safe-area-top {
-          height: env(safe-area-inset-top);
-        }
-        
-        .safe-area-bottom {
-          height: env(safe-area-inset-bottom);
-        }
-
         /* Touch manipulation */
         .touch-manipulation {
           -webkit-tap-highlight-color: transparent;
           touch-action: manipulation;
         }
 
-        /* Animaciones */
+        /* Animations */
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
@@ -240,7 +293,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         @keyframes slideUp {
           from { 
             opacity: 0;
-            transform: translateY(20px) scale(0.98);
+            transform: translateY(30px) scale(0.95);
           }
           to { 
             opacity: 1;
@@ -250,20 +303,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         
         @keyframes shake {
           0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-5px); }
-          75% { transform: translateX(5px); }
+          25% { transform: translateX(-8px); }
+          75% { transform: translateX(8px); }
         }
         
         .animate-fadeIn {
-          animation: fadeIn 0.2s ease-out;
+          animation: fadeIn 0.3s ease-out;
         }
         
         .animate-slideUp {
-          animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+          animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         
         .animate-shake {
-          animation: shake 0.3s ease-out;
+          animation: shake 0.4s ease-out;
         }
 
         /* Prevent input zoom on iOS */
@@ -275,21 +328,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
         /* Reduce motion */
         @media (prefers-reduced-motion: reduce) {
-          .animate-fadeIn,
-          .animate-slideUp,
-          .animate-shake,
-          .hover\\:scale-\\[1\\.02\\],
-          .active\\:scale-95 {
-            animation: none !important;
-            transform: none !important;
+          * {
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
           }
         }
 
-        /* Optimización para pantallas muy pequeñas */
-        @media (max-width: 360px) {
-          .text-2xl {
-            font-size: 1.375rem;
-          }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+          width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+          background: rgba(168, 85, 247, 0.5);
+          border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(168, 85, 247, 0.7);
         }
       `}</style>
     </div>

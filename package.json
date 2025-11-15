@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Plataforma de curso SRM - Aprendé a vivir mejor, trabajar online y vender con propósito",
+  "description": "Plataforma de SRM Academy - Aprendé a vivir mejor, trabajar online y vender con propósito",
   "author": "SRM",
   "license": "MIT",
   "scripts": {

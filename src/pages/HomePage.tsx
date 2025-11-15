@@ -1,26 +1,169 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Hero } from '@components/home/Hero';
-import { ChapterGrid } from '@components/home/ChapterGrid';
-import { CourseData } from '@data/types';
-import { ChevronDown } from 'lucide-react';
+import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import { ChevronDown, ChevronUp, Sparkles, BookOpen, Award } from 'lucide-react';
+import { Chapter, Module } from '@data/types';
+
+// ============================================
+// INTERFACES
+// ============================================
+
+interface CourseProgress {
+  total: number;
+  completed: number;
+  percentage: number;
+}
+
+interface Stats {
+  totalModules: number;
+  completionRate?: number;
+}
+
+interface CourseData {
+  title: string;
+  subtitle: string;
+  chapters: Chapter[];
+}
+
+interface HeroProps {
+  title: string;
+  subtitle: string;
+  onStartCourse: () => void;
+  courseProgress?: CourseProgress | null;
+  stats: Stats;
+}
+
+interface ChapterGridProps {
+  chapters: Chapter[];
+  onChapterClick: (chapterId: number) => void;
+  completedModules: Set<number>;
+}
 
 interface HomePageProps {
   courseData: CourseData;
   onStartCourse: () => void;
   completedModules?: Set<number>;
-  courseProgress?: {
-    total: number;
-    completed: number;
-    percentage: number;
-  };
-  onChapterClick?: (chapterId: number) => void;
+  courseProgress?: CourseProgress | null;
+  onChapterClick?: (id: number) => void;
 }
 
-export const HomePage: React.FC<HomePageProps> = ({ 
-  courseData, 
+// ============================================
+// HERO COMPONENT
+// ============================================
+
+const Hero: React.FC<HeroProps> = ({ title, subtitle, onStartCourse, courseProgress, stats }) => (
+  <div className="min-h-screen flex items-center justify-center px-4">
+    <div className="max-w-4xl mx-auto text-center space-y-8">
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full text-sm text-gray-300">
+        <Sparkles className="w-4 h-4 text-violet-400" />
+        <span>Academia Digital SRM</span>
+      </div>
+      
+      <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
+        <span className="bg-gradient-to-br from-white via-white to-gray-300 bg-clip-text text-transparent">
+          {title}
+        </span>
+      </h1>
+      
+      <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
+        {subtitle}
+      </p>
+
+      {courseProgress && (
+        <div className="flex items-center justify-center gap-6 text-sm">
+          <div className="flex items-center gap-2">
+            <BookOpen className="w-4 h-4 text-violet-400" />
+            <span className="text-gray-300">{stats.totalModules} módulos</span>
+          </div>
+          <div className="w-1 h-1 rounded-full bg-gray-600" />
+          <div className="flex items-center gap-2">
+            <Award className="w-4 h-4 text-violet-400" />
+            <span className="text-gray-300">{courseProgress.percentage}% completado</span>
+          </div>
+        </div>
+      )}
+      
+      <button
+        onClick={onStartCourse}
+        className="group relative px-8 py-4 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-xl font-semibold text-white shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/40 hover:scale-105 active:scale-95 transition-all duration-300"
+      >
+        <span className="relative z-10">Comenzar Curso</span>
+        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-300" />
+      </button>
+    </div>
+  </div>
+);
+
+// ============================================
+// CHAPTER GRID COMPONENT
+// ============================================
+
+const ChapterGrid: React.FC<ChapterGridProps> = ({ chapters, onChapterClick, completedModules }) => (
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto px-4">
+    {chapters.map((chapter: Chapter, index: number) => {
+      const completed = chapter.modules?.filter((m: Module) => completedModules.has(m.id)).length || 0;
+      const total = chapter.modules?.length || 0;
+      const progress = total > 0 ? (completed / total) * 100 : 0;
+      
+      return (
+        <div
+          key={chapter.id}
+          onClick={() => onChapterClick(chapter.id)}
+          className="group relative bg-white/[0.02] backdrop-blur-sm border border-white/[0.05] rounded-2xl p-6 hover:bg-white/[0.04] hover:border-white/10 transition-all duration-300 cursor-pointer"
+        >
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-violet-500/0 to-fuchsia-500/0 group-hover:from-violet-500/5 group-hover:to-fuchsia-500/5 transition-all duration-500" />
+          
+          <div className="relative space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 border border-violet-500/30 flex items-center justify-center text-sm font-bold text-violet-300">
+                  {index + 1}
+                </div>
+                <div>
+                  <h3 className="font-semibold text-white text-lg leading-tight">
+                    {chapter.title}
+                  </h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {total} módulos
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {chapter.description && (
+              <p className="text-sm text-gray-400 leading-relaxed line-clamp-2">
+                {chapter.description}
+              </p>
+            )}
+
+            {progress > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-500">Progreso</span>
+                  <span className="text-violet-400 font-medium">{Math.round(progress)}%</span>
+                </div>
+                <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full transition-all duration-500"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    })}
+  </div>
+);
+
+// ============================================
+// MAIN COMPONENT
+// ============================================
+
+const HomePage: React.FC<HomePageProps> = ({ 
+  courseData,
   onStartCourse,
   completedModules = new Set(),
-  courseProgress,
+  courseProgress = null,
   onChapterClick
 }) => {
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -29,12 +172,10 @@ export const HomePage: React.FC<HomePageProps> = ({
   const chaptersRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
 
-  // Mount animation trigger
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Scroll progress tracking
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
@@ -42,7 +183,6 @@ export const HomePage: React.FC<HomePageProps> = ({
       const progress = Math.min(scrollTop / docHeight, 1);
       setScrollProgress(progress);
 
-      // Hero visibility tracking
       if (heroRef.current) {
         const heroBottom = heroRef.current.getBoundingClientRect().bottom;
         setIsHeroVisible(heroBottom > 100);
@@ -50,27 +190,31 @@ export const HomePage: React.FC<HomePageProps> = ({
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll(); // Initial call
+    handleScroll();
     
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleChapterClick = (chapterId: number) => {
+  const handleChapterClick = useCallback((chapterId: number) => {
     if (onChapterClick) {
       onChapterClick(chapterId);
     } else {
       onStartCourse();
     }
-  };
+  }, [onChapterClick, onStartCourse]);
 
-  const scrollToChapters = () => {
+  const scrollToChapters = useCallback(() => {
     chaptersRef.current?.scrollIntoView({ 
       behavior: 'smooth', 
       block: 'start' 
     });
-  };
+  }, []);
 
-  const totalModules = React.useMemo(() => {
+  const scrollToTop = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const totalModules = useMemo(() => {
     return courseData.chapters?.reduce(
       (sum, ch) => sum + (ch.modules?.length || 0), 
       0
@@ -78,42 +222,61 @@ export const HomePage: React.FC<HomePageProps> = ({
   }, [courseData.chapters]);
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden">
+    <div className="relative min-h-screen bg-[#0a0a0f] text-white overflow-x-hidden">
       
-      {/* Animated gradient background */}
-      <div className="fixed inset-0 -z-20 bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50" />
+      {/* Ultra-subtle gradient background */}
+      <div className="fixed inset-0 bg-gradient-to-br from-violet-950/20 via-[#0a0a0f] to-fuchsia-950/10" />
       
-      {/* Ambient blur orbs */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+      {/* Minimal starfield */}
+      <div 
+        className="fixed inset-0 opacity-30"
+        style={{
+          backgroundImage: `
+            radial-gradient(1px 1px at 20% 30%, white, transparent),
+            radial-gradient(1px 1px at 60% 70%, white, transparent),
+            radial-gradient(1px 1px at 50% 50%, white, transparent),
+            radial-gradient(1px 1px at 80% 10%, white, transparent),
+            radial-gradient(1px 1px at 90% 60%, white, transparent)
+          `,
+          backgroundSize: '200px 200px, 300px 300px, 250px 250px, 400px 400px, 350px 350px',
+          backgroundPosition: '0 0, 40px 60px, 130px 270px, 70px 100px, 200px 150px',
+        }}
+      />
+
+      {/* Subtle ambient glow */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div 
-          className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-amber-200/40 rounded-full blur-3xl transition-all duration-[3000ms] ease-out"
+          className="absolute w-[600px] h-[600px] rounded-full opacity-20 blur-3xl"
           style={{ 
-            transform: `translate(${scrollProgress * 100}px, ${scrollProgress * 200}px) scale(${1 + scrollProgress * 0.5})`,
-            opacity: 0.6 - scrollProgress * 0.3
+            background: 'radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, transparent 70%)',
+            top: '10%',
+            left: '-10%',
+            transform: `translate(${scrollProgress * 50}px, ${scrollProgress * 80}px)`,
+            transition: 'transform 0.3s ease-out'
           }}
         />
         <div 
-          className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-orange-200/30 rounded-full blur-3xl transition-all duration-[3000ms] ease-out"
+          className="absolute w-[500px] h-[500px] rounded-full opacity-15 blur-3xl"
           style={{ 
-            transform: `translate(-${scrollProgress * 80}px, -${scrollProgress * 150}px) scale(${1 + scrollProgress * 0.3})`,
-            opacity: 0.5 - scrollProgress * 0.2
+            background: 'radial-gradient(circle, rgba(217, 70, 239, 0.3) 0%, transparent 70%)',
+            bottom: '10%',
+            right: '-10%',
+            transform: `translate(-${scrollProgress * 40}px, -${scrollProgress * 60}px)`,
+            transition: 'transform 0.3s ease-out'
           }}
         />
       </div>
 
-      {/* Progress indicator */}
+      {/* Minimal progress bar */}
       <div 
-        className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-orange-500 to-orange-600 z-50 transition-transform duration-150 ease-out origin-left"
-        style={{ 
-          transform: `scaleX(${scrollProgress})`,
-          opacity: scrollProgress > 0.05 ? 1 : 0
-        }}
-        role="progressbar"
-        aria-valuenow={Math.round(scrollProgress * 100)}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-label="Progreso de scroll"
-      />
+        className="fixed top-0 left-0 right-0 h-0.5 z-50 transition-opacity duration-300"
+        style={{ opacity: scrollProgress > 0.02 ? 1 : 0 }}
+      >
+        <div 
+          className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all duration-200 ease-out origin-left"
+          style={{ transform: `scaleX(${scrollProgress})` }}
+        />
+      </div>
 
       {/* Hero Section */}
       <div 
@@ -121,8 +284,8 @@ export const HomePage: React.FC<HomePageProps> = ({
         className="relative"
         style={{
           opacity: mounted ? 1 : 0,
-          transform: mounted ? 'translateY(0)' : 'translateY(20px)',
-          transition: 'all 1s cubic-bezier(0.34, 1.56, 0.64, 1)'
+          transform: mounted ? 'translateY(0)' : 'translateY(30px)',
+          transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)'
         }}
       >
         <Hero
@@ -132,201 +295,139 @@ export const HomePage: React.FC<HomePageProps> = ({
           courseProgress={courseProgress}
           stats={{
             totalModules: totalModules,
-            estimatedHours: undefined,
             completionRate: courseProgress?.percentage
           }}
         />
         
-        {/* Scroll indicator - Solo visible si no hay progreso */}
+        {/* Elegant scroll indicator */}
         {!courseProgress?.completed && (
           <button
             onClick={scrollToChapters}
-            className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-gray-500 hover:text-amber-600 transition-all duration-300 group animate-bounce-slow"
+            className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 group cursor-pointer"
             aria-label="Ver capítulos del curso"
           >
-            <span className="text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-              Ver capítulos
+            <span className="text-xs font-medium text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 uppercase tracking-wider">
+              Explorar Contenido
             </span>
-            <div className="w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200 shadow-lg flex items-center justify-center group-hover:shadow-xl group-hover:border-amber-300 transition-all">
-              <ChevronDown size={20} className="group-hover:translate-y-1 transition-transform" />
+
+            <div className="relative w-12 h-12 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 flex items-center justify-center group-hover:bg-white/10 group-hover:border-white/20 group-hover:scale-110 transition-all duration-300">
+              <ChevronDown 
+                size={20} 
+                className="text-gray-400 group-hover:text-white group-hover:translate-y-0.5 transition-all duration-300" 
+                strokeWidth={2}
+              />
             </div>
           </button>
         )}
       </div>
 
-      {/* Transition gradient overlay */}
-      <div 
-        className="relative h-24 sm:h-32 lg:h-40 pointer-events-none"
-        style={{
-          background: 'linear-gradient(to bottom, rgba(255, 251, 235, 0) 0%, rgba(255, 251, 235, 0.5) 50%, rgba(255, 251, 235, 1) 100%)',
-          marginTop: '-6rem'
-        }}
-      />
-
       {/* Chapters Section */}
       <div 
         ref={chaptersRef}
-        className="relative z-10 scroll-mt-20"
+        className="relative z-10 scroll-mt-20 pt-32 pb-32"
         style={{
           opacity: mounted ? 1 : 0,
           transform: mounted ? 'translateY(0)' : 'translateY(40px)',
-          transition: 'all 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s'
+          transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s'
         }}
       >
-        {/* Section header con animación de entrada */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 sm:mb-12">
-          <div className="text-center space-y-3 sm:space-y-4">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 tracking-tight">
-              <span className="bg-gradient-to-br from-amber-600 to-orange-600 bg-clip-text text-transparent">
-                Contenido del Curso
-              </span>
-            </h2>
-            <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto font-medium">
-              {courseData.chapters?.length || 0} capítulos diseñados para tu crecimiento profesional
+        {/* Section Header */}
+        <div className="max-w-7xl mx-auto px-4 mb-16 text-center space-y-4">
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-br from-white via-white to-gray-400 bg-clip-text text-transparent">
+            Contenido del Curso
+          </h2>
+          
+          <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+            {courseData.chapters?.length || 0} capítulos diseñados para llevar tu carrera al siguiente nivel
+          </p>
+
+          {courseProgress && courseProgress.total > 0 && (
+            <div className="inline-flex items-center gap-3 px-4 py-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full text-sm text-gray-300 mt-6">
+              <div className="w-2 h-2 bg-violet-400 rounded-full animate-pulse" />
+              <span>{courseProgress.completed} de {courseProgress.total} módulos completados</span>
+            </div>
+          )}
+        </div>
+
+        <ChapterGrid 
+          chapters={courseData.chapters || []}
+          onChapterClick={handleChapterClick}
+          completedModules={completedModules}
+        />
+      </div>
+
+      {/* Minimal Footer */}
+      <footer className="relative z-10 mt-32 border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-4 py-12">
+          <div className="text-center space-y-4">
+            <p className="text-sm text-gray-500">
+              Academia Digital <span className="text-violet-400 font-semibold">SRM</span> © 2025
+            </p>
+            <p className="text-xs text-gray-600 max-w-md mx-auto">
+              Transformando carreras profesionales con educación de calidad
             </p>
           </div>
         </div>
+      </footer>
 
-        {/* Chapter Grid con reveal escalonado */}
-        <div className="pb-16 sm:pb-20 lg:pb-24">
-          <ChapterGrid 
-            chapters={courseData.chapters || []}
-            onChapterClick={handleChapterClick}
-            completedModules={completedModules}
-            isLoading={false}
-          />
-        </div>
-      </div>
-
-      {/* Floating progress badge - Solo visible cuando hay progreso */}
+      {/* Floating Progress Card */}
       {courseProgress && courseProgress.completed > 0 && (
         <div 
-          className="fixed bottom-6 right-6 z-40 transition-all duration-500 ease-out"
+          className="fixed bottom-8 right-8 z-40 transition-all duration-500"
           style={{
             opacity: isHeroVisible ? 0 : 1,
-            transform: isHeroVisible ? 'translateY(100px) scale(0.8)' : 'translateY(0) scale(1)',
+            transform: isHeroVisible ? 'translateY(100px) scale(0.9)' : 'translateY(0) scale(1)',
             pointerEvents: isHeroVisible ? 'none' : 'auto'
           }}
         >
-          <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200/50 p-4 min-w-[200px]">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center">
-                <span className="text-white font-black text-lg">
-                  {courseProgress.percentage}%
-                </span>
+          <div className="relative group">
+            <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/20 p-5 min-w-[240px] group-hover:bg-white/[0.05] group-hover:border-white/20 transition-all duration-300">
+              
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-14 h-14 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/25">
+                  <span className="text-white font-bold text-xl">
+                    {courseProgress.percentage}%
+                  </span>
+                </div>
+
+                <div className="flex-1">
+                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">
+                    Progreso Total
+                  </p>
+                  <p className="text-sm font-semibold text-white">
+                    {courseProgress.completed}/{courseProgress.total} módulos
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Progreso total
-                </p>
-                <p className="text-sm font-bold text-gray-900">
-                  {courseProgress.completed}/{courseProgress.total} módulos
-                </p>
+              
+              <div className="relative w-full h-2 bg-white/5 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full transition-all duration-1000 ease-out"
+                  style={{ width: `${courseProgress.percentage}%` }}
+                />
               </div>
-            </div>
-            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-500"
-                style={{ width: `${courseProgress.percentage}%` }}
-              />
             </div>
           </div>
         </div>
       )}
 
-      {/* Scroll to top button */}
+      {/* Scroll to Top Button */}
       {scrollProgress > 0.3 && (
         <button
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-6 left-6 z-40 w-12 h-12 bg-white/90 backdrop-blur-xl rounded-full shadow-xl border border-gray-200/50 flex items-center justify-center text-gray-700 hover:text-amber-600 hover:shadow-2xl hover:border-amber-300 transition-all duration-300 hover:scale-110 active:scale-95"
+          onClick={scrollToTop}
+          className="fixed bottom-8 left-8 z-40 w-12 h-12 bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-full flex items-center justify-center text-gray-400 hover:bg-white/[0.08] hover:text-white hover:border-white/20 hover:scale-110 active:scale-95 transition-all duration-300 shadow-lg shadow-black/10"
           aria-label="Volver arriba"
           style={{
             opacity: scrollProgress > 0.3 ? 1 : 0,
             transform: `translateY(${scrollProgress > 0.3 ? '0' : '20px'})`
           }}
         >
-          <ChevronDown size={24} className="rotate-180" />
+          <ChevronUp size={20} strokeWidth={2} />
         </button>
       )}
-
-      <style>{`
-        /* Smooth scroll behavior */
-        html {
-          scroll-behavior: smooth;
-          scroll-padding-top: 5rem;
-        }
-
-        /* iOS momentum scrolling */
-        * {
-          -webkit-overflow-scrolling: touch;
-        }
-
-        /* Bounce animation optimizada */
-        @keyframes bounce-slow {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
-        }
-        
-        .animate-bounce-slow {
-          animation: bounce-slow 2s infinite ease-in-out;
-        }
-
-        /* Prevent layout shift */
-        .scroll-mt-20 {
-          scroll-margin-top: 5rem;
-        }
-
-        /* GPU acceleration para elementos animados */
-        [style*="transform"] {
-          will-change: transform;
-          transform: translateZ(0);
-          backface-visibility: hidden;
-        }
-
-        /* Optimización para móviles */
-        @media (max-width: 768px) {
-          /* Prevent zoom on input focus */
-          input, textarea, select {
-            font-size: 16px !important;
-          }
-
-          /* Reduce motion on mobile for performance */
-          @media (prefers-reduced-motion: no-preference) {
-            * {
-              scroll-behavior: smooth;
-            }
-          }
-        }
-
-        /* Mejora de contraste para accesibilidad */
-        @media (prefers-contrast: high) {
-          .bg-white\\/90 {
-            background-color: white;
-          }
-        }
-
-        /* Reduce motion para usuarios con preferencia */
-        @media (prefers-reduced-motion: reduce) {
-          *,
-          *::before,
-          *::after {
-            animation-duration: 0.01ms !important;
-            animation-iteration-count: 1 !important;
-            transition-duration: 0.01ms !important;
-            scroll-behavior: auto !important;
-          }
-        }
-
-        /* Safe areas para notch de iOS */
-        @supports (padding: env(safe-area-inset-top)) {
-          .safe-area-inset {
-            padding-top: env(safe-area-inset-top);
-            padding-bottom: env(safe-area-inset-bottom);
-            padding-left: env(safe-area-inset-left);
-            padding-right: env(safe-area-inset-right);
-          }
-        }
-      `}</style>
     </div>
   );
 };
+
+export { HomePage };
+export default HomePage;

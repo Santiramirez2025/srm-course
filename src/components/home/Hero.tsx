@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Play, BookOpen, Clock, Award, Sparkles, TrendingUp } from 'lucide-react';
+import { Play, BookOpen, Clock, Award, Sparkles, TrendingUp, Zap } from 'lucide-react';
 
 interface HeroProps {
   title: string;
@@ -34,62 +34,63 @@ export const Hero: React.FC<HeroProps> = ({
     setMounted(true);
   }, []);
 
-  // Mensaje motivacional dinámico
   const getMotivationalMessage = () => {
     if (!courseProgress) return '';
     const { percentage } = courseProgress;
     
-    if (percentage < 25) return 'Excelente inicio. Cada paso cuenta';
-    if (percentage < 50) return 'Vas por buen camino. Mantén el ritmo';
-    if (percentage < 75) return 'Más de la mitad. Ya casi llegas';
-    if (percentage < 100) return 'La meta está cerca. ¡Último empujón!';
-    return 'Logro desbloqueado';
+    if (percentage < 25) return '🚀 Excelente inicio';
+    if (percentage < 50) return '💪 Vas por buen camino';
+    if (percentage < 75) return '🔥 Más de la mitad';
+    if (percentage < 100) return '⭐ La meta está cerca';
+    return '🏆 Logro completado';
   };
 
   return (
-    <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 lg:pt-24 pb-12 sm:pb-16 lg:pb-20">
+    <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 lg:pt-32 pb-16 sm:pb-20 lg:pb-24">
       
-      {/* Ambient Background - Optimizado */}
-      <div className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute top-20 left-1/4 w-[500px] h-[500px] bg-amber-200/30 rounded-full blur-3xl opacity-60" 
-             style={{ transform: mounted ? 'scale(1)' : 'scale(0.8)', transition: 'transform 2s cubic-bezier(0.34, 1.56, 0.64, 1)' }} />
-        <div className="absolute top-40 right-1/4 w-[600px] h-[600px] bg-orange-200/20 rounded-full blur-3xl opacity-40" 
-             style={{ transform: mounted ? 'scale(1)' : 'scale(0.8)', transition: 'transform 2.5s cubic-bezier(0.34, 1.56, 0.64, 1)' }} />
-      </div>
-
       <div className="relative text-center">
         
-        {/* Logo con reveal cinemático */}
-        <div className="mb-8 sm:mb-10 inline-block">
+        {/* Premium Logo con mega glow */}
+        <div className="mb-10 sm:mb-12 inline-block">
           <div className="relative group">
-            {/* Glow layer */}
+            {/* Mega glow layers */}
             <div 
-              className="absolute -inset-4 bg-gradient-to-br from-amber-400 to-orange-500 rounded-3xl blur-2xl opacity-0 transition-opacity duration-1000"
-              style={{ opacity: mounted ? 0.4 : 0 }}
+              className="absolute -inset-6 bg-gradient-to-br from-purple-600 via-fuchsia-600 to-orange-600 rounded-3xl blur-3xl transition-opacity duration-1000"
+              style={{ opacity: mounted ? 0.5 : 0 }}
+            />
+            <div 
+              className="absolute -inset-4 bg-gradient-to-br from-purple-500 to-fuchsia-500 rounded-3xl blur-2xl opacity-0 group-hover:opacity-60 transition-opacity duration-500"
             />
             
-            {/* Logo container */}
+            {/* Logo container premium */}
             <div 
-              className="relative w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 bg-gradient-to-br from-amber-500 via-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-2xl transition-all duration-700 ease-out group-hover:shadow-amber-500/50"
+              className="relative w-28 h-28 sm:w-32 sm:h-32 lg:w-40 lg:h-40 bg-gradient-to-br from-purple-500 via-fuchsia-500 to-orange-500 rounded-3xl flex items-center justify-center shadow-2xl shadow-purple-500/50 transition-all duration-700 ease-out group-hover:scale-110 group-hover:rotate-3"
               style={{ 
                 transform: mounted ? 'scale(1) rotate(0deg)' : 'scale(0.8) rotate(-10deg)',
                 opacity: mounted ? 1 : 0
               }}
             >
-              <span className="text-white font-black text-4xl sm:text-5xl lg:text-6xl transition-transform duration-300 group-hover:scale-110">
-                {logo.length === 1 ? logo : <img src={logo} alt="Logo" className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 object-contain" />}
+              {/* Overlay gradient */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-3xl" />
+              
+              <span className="text-white font-black text-5xl sm:text-6xl lg:text-7xl transition-transform duration-300 group-hover:scale-110">
+                {logo.length === 1 ? logo : <img src={logo} alt="Logo" className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 object-contain" />}
               </span>
               
-              {/* Shine effect */}
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+              {/* Animated shine effect */}
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+              
+              {/* Sparkle particles */}
+              <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full animate-pulse opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute -bottom-2 -left-2 w-4 h-4 bg-pink-400 rounded-full animate-pulse opacity-0 group-hover:opacity-100 transition-opacity" style={{ animationDelay: '0.3s' }} />
             </div>
           </div>
         </div>
 
-        {/* Status Badge */}
+        {/* Status Badge Premium */}
         {hasStarted && !isCompleted && (
           <div 
-            className="inline-flex items-center gap-2.5 px-5 py-2.5 bg-white/80 backdrop-blur-xl border border-amber-200/50 text-amber-700 rounded-full text-sm font-semibold mb-6 shadow-lg shadow-amber-100/50 transition-all duration-300 hover:shadow-xl"
+            className="inline-flex items-center gap-3 px-6 py-3 bg-white/10 backdrop-blur-xl border-2 border-purple-400/30 text-white rounded-full text-sm font-bold mb-8 shadow-2xl shadow-purple-500/20 transition-all duration-300 hover:scale-105 hover:border-purple-400/50"
             style={{ 
               opacity: mounted ? 1 : 0,
               transform: mounted ? 'translateY(0)' : 'translateY(-10px)',
@@ -97,30 +98,32 @@ export const Hero: React.FC<HeroProps> = ({
             }}
           >
             <div className="relative flex items-center justify-center">
-              <div className="absolute w-3 h-3 bg-amber-400 rounded-full animate-ping opacity-75" />
-              <div className="relative w-2 h-2 bg-amber-500 rounded-full" />
+              <div className="absolute w-3 h-3 bg-purple-400 rounded-full animate-ping opacity-75" />
+              <div className="relative w-2 h-2 bg-purple-500 rounded-full shadow-lg shadow-purple-500/50" />
             </div>
-            <span className="tracking-tight">En progreso</span>
+            <span>En progreso</span>
+            <Zap size={16} className="text-purple-400" />
           </div>
         )}
 
         {isCompleted && (
           <div 
-            className="inline-flex items-center gap-2.5 px-5 py-2.5 bg-gradient-to-r from-green-50 to-emerald-50 backdrop-blur-xl border border-green-200/50 text-green-700 rounded-full text-sm font-semibold mb-6 shadow-lg shadow-green-100/50"
+            className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-xl border-2 border-green-400/30 text-white rounded-full text-sm font-bold mb-8 shadow-2xl shadow-green-500/20 transition-all duration-300 hover:scale-105"
             style={{ 
               opacity: mounted ? 1 : 0,
               transform: mounted ? 'translateY(0)' : 'translateY(-10px)',
               transitionDelay: '0.2s'
             }}
           >
-            <Award size={18} className="text-green-600" />
-            <span className="tracking-tight">Curso completado</span>
+            <Award size={18} className="text-green-400" />
+            <span>Curso completado</span>
+            <Sparkles size={16} className="text-green-400" />
           </div>
         )}
 
-        {/* Title con efecto gradiente animado */}
+        {/* Title Premium con gradiente animado */}
         <h1 
-          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-6 leading-[1.1] tracking-tight"
+          className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black mb-8 leading-[1.05] tracking-tight px-4"
           style={{ 
             opacity: mounted ? 1 : 0,
             transform: mounted ? 'translateY(0)' : 'translateY(20px)',
@@ -128,14 +131,14 @@ export const Hero: React.FC<HeroProps> = ({
             transition: 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)'
           }}
         >
-          <span className="bg-gradient-to-br from-amber-600 via-orange-600 to-orange-700 bg-clip-text text-transparent">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-fuchsia-400 to-pink-400">
             {title}
           </span>
         </h1>
 
-        {/* Subtitle mejorado */}
+        {/* Subtitle Premium */}
         <p 
-          className="text-lg sm:text-xl lg:text-2xl text-gray-600 mb-10 sm:mb-12 max-w-2xl lg:max-w-3xl mx-auto leading-relaxed font-medium"
+          className="text-xl sm:text-2xl lg:text-3xl text-gray-300 mb-12 sm:mb-14 max-w-3xl lg:max-w-4xl mx-auto leading-relaxed font-medium px-4"
           style={{ 
             opacity: mounted ? 1 : 0,
             transform: mounted ? 'translateY(0)' : 'translateY(20px)',
@@ -149,7 +152,7 @@ export const Hero: React.FC<HeroProps> = ({
         {/* Progress Card Premium */}
         {hasStarted && courseProgress && (
           <div 
-            className="max-w-md mx-auto mb-10 sm:mb-12"
+            className="max-w-xl mx-auto mb-12 sm:mb-14"
             style={{ 
               opacity: mounted ? 1 : 0,
               transform: mounted ? 'translateY(0)' : 'translateY(20px)',
@@ -157,56 +160,84 @@ export const Hero: React.FC<HeroProps> = ({
               transition: 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)'
             }}
           >
-            <div className="bg-white/70 backdrop-blur-2xl rounded-3xl p-6 sm:p-7 shadow-xl border border-gray-200/50 hover:shadow-2xl transition-all duration-500">
+            <div className="relative group">
+              {/* Glow effect */}
+              <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 to-fuchsia-500 rounded-3xl opacity-30 group-hover:opacity-50 blur-xl transition-opacity duration-500" />
               
-              {/* Header */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center">
-                    <TrendingUp size={18} className="text-white" />
-                  </div>
-                  <span className="font-bold text-gray-900 text-lg">Tu progreso</span>
-                </div>
-                <span className="text-2xl font-black bg-gradient-to-br from-amber-600 to-orange-600 bg-clip-text text-transparent">
-                  {courseProgress.percentage}%
-                </span>
-              </div>
-              
-              {/* Progress Bar Premium */}
-              <div className="relative w-full h-3 bg-gray-100 rounded-full overflow-hidden mb-4">
-                {/* Background gradient */}
-                <div className="absolute inset-0 bg-gradient-to-r from-gray-100 to-gray-50" />
+              {/* Card */}
+              <div className="relative bg-white/5 backdrop-blur-2xl rounded-3xl p-7 sm:p-8 shadow-2xl border border-white/10 hover:border-white/20 transition-all duration-500">
                 
-                {/* Progress fill con animación */}
-                <div
-                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-400 via-amber-500 to-orange-600 rounded-full transition-all duration-1000 ease-out"
-                  style={{ 
-                    width: `${courseProgress.percentage}%`,
-                    boxShadow: '0 0 20px rgba(251, 191, 36, 0.4)'
-                  }}
-                >
-                  {/* Shimmer effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer" />
+                {/* Header */}
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-fuchsia-600 rounded-xl flex items-center justify-center shadow-lg">
+                      <TrendingUp size={20} className="text-white" />
+                    </div>
+                    <span className="font-black text-white text-xl">Tu progreso</span>
+                  </div>
+                  <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-fuchsia-400">
+                    {courseProgress.percentage}%
+                  </span>
                 </div>
-              </div>
-              
-              {/* Stats row */}
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500 font-medium">
-                  {courseProgress.completed} de {courseProgress.total} módulos
-                </span>
-                <span className="text-amber-600 font-semibold flex items-center gap-1.5">
-                  <Sparkles size={14} />
-                  {getMotivationalMessage()}
-                </span>
+                
+                {/* Progress Bar Premium */}
+                <div className="relative w-full h-4 bg-white/10 rounded-full overflow-hidden mb-5 shadow-inner">
+                  {/* Progress fill */}
+                  <div
+                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-500 via-fuchsia-500 to-pink-500 rounded-full transition-all duration-1000 ease-out shadow-lg shadow-purple-500/50"
+                    style={{ 
+                      width: `${courseProgress.percentage}%`
+                    }}
+                  >
+                    {/* Shimmer effect */}
+                    <div 
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                      style={{ animation: 'shimmer 3s infinite' }}
+                    />
+                    
+                    {/* Inner glow */}
+                    {courseProgress.percentage > 0 && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 blur-sm opacity-50" />
+                    )}
+                  </div>
+
+                  {/* Milestone markers */}
+                  <div className="absolute inset-0 flex justify-between items-center px-2 pointer-events-none">
+                    {[...Array(courseProgress.total)].map((_, i) => {
+                      const milestonePercentage = ((i + 1) / courseProgress.total) * 100;
+                      const isPassed = courseProgress.percentage >= milestonePercentage;
+                      
+                      return (
+                        <div 
+                          key={i}
+                          className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                            isPassed 
+                              ? 'bg-white shadow-lg shadow-white/50 scale-125' 
+                              : 'bg-white/20'
+                          }`}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+                
+                {/* Stats row */}
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-400 font-semibold">
+                    {courseProgress.completed} de {courseProgress.total} módulos
+                  </span>
+                  <span className="text-purple-400 font-bold flex items-center gap-2">
+                    {getMotivationalMessage()}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* CTA Button Premium con glow animado */}
+        {/* CTA Button Premium con mega effects */}
         <div 
-          className="flex justify-center mb-12 sm:mb-16"
+          className="flex justify-center mb-14 sm:mb-16"
           style={{ 
             opacity: mounted ? 1 : 0,
             transform: mounted ? 'translateY(0)' : 'translateY(20px)',
@@ -216,19 +247,27 @@ export const Hero: React.FC<HeroProps> = ({
         >
           <button
             onClick={onStartCourse}
-            className="group relative px-8 py-4 sm:px-10 sm:py-5 bg-gradient-to-r from-amber-500 via-orange-500 to-orange-600 text-white font-bold text-lg rounded-2xl shadow-2xl shadow-orange-500/30 hover:shadow-orange-500/50 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] min-w-[280px] overflow-hidden"
+            className="group relative px-10 py-5 sm:px-12 sm:py-6 font-black text-xl rounded-2xl shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 min-w-[320px] overflow-hidden"
             type="button"
             aria-label={isCompleted ? "Revisar curso" : hasStarted ? "Continuar curso" : "Comenzar curso"}
           >
-            {/* Animated glow */}
-            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+            {/* Base gradient */}
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 rounded-2xl" />
             
-            {/* Pulsing ring on hover */}
-            <div className="absolute inset-0 rounded-2xl bg-white/20 scale-0 group-hover:scale-100 opacity-0 group-hover:opacity-100 transition-all duration-500 blur-xl" />
+            {/* Glow layers */}
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 rounded-2xl blur-xl opacity-50" />
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 rounded-2xl opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-500" />
             
-            <span className="relative flex items-center justify-center gap-3 font-bold tracking-tight">
-              <Play size={22} className="group-hover:scale-110 transition-transform duration-300" fill="white" />
+            {/* Animated shine */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 rounded-2xl" />
+            
+            {/* Pulsing ring */}
+            <div className="absolute inset-0 rounded-2xl bg-white/10 scale-100 group-hover:scale-110 opacity-0 group-hover:opacity-100 transition-all duration-500 blur-md" />
+            
+            <span className="relative flex items-center justify-center gap-3 text-white font-black">
+              <Play size={24} className="group-hover:scale-110 transition-transform duration-300 drop-shadow-lg" fill="white" />
               {isCompleted ? 'Revisar curso' : hasStarted ? 'Continuar curso' : 'Comenzar curso'}
+              <Sparkles size={20} className="group-hover:rotate-12 transition-transform duration-300" />
             </span>
           </button>
         </div>
@@ -236,7 +275,7 @@ export const Hero: React.FC<HeroProps> = ({
         {/* Stats Grid Premium */}
         {stats && (
           <div 
-            className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 max-w-4xl mx-auto"
+            className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6 max-w-5xl mx-auto"
             style={{ 
               opacity: mounted ? 1 : 0,
               transform: mounted ? 'translateY(0)' : 'translateY(20px)',
@@ -245,86 +284,92 @@ export const Hero: React.FC<HeroProps> = ({
             }}
           >
             {stats.totalModules && (
-              <div className="group bg-white/60 backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-gray-200/50 hover:shadow-xl hover:border-amber-200/50 transition-all duration-300 hover:-translate-y-1">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                    <BookOpen size={26} className="text-amber-600" />
-                  </div>
-                  <div className="text-left">
-                    <div className="text-3xl font-black text-gray-900">{stats.totalModules}</div>
-                    <div className="text-sm font-semibold text-gray-500">Módulos</div>
-                  </div>
-                </div>
-              </div>
+              <StatCard
+                icon={BookOpen}
+                value={stats.totalModules}
+                label="Módulos"
+                color="purple"
+              />
             )}
 
             {stats.estimatedHours && (
-              <div className="group bg-white/60 backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-gray-200/50 hover:shadow-xl hover:border-blue-200/50 transition-all duration-300 hover:-translate-y-1">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                    <Clock size={26} className="text-blue-600" />
-                  </div>
-                  <div className="text-left">
-                    <div className="text-3xl font-black text-gray-900">{stats.estimatedHours}h</div>
-                    <div className="text-sm font-semibold text-gray-500">Duración</div>
-                  </div>
-                </div>
-              </div>
+              <StatCard
+                icon={Clock}
+                value={`${stats.estimatedHours}h`}
+                label="Duración"
+                color="blue"
+              />
             )}
 
             {stats.completionRate !== undefined && (
-              <div className="group bg-white/60 backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-gray-200/50 hover:shadow-xl hover:border-green-200/50 transition-all duration-300 hover:-translate-y-1 sm:col-span-1">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                    <Award size={26} className="text-green-600" />
-                  </div>
-                  <div className="text-left">
-                    <div className="text-3xl font-black text-gray-900">{stats.completionRate}%</div>
-                    <div className="text-sm font-semibold text-gray-500">Completado</div>
-                  </div>
-                </div>
-              </div>
+              <StatCard
+                icon={Award}
+                value={`${stats.completionRate}%`}
+                label="Completado"
+                color="green"
+              />
             )}
           </div>
         )}
       </div>
-
-      <style>{`
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(200%); }
-        }
-        
-        .animate-shimmer {
-          animation: shimmer 3s infinite;
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          * {
-            animation-duration: 0.01ms !important;
-            animation-iteration-count: 1 !important;
-            transition-duration: 0.01ms !important;
-          }
-        }
-
-        /* Mejora de contraste para accesibilidad */
-        @media (prefers-contrast: high) {
-          .bg-white\\/60, .bg-white\\/70, .bg-white\\/80 {
-            background-color: white;
-          }
-        }
-
-        /* Optimización touch targets */
-        button {
-          -webkit-tap-highlight-color: transparent;
-          touch-action: manipulation;
-        }
-
-        /* GPU acceleration */
-        .group:hover > * {
-          will-change: transform;
-        }
-      `}</style>
     </section>
+  );
+};
+
+// Stat Card Component Premium
+interface StatCardProps {
+  icon: React.ElementType;
+  value: number | string;
+  label: string;
+  color: 'purple' | 'blue' | 'green';
+}
+
+const StatCard: React.FC<StatCardProps> = ({ icon: Icon, value, label, color }) => {
+  const colorClasses = {
+    purple: {
+      bg: 'from-purple-500/10 to-violet-500/10',
+      border: 'border-purple-400/30',
+      iconBg: 'from-purple-500 to-violet-600',
+      iconShadow: 'shadow-purple-500/30',
+      text: 'text-purple-400'
+    },
+    blue: {
+      bg: 'from-blue-500/10 to-cyan-500/10',
+      border: 'border-blue-400/30',
+      iconBg: 'from-blue-500 to-cyan-600',
+      iconShadow: 'shadow-blue-500/30',
+      text: 'text-blue-400'
+    },
+    green: {
+      bg: 'from-green-500/10 to-emerald-500/10',
+      border: 'border-green-400/30',
+      iconBg: 'from-green-500 to-emerald-600',
+      iconShadow: 'shadow-green-500/30',
+      text: 'text-green-400'
+    }
+  };
+
+  const classes = colorClasses[color];
+
+  return (
+    <div className="relative group">
+      {/* Glow effect */}
+      <div className={`absolute -inset-1 bg-gradient-to-r ${classes.iconBg} rounded-2xl opacity-0 group-hover:opacity-30 blur transition-opacity duration-300`} />
+      
+      {/* Card */}
+      <div className={`relative flex items-center gap-4 px-6 py-5 bg-gradient-to-br ${classes.bg} border-2 ${classes.border} backdrop-blur-xl rounded-2xl shadow-xl hover:scale-105 transition-all duration-300`}>
+        <div className={`flex-shrink-0 w-14 h-14 bg-gradient-to-br ${classes.iconBg} rounded-xl flex items-center justify-center shadow-lg ${classes.iconShadow}`}>
+          <Icon className="w-7 h-7 text-white" />
+        </div>
+        <div className="flex flex-col">
+          <span className={`text-3xl font-black ${classes.text}`}>
+            {value}
+          </span>
+          <span className="text-sm font-bold text-gray-300 uppercase tracking-wide">
+            {label}
+          </span>
+        </div>
+      </div>
+    </div>
   );
 };

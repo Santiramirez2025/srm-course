@@ -629,7 +629,7 @@ export const EntrevistarContratarContent = () => {
 
           <div className="max-w-4xl mx-auto space-y-6">
             <p className="text-3xl font-black text-white">
-              Completaste el Curso SRM
+              Completaste la capacitacion SRM Academy
             </p>
             
             <div className="my-8 h-1 w-48 bg-gradient-to-r from-yellow-400 to-amber-400 mx-auto rounded-full" />
