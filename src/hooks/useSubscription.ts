@@ -16,11 +16,21 @@ export const useSubscription = (userId?: string) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Esperar a que Firebase entregue un valor real
+    if (userId === undefined) return;
+  
+    // Caso: usuario NO logueado
     if (!userId) {
+      setSubscription({
+        status: 'inactive',
+        plan: 'free',
+        hasAccess: false
+      });
       setLoading(false);
       return;
     }
-
+  
+    // Caso: usuario logueado → cargar subscripción
     checkSubscription(userId);
   }, [userId]);
 
