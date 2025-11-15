@@ -1,5 +1,10 @@
 // src/components/course/ui/HolographicPanel.tsx
-import React, { memo } from 'react';
+import React, { useMemo } from 'react';
+import { useReducedMotion } from 'framer-motion';
+
+// ============================================================================
+// TYPES
+// ============================================================================
 
 interface HolographicPanelProps {
   children: React.ReactNode;
@@ -8,34 +13,58 @@ interface HolographicPanelProps {
   variant?: 'default' | 'subtle' | 'intense';
   /** Desactiva animaciones para mejor rendimiento */
   static?: boolean;
+  /** Etiqueta ARIA personalizada para el panel */
+  ariaLabel?: string;
+  /** Rol ARIA personalizado */
+  role?: React.AriaRole;
 }
 
-export const HolographicPanel = memo<HolographicPanelProps>(({ 
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+const VARIANT_CLASSES: Record<'default' | 'subtle' | 'intense', string> = {
+  default: 'holographic',
+  subtle: 'holographic opacity-60',
+  intense: 'holographic brightness-110'
+};
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
+export const HolographicPanel = React.memo<HolographicPanelProps>(({ 
   children, 
   className = '',
   variant = 'default',
-  static: isStatic = false
+  static: isStatic = false,
+  ariaLabel = 'Panel holográfico',
+  role = 'region'
 }) => {
-  const variantClasses = {
-    default: 'holographic',
-    subtle: 'holographic opacity-60',
-    intense: 'holographic brightness-110'
-  };
-
-  const animationClass = isStatic ? '' : 'animate-hologram';
+  const prefersReducedMotion = useReducedMotion() || false;
+  
+  // Compute classes only when dependencies change
+  const panelClasses = useMemo(() => {
+    const variantClass = VARIANT_CLASSES[variant];
+    const animationClass = (isStatic || prefersReducedMotion) ? '' : 'animate-hologram';
+    
+    return [
+      'glass-panel',
+      variantClass,
+      animationClass,
+      'rounded-2xl sm:rounded-3xl',
+      'overflow-hidden',
+      className
+    ]
+      .filter(Boolean)
+      .join(' ');
+  }, [variant, isStatic, prefersReducedMotion, className]);
 
   return (
     <div 
-      className={`
-        glass-panel 
-        ${variantClasses[variant]} 
-        ${animationClass}
-        rounded-3xl 
-        overflow-hidden 
-        ${className}
-      `.trim().replace(/\s+/g, ' ')}
-      role="region"
-      aria-label="Panel holográfico"
+      className={panelClasses}
+      role={role}
+      aria-label={ariaLabel}
     >
       {children}
     </div>
