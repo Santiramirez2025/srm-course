@@ -1,4 +1,4 @@
-// src/App.tsx
+// src/App.tsx - OPTIMIZADO PARA MOBILE
 import React, { useState, useRef, useEffect, useCallback, useMemo, Suspense, lazy } from 'react';
 import { Volume2, VolumeX, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
@@ -19,26 +19,52 @@ const PricingModal = lazy(() => import('@components/subscription/PricingModal').
 const SubscriptionGate = lazy(() => import('@components/subscription/SubscriptionGate').then(m => ({ default: m.SubscriptionGate })));
 
 // ============================================
-// ANIMATION VARIANTS - Optimizados con prefers-reduced-motion
+// CUSTOM HOOK: Detección de Mobile
+// ============================================
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
+  return isMobile;
+};
+
+// ============================================
+// ANIMATION VARIANTS - Optimizados para Mobile
 // ============================================
 const pageTransition = {
-  duration: 0.4,
+  duration: 0.3, // Reducido para mobile
   ease: [0.22, 1, 0.36, 1] as const
 };
 
-const createPageVariants = (shouldReduceMotion: boolean) => ({
-  initial: shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 20, scale: 0.98 },
+const createPageVariants = (shouldReduceMotion: boolean, isMobile: boolean) => ({
+  initial: shouldReduceMotion || isMobile 
+    ? { opacity: 0 } 
+    : { opacity: 0, y: 20, scale: 0.98 },
   animate: { 
     opacity: 1, 
     y: 0, 
     scale: 1,
-    transition: shouldReduceMotion ? { duration: 0.2 } : pageTransition
+    transition: shouldReduceMotion || isMobile 
+      ? { duration: 0.2 } 
+      : pageTransition
   },
   exit: { 
     opacity: 0, 
-    y: shouldReduceMotion ? 0 : -20, 
-    scale: shouldReduceMotion ? 1 : 0.98,
-    transition: { duration: shouldReduceMotion ? 0.1 : 0.3, ease: [0.22, 1, 0.36, 1] as const }
+    y: shouldReduceMotion || isMobile ? 0 : -20, 
+    scale: shouldReduceMotion || isMobile ? 1 : 0.98,
+    transition: { 
+      duration: shouldReduceMotion || isMobile ? 0.15 : 0.3, 
+      ease: [0.22, 1, 0.36, 1] as const 
+    }
   }
 });
 
@@ -56,27 +82,27 @@ const musicButtonVariants = {
   animate: { 
     scale: 1, 
     rotate: 0,
-    transition: { delay: 0.5, duration: 0.5, ease: [0.34, 1.56, 0.64, 1] as const }
+    transition: { delay: 0.3, duration: 0.4, ease: [0.34, 1.56, 0.64, 1] as const }
   },
-  tap: { scale: 0.9 },
-  hover: { scale: 1.1, rotate: 5 }
+  tap: { scale: 0.85 }, // Feedback táctil más pronunciado
+  hover: { scale: 1.05 } // Menos hover en mobile
 };
 
 // ============================================
-// LOADING COMPONENT - Memoizado
+// LOADING COMPONENT - Responsive
 // ============================================
 const LoadingScreen = React.memo(() => (
-  <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-950 via-purple-900/20 to-slate-950">
+  <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-950 via-purple-900/20 to-slate-950 px-4">
     <motion.div 
       className="text-center"
       variants={loadingVariants}
       initial="initial"
       animate="animate"
     >
-      {/* Logo holográfico */}
-      <div className="relative w-24 h-24 mx-auto mb-8">
+      {/* Logo holográfico - Responsive */}
+      <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mx-auto mb-6 sm:mb-8">
         <motion.div 
-          className="absolute inset-0 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-2xl blur-2xl opacity-60"
+          className="absolute inset-0 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-xl sm:rounded-2xl blur-xl sm:blur-2xl opacity-60"
           animate={{ 
             scale: [1, 1.2, 1],
             opacity: [0.6, 0.8, 0.6]
@@ -87,14 +113,14 @@ const LoadingScreen = React.memo(() => (
             ease: "easeInOut"
           }}
         />
-        <div className="relative w-24 h-24 bg-gradient-to-br from-purple-600 via-purple-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-2xl">
-          <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent rounded-2xl" />
-          <Sparkles className="w-12 h-12 text-white relative z-10" />
+        <div className="relative w-full h-full bg-gradient-to-br from-purple-600 via-purple-500 to-cyan-500 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-2xl">
+          <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent rounded-xl sm:rounded-2xl" />
+          <Sparkles className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-white relative z-10" />
         </div>
       </div>
       
       <motion.p 
-        className="text-white font-bold text-lg"
+        className="text-white font-bold text-base sm:text-lg px-4"
         animate={{ opacity: [0.5, 1, 0.5] }}
         transition={{ duration: 1.5, repeat: Infinity }}
       >
@@ -107,11 +133,11 @@ const LoadingScreen = React.memo(() => (
 LoadingScreen.displayName = 'LoadingScreen';
 
 // ============================================
-// SUSPENSE FALLBACK
+// SUSPENSE FALLBACK - Responsive
 // ============================================
 const SuspenseFallback = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="animate-pulse text-purple-400 text-lg font-medium">
+  <div className="flex items-center justify-center min-h-screen px-4">
+    <div className="animate-pulse text-purple-400 text-base sm:text-lg font-medium text-center">
       Cargando módulo...
     </div>
   </div>
@@ -122,7 +148,11 @@ const SuspenseFallback = () => (
 // ============================================
 const App: React.FC = () => {
   const shouldReduceMotion = useReducedMotion();
-  const pageVariants = useMemo(() => createPageVariants(!!shouldReduceMotion), [shouldReduceMotion]);
+  const isMobile = useIsMobile();
+  const pageVariants = useMemo(
+    () => createPageVariants(!!shouldReduceMotion, isMobile), 
+    [shouldReduceMotion, isMobile]
+  );
   
   // ============================================
   // HOOKS
@@ -183,17 +213,17 @@ const App: React.FC = () => {
     }
   }, [user]);
 
-  // Scroll to top on view change
+  // Scroll to top on view change - Optimizado para mobile
   useEffect(() => {
     const timer = setTimeout(() => {
       window.scrollTo({ 
         top: 0, 
-        behavior: 'instant' 
+        behavior: isMobile ? 'instant' : 'smooth' // Instant en mobile
       });
     }, 50);
 
     return () => clearTimeout(timer);
-  }, [currentView]);
+  }, [currentView, isMobile]);
 
   // Audio setup
   useEffect(() => {
@@ -221,8 +251,23 @@ const App: React.FC = () => {
     };
   }, []);
 
+  // Prevenir zoom en iOS en doble tap
+  useEffect(() => {
+    if (!isMobile) return;
+    
+    const preventZoom = (e: TouchEvent) => {
+      if ((e.target as HTMLElement).tagName !== 'INPUT' && 
+          (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+        e.preventDefault();
+      }
+    };
+    
+    document.addEventListener('touchstart', preventZoom, { passive: false });
+    return () => document.removeEventListener('touchstart', preventZoom);
+  }, [isMobile]);
+
   // ============================================
-  // CALLBACKS - Memoizados para evitar re-renders
+  // CALLBACKS - Memoizados
   // ============================================
   
   const toggleMusic = useCallback(async () => {
@@ -309,7 +354,7 @@ const App: React.FC = () => {
   if (!user) {
     return (
       <motion.div 
-        className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-900/20 to-slate-950"
+        className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-900/20 to-slate-950 p-4 sm:p-0"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
@@ -333,23 +378,40 @@ const App: React.FC = () => {
         hasAccess={hasAccess}
         onUpgrade={handleOpenPricing}
       >
-        <div className="flex flex-col min-h-screen bg-[#0a0118] text-white">
+        <div className="flex flex-col min-h-screen bg-[#0a0118] text-white overflow-x-hidden">
           
           {/* Background Music */}
           <audio ref={audioRef} loop preload="metadata">
             <source src="/music/lofibro.m4a" type="audio/mp4" />
           </audio>
 
-          {/* Music Toggle Button */}
+          {/* Music Toggle Button - RESPONSIVE */}
           {!audioError && (
             <motion.button
               onClick={toggleMusic}
-              className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-gradient-to-br from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white rounded-full shadow-lg shadow-purple-500/50 hover:shadow-2xl hover:shadow-purple-500/60 flex items-center justify-center touch-manipulation backdrop-blur-sm"
-              variants={shouldReduceMotion ? undefined : musicButtonVariants}
-              initial={shouldReduceMotion ? undefined : "initial"}
-              animate={shouldReduceMotion ? undefined : "animate"}
+              className={`
+                fixed z-50 
+                ${isMobile 
+                  ? 'bottom-4 right-4 w-12 h-12' 
+                  : 'bottom-6 right-6 w-14 h-14'
+                }
+                bg-gradient-to-br from-purple-600 to-cyan-600 
+                hover:from-purple-500 hover:to-cyan-500 
+                active:from-purple-700 active:to-cyan-700
+                text-white rounded-full 
+                shadow-lg shadow-purple-500/50 
+                hover:shadow-2xl hover:shadow-purple-500/60
+                active:shadow-purple-500/40
+                flex items-center justify-center 
+                touch-manipulation backdrop-blur-sm
+                transition-shadow duration-200
+                safe-area-padding
+              `}
+              variants={shouldReduceMotion || isMobile ? undefined : musicButtonVariants}
+              initial={shouldReduceMotion || isMobile ? undefined : "initial"}
+              animate={shouldReduceMotion || isMobile ? undefined : "animate"}
               whileTap={shouldReduceMotion ? undefined : "tap"}
-              whileHover={shouldReduceMotion ? undefined : "hover"}
+              whileHover={isMobile || shouldReduceMotion ? undefined : "hover"}
               type="button"
               aria-label={isMusicPlaying ? 'Pausar música' : 'Reproducir música'}
             >
@@ -362,7 +424,7 @@ const App: React.FC = () => {
                     exit={{ scale: 0, rotate: 90 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <Volume2 size={24} />
+                    <Volume2 size={isMobile ? 20 : 24} />
                   </motion.div>
                 ) : (
                   <motion.div
@@ -372,7 +434,7 @@ const App: React.FC = () => {
                     exit={{ scale: 0, rotate: 90 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <VolumeX size={24} />
+                    <VolumeX size={isMobile ? 20 : 24} />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -387,8 +449,8 @@ const App: React.FC = () => {
             onLogout={logout}
           />
 
-          {/* Main Content */}
-          <main className="flex-1">
+          {/* Main Content - Safe Area Padding */}
+          <main className="flex-1 safe-area-padding">
             <AnimatePresence mode="wait">
               {currentView === 'home' ? (
                 <motion.div
@@ -397,6 +459,7 @@ const App: React.FC = () => {
                   initial="initial"
                   animate="animate"
                   exit="exit"
+                  className="min-h-full"
                 >
                   <HomePage
                     courseData={courseData}
@@ -413,6 +476,7 @@ const App: React.FC = () => {
                   initial="initial"
                   animate="animate"
                   exit="exit"
+                  className="min-h-full"
                 >
                   <Suspense fallback={<SuspenseFallback />}>
                     <GalacticCoursePage

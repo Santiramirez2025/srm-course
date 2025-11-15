@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState, useEffect } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Planet } from './Planet';
 import { Chapter, Module } from '@data/types';
@@ -22,40 +22,59 @@ interface ConstellationPath {
 }
 
 // ============================================================================
-// CONSTANTS
+// CONSTANTS - RESPONSIVE
 // ============================================================================
 
 const PLANET_CONSTANTS = {
-  ORBITAL_RADIUS: 220,
-  SATELLITE_SIZE: 64,
-  TOOLTIP_HEIGHT: 80,
-  SAFETY_MARGIN: 20,
-  PLANET_CORE_SIZE: 192,
+  // Desktop
+  DESKTOP: {
+    ORBITAL_RADIUS: 220,
+    SATELLITE_SIZE: 64,
+    TOOLTIP_HEIGHT: 80,
+    SAFETY_MARGIN: 20,
+    PLANET_CORE_SIZE: 192,
+  },
+  // Mobile
+  MOBILE: {
+    ORBITAL_RADIUS: 160,
+    SATELLITE_SIZE: 52,
+    TOOLTIP_HEIGHT: 60,
+    SAFETY_MARGIN: 15,
+    PLANET_CORE_SIZE: 140,
+  }
 } as const;
 
 const SPACING = {
-  NORMAL: 600,
-  EXPANDED: 100,
-  COLLAPSED_PADDING: 100,
-  LAST_MARGIN: 200,
+  DESKTOP: {
+    NORMAL: 600,
+    EXPANDED: 100,
+    COLLAPSED_PADDING: 100,
+    LAST_MARGIN: 200,
+  },
+  MOBILE: {
+    NORMAL: 400,
+    EXPANDED: 80,
+    COLLAPSED_PADDING: 60,
+    LAST_MARGIN: 120,
+  }
 } as const;
 
 const ANIMATION_CONFIG = {
   planet: {
     initial: { opacity: 0, scale: 0.8, y: 20 },
     animate: { opacity: 1, scale: 1, y: 0 },
-    getTransition: (index: number, reducedMotion: boolean) => ({
-      duration: reducedMotion ? 0.2 : 0.5,
-      delay: reducedMotion ? 0 : index * 0.1,
+    getTransition: (index: number, reducedMotion: boolean, isMobile: boolean) => ({
+      duration: reducedMotion ? 0.15 : (isMobile ? 0.3 : 0.5),
+      delay: reducedMotion ? 0 : (isMobile ? index * 0.05 : index * 0.1),
       ease: [0.34, 1.56, 0.64, 1] as [number, number, number, number]
     })
   },
   constellation: {
     initial: { pathLength: 0, opacity: 0 },
     animate: { pathLength: 1, opacity: 0.4 },
-    getTransition: (index: number, reducedMotion: boolean) => ({
-      duration: reducedMotion ? 0.2 : 1,
-      delay: reducedMotion ? 0 : index * 0.2,
+    getTransition: (index: number, reducedMotion: boolean, isMobile: boolean) => ({
+      duration: reducedMotion ? 0.15 : (isMobile ? 0.6 : 1),
+      delay: reducedMotion ? 0 : (isMobile ? index * 0.1 : index * 0.2),
       ease: "easeInOut" as const
     })
   },
@@ -67,7 +86,7 @@ const ANIMATION_CONFIG = {
     },
     mobile: {
       scale: [1, 1.05, 1],
-      opacity: [0.2, 0.3, 0.2],
+      opacity: [0.15, 0.25, 0.15],
       duration: 8
     }
   },
@@ -78,7 +97,7 @@ const ANIMATION_CONFIG = {
       baseDuration: 3
     },
     mobile: {
-      opacity: [0.1, 0.4, 0.1],
+      opacity: [0.1, 0.3, 0.1],
       scale: [1, 1.1, 1],
       baseDuration: 2
     }
@@ -86,32 +105,36 @@ const ANIMATION_CONFIG = {
 };
 
 // ============================================================================
-// UTILITY FUNCTIONS
+// UTILITY FUNCTIONS - RESPONSIVE
 // ============================================================================
 
-const getExpandedContainerSize = (): number => {
-  const { ORBITAL_RADIUS, SATELLITE_SIZE, TOOLTIP_HEIGHT, SAFETY_MARGIN } = PLANET_CONSTANTS;
-  return (ORBITAL_RADIUS + SATELLITE_SIZE / 2 + TOOLTIP_HEIGHT + SAFETY_MARGIN) * 2;
+const getExpandedContainerSize = (isMobile: boolean): number => {
+  const constants = isMobile ? PLANET_CONSTANTS.MOBILE : PLANET_CONSTANTS.DESKTOP;
+  return (constants.ORBITAL_RADIUS + constants.SATELLITE_SIZE / 2 + constants.TOOLTIP_HEIGHT + constants.SAFETY_MARGIN) * 2;
 };
 
-const getCollapsedSize = (): number => {
-  return PLANET_CONSTANTS.PLANET_CORE_SIZE + SPACING.COLLAPSED_PADDING;
+const getCollapsedSize = (isMobile: boolean): number => {
+  const constants = isMobile ? PLANET_CONSTANTS.MOBILE : PLANET_CONSTANTS.DESKTOP;
+  const spacing = isMobile ? SPACING.MOBILE : SPACING.DESKTOP;
+  return constants.PLANET_CORE_SIZE + spacing.COLLAPSED_PADDING;
 };
 
 const getConstellationPath = (
   index: number,
   expandedChapter: number | null,
   chapters: Chapter[],
-  svgWidth: number
+  svgWidth: number,
+  isMobile: boolean
 ): ConstellationPath => {
   const centerX = svgWidth / 2;
-  const baseY = 250;
+  const baseY = isMobile ? 150 : 250;
   
-  const expandedSize = getExpandedContainerSize();
-  const collapsedSize = getCollapsedSize();
+  const expandedSize = getExpandedContainerSize(isMobile);
+  const collapsedSize = getCollapsedSize(isMobile);
   
-  const normalSpacing = collapsedSize + SPACING.NORMAL;
-  const expandedSpacing = expandedSize + SPACING.EXPANDED;
+  const spacing = isMobile ? SPACING.MOBILE : SPACING.DESKTOP;
+  const normalSpacing = collapsedSize + spacing.NORMAL;
+  const expandedSpacing = expandedSize + spacing.EXPANDED;
   
   let y1 = baseY;
   
@@ -124,13 +147,43 @@ const getConstellationPath = (
   const y2 = y1 + (isCurrentExpanded ? expandedSpacing : normalSpacing);
   
   const midY = (y1 + y2) / 2;
-  const curveOffset = 40;
+  const curveOffset = isMobile ? 25 : 40;
   
   return {
     y1,
     y2,
     path: `M ${centerX} ${y1} Q ${centerX} ${midY + curveOffset}, ${centerX} ${y2}`
   };
+};
+
+// ============================================================================
+// CUSTOM HOOK: Mobile Detection
+// ============================================================================
+
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    
+    let timeoutId: number;
+    const debouncedCheck = () => {
+      clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(checkMobile, 150);
+    };
+    
+    window.addEventListener('resize', debouncedCheck);
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('resize', debouncedCheck);
+    };
+  }, []);
+  
+  return isMobile;
 };
 
 // ============================================================================
@@ -146,8 +199,8 @@ const AmbientBackground = React.memo<{
   if (prefersReducedMotion) {
     return (
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-        <div className="absolute top-1/4 left-1/4 w-64 sm:w-96 md:w-[500px] h-64 sm:h-96 md:h-[500px] bg-purple-500/5 rounded-full blur-[60px] sm:blur-[80px] md:blur-[100px] opacity-30" />
-        <div className="absolute bottom-1/4 right-1/4 w-64 sm:w-96 md:w-[500px] h-64 sm:h-96 md:h-[500px] bg-cyan-500/5 rounded-full blur-[60px] sm:blur-[80px] md:blur-[100px] opacity-30" />
+        <div className="absolute top-1/4 left-1/4 w-48 sm:w-64 md:w-96 lg:w-[500px] h-48 sm:h-64 md:h-96 lg:h-[500px] bg-purple-500/5 rounded-full blur-[40px] sm:blur-[60px] md:blur-[80px] lg:blur-[100px] opacity-20 sm:opacity-30" />
+        <div className="absolute bottom-1/4 right-1/4 w-48 sm:w-64 md:w-96 lg:w-[500px] h-48 sm:h-64 md:h-96 lg:h-[500px] bg-cyan-500/5 rounded-full blur-[40px] sm:blur-[60px] md:blur-[80px] lg:blur-[100px] opacity-20 sm:opacity-30" />
       </div>
     );
   }
@@ -155,7 +208,7 @@ const AmbientBackground = React.memo<{
   return (
     <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
       <motion.div
-        className="absolute top-1/4 left-1/4 w-64 sm:w-96 md:w-[500px] h-64 sm:h-96 md:h-[500px] bg-purple-500/5 rounded-full blur-[60px] sm:blur-[80px] md:blur-[100px]"
+        className="absolute top-1/4 left-1/4 w-48 sm:w-64 md:w-96 lg:w-[500px] h-48 sm:h-64 md:h-96 lg:h-[500px] bg-purple-500/5 rounded-full blur-[40px] sm:blur-[60px] md:blur-[80px] lg:blur-[100px]"
         animate={{
           scale: config.scale,
           opacity: config.opacity
@@ -163,10 +216,10 @@ const AmbientBackground = React.memo<{
         transition={{ duration: config.duration, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="absolute bottom-1/4 right-1/4 w-64 sm:w-96 md:w-[500px] h-64 sm:h-96 md:h-[500px] bg-cyan-500/5 rounded-full blur-[60px] sm:blur-[80px] md:blur-[100px]"
+        className="absolute bottom-1/4 right-1/4 w-48 sm:w-64 md:w-96 lg:w-[500px] h-48 sm:h-64 md:h-96 lg:h-[500px] bg-cyan-500/5 rounded-full blur-[40px] sm:blur-[60px] md:blur-[80px] lg:blur-[100px]"
         animate={{
           scale: [1.1, 1, 1.1],
-          opacity: [0.5, 0.3, 0.5]
+          opacity: isMobile ? [0.25, 0.15, 0.25] : [0.5, 0.3, 0.5]
         }}
         transition={{ duration: config.duration + 2, repeat: Infinity, ease: "easeInOut" }}
       />
@@ -200,9 +253,11 @@ const ConstellationLine = React.memo<{
   pathData: ConstellationPath;
   index: number;
   prefersReducedMotion: boolean;
-}>(({ pathData, index, prefersReducedMotion }) => {
-  const lineTransition = ANIMATION_CONFIG.constellation.getTransition(index, prefersReducedMotion);
-  const circleDelay = prefersReducedMotion ? 0 : index * 0.2 + 0.4;
+  isMobile: boolean;
+  centerX: number;
+}>(({ pathData, index, prefersReducedMotion, isMobile, centerX }) => {
+  const lineTransition = ANIMATION_CONFIG.constellation.getTransition(index, prefersReducedMotion, isMobile);
+  const circleDelay = prefersReducedMotion ? 0 : (isMobile ? index * 0.1 + 0.2 : index * 0.2 + 0.4);
 
   return (
     <g>
@@ -210,9 +265,9 @@ const ConstellationLine = React.memo<{
         d={pathData.path}
         fill="none"
         stroke="url(#constellationGradient)"
-        strokeWidth="1.5"
+        strokeWidth={isMobile ? "1" : "1.5"}
         strokeLinecap="round"
-        strokeDasharray="6 10"
+        strokeDasharray={isMobile ? "4 8" : "6 10"}
         filter="url(#constellationGlow)"
         initial={ANIMATION_CONFIG.constellation.initial}
         animate={ANIMATION_CONFIG.constellation.animate}
@@ -220,9 +275,9 @@ const ConstellationLine = React.memo<{
       />
       
       <motion.circle
-        cx={500}
+        cx={centerX}
         cy={pathData.y1}
-        r="3"
+        r={isMobile ? "2.5" : "3"}
         fill="#a855f7"
         opacity="0.5"
         initial={{ scale: 0 }}
@@ -238,10 +293,12 @@ ConstellationLine.displayName = 'ConstellationLine';
 const ConstellationLines = React.memo<{
   paths: ConstellationPath[];
   prefersReducedMotion: boolean;
-}>(({ paths, prefersReducedMotion }) => (
+  isMobile: boolean;
+  centerX: number;
+}>(({ paths, prefersReducedMotion, isMobile, centerX }) => (
   <svg 
     className="absolute inset-0 w-full h-full pointer-events-none"
-    style={{ filter: 'drop-shadow(0 0 4px rgba(168, 85, 247, 0.2))' }}
+    style={{ filter: isMobile ? 'drop-shadow(0 0 2px rgba(168, 85, 247, 0.15))' : 'drop-shadow(0 0 4px rgba(168, 85, 247, 0.2))' }}
     aria-hidden="true"
   >
     <ConstellationGradients />
@@ -252,6 +309,8 @@ const ConstellationLines = React.memo<{
         pathData={pathData}
         index={index}
         prefersReducedMotion={prefersReducedMotion}
+        isMobile={isMobile}
+        centerX={centerX}
       />
     ))}
   </svg>
@@ -276,7 +335,7 @@ const AmbientStar = React.memo<{
   if (prefersReducedMotion) {
     return (
       <div
-        className="absolute w-1 h-1 bg-white rounded-full opacity-20"
+        className={`absolute bg-white rounded-full ${isMobile ? 'w-0.5 h-0.5 opacity-15' : 'w-1 h-1 opacity-20'}`}
         style={style}
       />
     );
@@ -284,7 +343,7 @@ const AmbientStar = React.memo<{
 
   return (
     <motion.div
-      className="absolute w-1 h-1 bg-white rounded-full"
+      className={`absolute bg-white rounded-full ${isMobile ? 'w-0.5 h-0.5' : 'w-1 h-1'}`}
       style={style}
       animate={{
         opacity: config.opacity,
@@ -306,7 +365,7 @@ const AmbientStars = React.memo<{
   isMobile: boolean;
   prefersReducedMotion: boolean;
 }>(({ count, isMobile, prefersReducedMotion }) => (
-  <div className="absolute inset-0 pointer-events-none opacity-20" aria-hidden="true">
+  <div className={`absolute inset-0 pointer-events-none ${isMobile ? 'opacity-15' : 'opacity-20'}`} aria-hidden="true">
     {Array.from({ length: count }, (_, i) => (
       <AmbientStar
         key={i}
@@ -326,23 +385,26 @@ const PlanetContainer = React.memo<{
   isExpanded: boolean;
   isLastChapter: boolean;
   containerHeight: number;
+  marginBottom: number;
   onToggleChapter: (chapterId: number) => void;
   onSelectModule: (chapter: Chapter, module: Module) => void;
   completedModules: Set<number>;
   prefersReducedMotion: boolean;
+  isMobile: boolean;
 }>(({ 
   chapter, 
   index, 
   isExpanded, 
   isLastChapter,
   containerHeight,
+  marginBottom,
   onToggleChapter,
   onSelectModule,
   completedModules,
-  prefersReducedMotion
+  prefersReducedMotion,
+  isMobile
 }) => {
-  const marginBottom = isLastChapter ? SPACING.LAST_MARGIN : SPACING.NORMAL;
-  const transition = ANIMATION_CONFIG.planet.getTransition(index, prefersReducedMotion);
+  const transition = ANIMATION_CONFIG.planet.getTransition(index, prefersReducedMotion, isMobile);
 
   const handleToggle = useCallback(() => {
     onToggleChapter(chapter.id);
@@ -353,7 +415,7 @@ const PlanetContainer = React.memo<{
       initial={ANIMATION_CONFIG.planet.initial}
       animate={ANIMATION_CONFIG.planet.animate}
       transition={transition}
-      className="flex items-center justify-center transition-all duration-500"
+      className="flex items-center justify-center transition-all duration-500 ease-out"
       style={{
         minHeight: `${containerHeight}px`,
         marginBottom: `${marginBottom}px`
@@ -361,7 +423,7 @@ const PlanetContainer = React.memo<{
     >
       <div 
         style={{ zIndex: isExpanded ? 200 : 10 }} 
-        className="relative"
+        className="relative w-full max-w-full px-2 sm:px-4"
       >
         <Planet
           chapter={chapter}
@@ -389,37 +451,55 @@ export const PlanetaryMap: React.FC<PlanetaryMapProps> = React.memo(({
   onSelectModule,
   completedModules
 }) => {
-  // Detect user preferences
+  // Detect user preferences and viewport
   const prefersReducedMotion = useReducedMotion() || false;
+  const isMobile = useIsMobile();
   
-  // Detect mobile viewport
-  const isMobile = useMemo(() => {
-    if (typeof window === 'undefined') return false;
-    return window.innerWidth < 768;
-  }, []);
-
   // Get viewport width for constellation calculations
-  const viewportWidth = useMemo(() => {
-    if (typeof window === 'undefined') return 1000;
-    return window.innerWidth;
+  const [viewportWidth, setViewportWidth] = useState(
+    typeof window !== 'undefined' ? window.innerWidth : 1000
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setViewportWidth(window.innerWidth);
+    };
+
+    let timeoutId: number;
+    const debouncedResize = () => {
+      clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(handleResize, 150);
+    };
+
+    window.addEventListener('resize', debouncedResize);
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('resize', debouncedResize);
+    };
   }, []);
 
-  // Calculate constellation paths
+  // Calculate constellation paths with mobile support
   const constellationPaths = useMemo(
     () => chapters.slice(0, -1).map((_, i) => 
-      getConstellationPath(i, expandedChapter, chapters, viewportWidth)
+      getConstellationPath(i, expandedChapter, chapters, viewportWidth, isMobile)
     ),
-    [chapters, expandedChapter, viewportWidth]
+    [chapters, expandedChapter, viewportWidth, isMobile]
   );
 
   // Memoize size calculations
   const sizes = useMemo(() => ({
-    expanded: getExpandedContainerSize(),
-    collapsed: getCollapsedSize()
-  }), []);
+    expanded: getExpandedContainerSize(isMobile),
+    collapsed: getCollapsedSize(isMobile)
+  }), [isMobile]);
+
+  // Get spacing constants
+  const spacing = isMobile ? SPACING.MOBILE : SPACING.DESKTOP;
 
   // Adjust star count for mobile
-  const starCount = isMobile ? 10 : 15;
+  const starCount = isMobile ? 8 : 15;
+
+  // Center X for constellation lines
+  const centerX = viewportWidth / 2;
 
   // Stable callbacks
   const handleToggleChapter = useCallback((chapterId: number) => {
@@ -432,7 +512,7 @@ export const PlanetaryMap: React.FC<PlanetaryMapProps> = React.memo(({
 
   return (
     <div 
-      className="relative min-h-screen py-12 sm:py-16 md:py-20 pb-20 sm:pb-32 md:pb-40 overflow-hidden"
+      className="relative min-h-screen py-8 sm:py-12 md:py-16 lg:py-20 pb-16 sm:pb-24 md:pb-32 lg:pb-40 overflow-x-hidden"
       role="main"
       aria-label="Mapa de capítulos del curso"
     >
@@ -440,17 +520,23 @@ export const PlanetaryMap: React.FC<PlanetaryMapProps> = React.memo(({
       <AmbientBackground isMobile={isMobile} prefersReducedMotion={prefersReducedMotion} />
 
       {/* Constellation lines */}
-      <ConstellationLines paths={constellationPaths} prefersReducedMotion={prefersReducedMotion} />
+      <ConstellationLines 
+        paths={constellationPaths} 
+        prefersReducedMotion={prefersReducedMotion}
+        isMobile={isMobile}
+        centerX={centerX}
+      />
 
       {/* Planet grid */}
       <nav 
-        className="relative"
+        className="relative px-2 sm:px-4"
         aria-label="Capítulos del curso"
       >
         {chapters.map((chapter, index) => {
           const isExpanded = expandedChapter === chapter.id;
           const isLastChapter = index === chapters.length - 1;
           const containerHeight = isExpanded ? sizes.expanded : sizes.collapsed;
+          const marginBottom = isLastChapter ? spacing.LAST_MARGIN : spacing.NORMAL;
           
           return (
             <PlanetContainer
@@ -460,10 +546,12 @@ export const PlanetaryMap: React.FC<PlanetaryMapProps> = React.memo(({
               isExpanded={isExpanded}
               isLastChapter={isLastChapter}
               containerHeight={containerHeight}
+              marginBottom={marginBottom}
               onToggleChapter={handleToggleChapter}
               onSelectModule={handleSelectModule}
               completedModules={completedModules}
               prefersReducedMotion={prefersReducedMotion}
+              isMobile={isMobile}
             />
           );
         })}
@@ -489,10 +577,38 @@ PlanetaryMap.displayName = 'PlanetaryMap';
 
 const PlanetaryMapStyles = React.memo(() => (
   <style>{`
-    /* Optimize blur for mobile */
+    /* Mobile optimizations */
     @media (max-width: 768px) {
+      /* Reduce blur intensity for performance */
       [class*="blur-"] {
-        filter: blur(40px) !important;
+        filter: blur(30px) !important;
+      }
+
+      /* Optimize transforms */
+      [class*="motion-"],
+      [class*="animate-"] {
+        transform: translateZ(0);
+        backface-visibility: hidden;
+        perspective: 1000px;
+      }
+
+      /* Reduce SVG complexity */
+      svg path {
+        shape-rendering: optimizeSpeed;
+      }
+
+      /* Touch targets */
+      button,
+      [role="button"] {
+        min-height: 44px;
+        min-width: 44px;
+      }
+    }
+
+    /* Tablet optimizations */
+    @media (min-width: 768px) and (max-width: 1024px) {
+      [class*="blur-"] {
+        filter: blur(50px) !important;
       }
     }
 
@@ -510,11 +626,12 @@ const PlanetaryMapStyles = React.memo(() => (
     /* High contrast mode */
     @media (prefers-contrast: high) {
       [aria-hidden="true"] {
-        opacity: 0.8 !important;
+        opacity: 0.9 !important;
       }
 
       svg path {
         stroke-width: 2.5px !important;
+        opacity: 0.8 !important;
       }
     }
 
@@ -523,6 +640,7 @@ const PlanetaryMapStyles = React.memo(() => (
     [role="button"]:focus-visible {
       outline: 3px solid rgba(168, 85, 247, 0.8);
       outline-offset: 4px;
+      border-radius: 8px;
     }
 
     /* Print styles */
@@ -538,6 +656,11 @@ const PlanetaryMapStyles = React.memo(() => (
       .relative {
         position: static !important;
       }
+
+      motion-div {
+        opacity: 1 !important;
+        transform: none !important;
+      }
     }
 
     /* Improve scrolling performance */
@@ -552,6 +675,34 @@ const PlanetaryMapStyles = React.memo(() => (
       will-change: transform, opacity;
       transform: translateZ(0);
       backface-visibility: hidden;
+    }
+
+    /* Safe area support for notched devices */
+    @supports (padding: env(safe-area-inset-bottom)) {
+      .safe-area-padding {
+        padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
+      }
+    }
+
+    /* Smooth font rendering on mobile */
+    @media (max-width: 768px) {
+      * {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+    }
+
+    /* Prevent text size adjustment on orientation change */
+    html {
+      -webkit-text-size-adjust: 100%;
+      -moz-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+
+    /* Optimize scrolling on iOS */
+    * {
+      -webkit-overflow-scrolling: touch;
     }
   `}</style>
 ));

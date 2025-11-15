@@ -1,76 +1,46 @@
 // src/components/course/GalacticCoursePage.tsx
-import React, { 
-  useState, 
-  useEffect, 
-  useRef, 
-  useMemo, 
-  useCallback,
-  lazy,
-  Suspense 
-} from 'react';
-import { motion, AnimatePresence, useMotionValue, useReducedMotion } from 'framer-motion';
-import { ChevronLeft, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { motion, AnimatePresence, useMotionValue } from 'framer-motion';
+import { ChevronLeft } from 'lucide-react';
 
-// ============================================
-// LAZY LOADED COMPONENTS
-// ============================================
-const PlanetaryMap = lazy(() => 
-  import('./galactic/PlanetaryMap').then(m => ({ default: m.PlanetaryMap }))
-);
-const HolographicCabin = lazy(() => 
-  import('./galactic/HolographicCabin').then(m => ({ default: m.HolographicCabin }))
-);
-const AnimatedNebulas = lazy(() => 
-  import('./galactic/background').then(m => ({ default: m.AnimatedNebulas }))
-);
-
-// ============================================
-// EAGER LOADED COMPONENTS
-// ============================================
+// Galactic Components
 import { GalacticHub } from './galactic/GalacticHub';
+import { PlanetaryMap } from './galactic/PlanetaryMap';
+import { HolographicCabin } from './galactic/HolographicCabin';
 import { OrbitalProgress } from './galactic/OrbitalProgress';
+
+// UI Components
 import { 
   HolographicPanel, 
   ViewModeToggle, 
   AchievementBadge,
   EnergyBar 
 } from './galactic/ui';
-import { StarField, GalacticLoadingScreen } from './galactic/background';
-import { ChapterList } from '../components/course/ChapterList';
 
-// ============================================
-// TYPES
-// ============================================
+// Background Components
+import { 
+  StarField, 
+  AnimatedNebulas, 
+  GalacticLoadingScreen 
+} from './galactic/background';
+
+// Existing Components
+import { ChapterList } from '../components/course/ChapterList';
+import { ModuleContent } from '../components/course/ModuleContent';
+
+// Types
 import { CourseData, Module, Chapter } from '@data/types';
 
-interface GalacticCoursePageProps {
-  courseData: CourseData;
-  expandedChapter: number | null;
-  selectedModule: (Module & { chapterTitle: string; chapterId: number }) | null;
-  onToggleChapter: (chapterId: number) => void;
-  onSelectModule: (chapter: Chapter, module: Module) => void;
-  onBackToMap: () => void;
-  completedModules?: Set<number>;
-  onNavigateModule?: (direction: 'prev' | 'next') => void;
-  onModuleComplete?: (moduleId: number) => void;
-  onModuleBookmark?: (moduleId: number) => void;
-  bookmarkedModules?: Set<number>;
-  hasPrevious?: boolean;
-  hasNext?: boolean;
-  currentModuleNumber?: number;
-  totalModules?: number;
-  courseProgress?: {
-    total: number;
-    completed: number;
-    percentage: number;
-  };
-  isLoading?: boolean;
-  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
-}
+// Styles
+import { galacticStyles } from './galactic/styles/galacticStyles';
 
 // ============================================
-// UTILITY: Throttle optimizado
+// UTILITY FUNCTIONS
 // ============================================
+
+/**
+ * Throttle optimizado con trailing call
+ */
 function throttle<T extends (...args: any[]) => void>(
   func: T,
   delay: number
@@ -110,43 +80,60 @@ function throttle<T extends (...args: any[]) => void>(
 }
 
 // ============================================
-// UTILITY: Detectar dispositivo móvil
-// ============================================
-const isMobileDevice = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent
-  ) || window.innerWidth < 768;
-};
-
-// ============================================
-// LOADING FALLBACK COMPONENT
-// ============================================
-const ComponentLoader: React.FC = () => (
-  <div className="flex items-center justify-center py-16 sm:py-24" role="status">
-    <div className="text-center space-y-4">
-      <Loader2 className="w-10 h-10 sm:w-12 sm:h-12 text-cyan-400 animate-spin mx-auto" />
-      <p className="text-sm sm:text-base text-gray-400" aria-live="polite">
-        Cargando componente...
-      </p>
-    </div>
-  </div>
-);
-
-// ============================================
 // MEMOIZED COMPONENTS
 // ============================================
-const MemoizedGalacticHub = React.memo(GalacticHub, (prev, next) => 
-  prev.courseData === next.courseData &&
-  prev.courseProgress?.percentage === next.courseProgress?.percentage &&
-  prev.currentModuleNumber === next.currentModuleNumber &&
-  prev.totalModules === next.totalModules
-);
+
+const MemoizedGalacticHub = React.memo(GalacticHub, (prev, next) => {
+  return (
+    prev.courseData === next.courseData &&
+    prev.courseProgress?.percentage === next.courseProgress?.percentage &&
+    prev.currentModuleNumber === next.currentModuleNumber &&
+    prev.totalModules === next.totalModules
+  );
+});
+
+const MemoizedPlanetaryMap = React.memo(PlanetaryMap, (prev, next) => {
+  return (
+    prev.chapters === next.chapters &&
+    prev.expandedChapter === next.expandedChapter &&
+    prev.completedModules === next.completedModules
+  );
+});
 
 const MemoizedChapterList = React.memo(ChapterList);
+const MemoizedHolographicCabin = React.memo(HolographicCabin);
 const MemoizedOrbitalProgress = React.memo(OrbitalProgress);
 const MemoizedEnergyBar = React.memo(EnergyBar);
 const MemoizedStarField = React.memo(StarField);
+const MemoizedAnimatedNebulas = React.memo(AnimatedNebulas);
+
+// ============================================
+// PROPS INTERFACE
+// ============================================
+interface GalacticCoursePageProps {
+  courseData: CourseData;
+  expandedChapter: number | null;
+  selectedModule: (Module & { chapterTitle: string; chapterId: number }) | null;
+  onToggleChapter: (chapterId: number) => void;
+  onSelectModule: (chapter: Chapter, module: Module) => void;
+  onBackToMap: () => void;
+  completedModules?: Set<number>;
+  onNavigateModule?: (direction: 'prev' | 'next') => void;
+  onModuleComplete?: (moduleId: number) => void;
+  onModuleBookmark?: (moduleId: number) => void;
+  bookmarkedModules?: Set<number>;
+  hasPrevious?: boolean;
+  hasNext?: boolean;
+  currentModuleNumber?: number;
+  totalModules?: number;
+  courseProgress?: {
+    total: number;
+    completed: number;
+    percentage: number;
+  };
+  isLoading?: boolean;
+  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
+}
 
 // ============================================
 // MAIN COMPONENT
@@ -172,12 +159,6 @@ export const GalacticCoursePage: React.FC<GalacticCoursePageProps> = ({
   onError
 }) => {
   // ============================================
-  // HOOKS: Detección de rendimiento
-  // ============================================
-  const shouldReduceMotion = useReducedMotion();
-  const [isMobile, setIsMobile] = useState(false);
-  
-  // ============================================
   // STATE
   // ============================================
   const [mounted, setMounted] = useState(false);
@@ -193,6 +174,7 @@ export const GalacticCoursePage: React.FC<GalacticCoursePageProps> = ({
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const prevCompletedRef = useRef(completedModules);
+  const scrollTimeoutRef = useRef<number | null>(null);
   const lastSelectedModuleId = useRef<number | null>(null);
 
   // ============================================
@@ -213,26 +195,6 @@ export const GalacticCoursePage: React.FC<GalacticCoursePageProps> = ({
     [completedModules.size]
   );
 
-  // Animaciones adaptativas según el dispositivo
-  const animationConfig = useMemo(() => {
-    if (shouldReduceMotion) {
-      return {
-        duration: 0.01,
-        ease: 'linear' as const
-      };
-    }
-    if (isMobile) {
-      return {
-        duration: 0.4,
-        ease: [0.4, 0, 0.2, 1] as const
-      };
-    }
-    return {
-      duration: 0.8,
-      ease: [0.19, 1, 0.22, 1] as const
-    };
-  }, [shouldReduceMotion, isMobile]);
-
   // ============================================
   // CALLBACKS
   // ============================================
@@ -241,79 +203,59 @@ export const GalacticCoursePage: React.FC<GalacticCoursePageProps> = ({
     lastSelectedModuleId.current = null;
     onBackToMap();
     
-    setTimeout(() => setIsTransitioning(false), isMobile ? 400 : 600);
-  }, [onBackToMap, isMobile]);
+    setTimeout(() => setIsTransitioning(false), 600);
+  }, [onBackToMap]);
 
   const handleModuleComplete = useCallback((moduleId: number) => {
     try {
       onModuleComplete?.(moduleId);
     } catch (error) {
-      if (onError && error instanceof Error) {
-        onError(error, { componentStack: '' } as React.ErrorInfo);
-      }
+      console.error('Error completing module:', error);
     }
-  }, [onModuleComplete, onError]);
+  }, [onModuleComplete]);
 
   const handleModuleBookmark = useCallback((moduleId: number) => {
     try {
       onModuleBookmark?.(moduleId);
     } catch (error) {
-      if (onError && error instanceof Error) {
-        onError(error, { componentStack: '' } as React.ErrorInfo);
-      }
+      console.error('Error bookmarking module:', error);
     }
-  }, [onModuleBookmark, onError]);
+  }, [onModuleBookmark]);
 
   const handleNavigateModule = useCallback((direction: 'prev' | 'next') => {
     try {
       onNavigateModule?.(direction);
     } catch (error) {
-      if (onError && error instanceof Error) {
-        onError(error, { componentStack: '' } as React.ErrorInfo);
-      }
+      console.error('Error navigating module:', error);
     }
-  }, [onNavigateModule, onError]);
+  }, [onNavigateModule]);
 
-  // Throttled mouse handler - 60fps desktop, deshabilitado en móvil
-  const handleMouseMove = useMemo(() => {
-    if (isMobile) {
-      const noop = (() => {}) as (() => void) & { cancel: () => void };
-      noop.cancel = () => {};
-      return noop;
-    }
-    return throttle((e: MouseEvent) => {
+  // Throttled mouse handler - 60fps
+  const handleMouseMove = useMemo(
+    () => throttle((e: MouseEvent) => {
       mouseX.set(e.clientX);
       mouseY.set(e.clientY);
-    }, 16);
-  }, [mouseX, mouseY, isMobile]);
+    }, 16),
+    [mouseX, mouseY]
+  );
 
   // ============================================
   // EFFECTS
   // ============================================
   
-  // Detección inicial de dispositivo y mount
+  // Mount effect
   useEffect(() => {
-    setIsMobile(isMobileDevice());
     setMounted(true);
-
-    const handleResize = () => setIsMobile(isMobileDevice());
-    window.addEventListener('resize', handleResize, { passive: true });
-    
-    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Mouse tracking (solo desktop)
+  // Mouse tracking
   useEffect(() => {
-    if (isMobile || shouldReduceMotion) return;
-
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    window.addEventListener('mousemove', handleMouseMove);
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
-      if (typeof handleMouseMove === 'function' && 'cancel' in handleMouseMove) {
-        handleMouseMove.cancel();
-      }
+      handleMouseMove.cancel();
     };
-  }, [handleMouseMove, isMobile, shouldReduceMotion]);
+  }, [handleMouseMove]);
 
   // Achievement trigger
   useEffect(() => {
@@ -326,78 +268,96 @@ export const GalacticCoursePage: React.FC<GalacticCoursePageProps> = ({
       setRecentAchievement(`Módulo "${selectedModule.title}" completado`);
       setShowAchievement(true);
       
-      const timer = setTimeout(() => setShowAchievement(false), 4000);
+      const timer = setTimeout(() => {
+        setShowAchievement(false);
+      }, 4000);
+      
       prevCompletedRef.current = new Set(completedModules);
       
       return () => clearTimeout(timer);
     }
   }, [completedModules, selectedModule, mounted]);
 
-  // Scroll optimizado - SOLO cuando cambia el módulo
+  // Scroll optimizado - SOLO cuando se selecciona un módulo nuevo
   useEffect(() => {
-    if (!selectedModule || !moduleMainRef.current || !mounted || isTransitioning) {
-      return;
-    }
+    // Guards estrictos para prevenir scroll accidental
+    if (!selectedModule) return;
+    if (!moduleMainRef.current) return;
+    if (!mounted) return;
+    if (isTransitioning) return;
     
+    // Solo hacer scroll si es un módulo diferente
     if (lastSelectedModuleId.current === selectedModule.id) return;
     
+    // Actualizar referencia
     lastSelectedModuleId.current = selectedModule.id;
     
-    // En móvil, scroll inmediato sin animación
-    if (isMobile) {
-      moduleMainRef.current.scrollIntoView({ 
-        behavior: 'auto', 
-        block: 'start'
-      });
-      return;
-    }
-    
-    // Desktop: doble RAF para estabilidad
+    // Doble RAF para asegurar estabilidad del layout
     const frame1 = requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        moduleMainRef.current?.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'start',
-          inline: 'nearest'
-        });
+      const frame2 = requestAnimationFrame(() => {
+        if (moduleMainRef.current && selectedModule) {
+          moduleMainRef.current.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start',
+            inline: 'nearest'
+          });
+        }
       });
+      
+      scrollTimeoutRef.current = frame2;
     });
     
-    return () => cancelAnimationFrame(frame1);
-  }, [selectedModule?.id, mounted, isTransitioning, isMobile]);
+    return () => {
+      cancelAnimationFrame(frame1);
+      if (scrollTimeoutRef.current) {
+        cancelAnimationFrame(scrollTimeoutRef.current);
+      }
+    };
+  }, [selectedModule?.id, mounted, isTransitioning]);
 
   // Keyboard navigation
   useEffect(() => {
-    if (!selectedModule) return;
-
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         return;
       }
 
-      switch (e.key) {
-        case 'ArrowLeft':
-          if (hasPrevious) {
+      if (selectedModule) {
+        switch (e.key) {
+          case 'ArrowLeft':
+            if (hasPrevious) {
+              e.preventDefault();
+              handleNavigateModule('prev');
+            }
+            break;
+          case 'ArrowRight':
+            if (hasNext) {
+              e.preventDefault();
+              handleNavigateModule('next');
+            }
+            break;
+          case 'Escape':
             e.preventDefault();
-            handleNavigateModule('prev');
-          }
-          break;
-        case 'ArrowRight':
-          if (hasNext) {
-            e.preventDefault();
-            handleNavigateModule('next');
-          }
-          break;
-        case 'Escape':
-          e.preventDefault();
-          handleBackToMap();
-          break;
+            handleBackToMap();
+            break;
+        }
       }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedModule, hasPrevious, hasNext, handleNavigateModule, handleBackToMap]);
+
+  // Analytics tracking
+  useEffect(() => {
+    if (selectedModule && mounted) {
+      console.log('Module viewed:', {
+        moduleId: selectedModule.id,
+        moduleName: selectedModule.title,
+        chapterId: selectedModule.chapterId
+      });
+    }
+  }, [selectedModule, mounted]);
 
   // ============================================
   // LOADING STATE
@@ -412,13 +372,9 @@ export const GalacticCoursePage: React.FC<GalacticCoursePageProps> = ({
   return (
     <div className="min-h-screen bg-[#0a0118] relative overflow-hidden">
       
-      {/* Background Effects - Optimizado según dispositivo */}
+      {/* Background Effects */}
       <MemoizedStarField />
-      {!isMobile && !shouldReduceMotion && (
-        <Suspense fallback={null}>
-          <AnimatedNebulas mouseX={mouseX} mouseY={mouseY} />
-        </Suspense>
-      )}
+      <MemoizedAnimatedNebulas mouseX={mouseX} mouseY={mouseY} />
       
       {/* Achievement Notification */}
       <AnimatePresence>
@@ -427,65 +383,53 @@ export const GalacticCoursePage: React.FC<GalacticCoursePageProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Main Container - Responsive padding */}
-      <div 
-        className="max-w-[2000px] mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-12 relative z-10"
-        role="main"
-      >
+      {/* Main Container */}
+      <div className="max-w-[2000px] mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
         
-        {/* Header - SEO optimizado */}
-        <header>
-          <motion.div
-            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={animationConfig}
-            className="mb-8 sm:mb-16"
-          >
-            <MemoizedGalacticHub 
-              courseData={courseData}
-              courseProgress={courseProgress}
-              currentModuleNumber={currentModuleNumber}
-              totalModules={totalModules}
-            />
-          </motion.div>
-        </header>
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, ease: [0.19, 1, 0.22, 1] }}
+          className="mb-16"
+        >
+          <MemoizedGalacticHub 
+            courseData={courseData}
+            courseProgress={courseProgress}
+            currentModuleNumber={currentModuleNumber}
+            totalModules={totalModules}
+          />
+        </motion.div>
 
-        {/* View Mode Toggle - Touch-friendly */}
-        <nav aria-label="Vista del curso">
-          <motion.div 
-            initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: shouldReduceMotion ? 0 : 0.3 }}
-            className="flex justify-center mb-6 sm:mb-12"
-          >
-            <ViewModeToggle viewMode={viewMode} setViewMode={setViewMode} />
-          </motion.div>
-        </nav>
+        {/* View Mode Toggle */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.3 }}
+          className="flex justify-center mb-12"
+        >
+          <ViewModeToggle viewMode={viewMode} setViewMode={setViewMode} />
+        </motion.div>
 
-        {/* Main Content Grid - Responsive */}
+        {/* Main Content Grid */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: shouldReduceMotion ? 0 : 0.5, duration: animationConfig.duration }}
-          className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8"
+          transition={{ delay: 0.5, duration: 0.8 }}
+          className="grid grid-cols-1 lg:grid-cols-12 gap-8"
         >
           
           {/* Navigation View */}
           {!selectedModule && (
-            <section 
-              className="lg:col-span-12"
-              aria-label="Navegación del curso"
-            >
+            <div className="lg:col-span-12">
               {viewMode === 'map' ? (
-                <Suspense fallback={<ComponentLoader />}>
-                  <PlanetaryMap
-                    chapters={courseData.chapters}
-                    expandedChapter={expandedChapter}
-                    onToggleChapter={onToggleChapter}
-                    onSelectModule={onSelectModule}
-                    completedModules={completedModules}
-                  />
-                </Suspense>
+                <MemoizedPlanetaryMap
+                  chapters={courseData.chapters}
+                  expandedChapter={expandedChapter}
+                  onToggleChapter={onToggleChapter}
+                  onSelectModule={onSelectModule}
+                  completedModules={completedModules}
+                />
               ) : (
                 <div className="max-w-5xl mx-auto">
                   <HolographicPanel>
@@ -501,64 +445,58 @@ export const GalacticCoursePage: React.FC<GalacticCoursePageProps> = ({
                   </HolographicPanel>
                 </div>
               )}
-            </section>
+            </div>
           )}
 
           {/* Module Content View */}
           {selectedModule && (
             <>
-              {/* Sidebar - Responsive */}
-              <aside 
-                className="lg:col-span-3 space-y-4 sm:space-y-6"
-                aria-label="Barra lateral de navegación"
+              {/* Sidebar */}
+              <motion.aside 
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="lg:col-span-3 space-y-6"
               >
                 <HolographicPanel>
-                  <nav className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-                    {/* Back Button - Touch optimizado */}
+                  <div className="p-6 space-y-6">
+                    {/* Back Button */}
                     <button
                       onClick={handleBackToMap}
                       aria-label="Volver al mapa del curso"
-                      className="flex items-center gap-2 sm:gap-3 text-cyan-400 hover:text-cyan-300 transition-colors group focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-[#0a0118] rounded-lg p-2 sm:p-3 -m-2 min-h-[44px] w-full sm:w-auto touch-manipulation"
+                      className="flex items-center gap-3 text-cyan-400 hover:text-cyan-300 transition-colors group focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-[#0a0118] rounded-lg p-2 -m-2"
                     >
-                      <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 group-hover:-translate-x-1 transition-transform" />
-                      <span className="font-bold text-sm sm:text-base">Volver al mapa</span>
+                      <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                      <span className="font-bold">Volver al mapa</span>
                     </button>
 
                     {/* Progress Ring */}
                     {courseProgress && (
-                      <div className="py-2">
-                        <MemoizedOrbitalProgress 
-                          percentage={courseProgress.percentage}
-                          completed={courseProgress.completed}
-                          total={courseProgress.total}
-                          size="small"
-                        />
-                      </div>
+                      <MemoizedOrbitalProgress 
+                        percentage={courseProgress.percentage}
+                        completed={courseProgress.completed}
+                        total={courseProgress.total}
+                        size="small"
+                      />
                     )}
 
-                    <div className="text-center space-y-2">
-                      <p className="text-sm sm:text-base text-gray-400">
+                    <div className="text-center">
+                      <p className="text-sm text-gray-400">
                         Módulo {currentModuleNumber} de {totalModules}
                       </p>
-                      {!isMobile && (
-                        <p className="text-xs text-gray-500 hidden sm:block">
-                          ← → para navegar | ESC para volver
-                        </p>
-                      )}
+                      <p className="text-xs text-gray-500 mt-2">
+                        ← → para navegar | ESC para volver
+                      </p>
                     </div>
-                  </nav>
+                  </div>
                 </HolographicPanel>
 
                 {/* Energy Stats */}
                 <HolographicPanel>
-                  <section 
-                    className="p-4 sm:p-6 space-y-3 sm:space-y-4"
-                    aria-label="Estadísticas de progreso"
-                  >
-                    <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                  <div className="p-6 space-y-4">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
                       <span role="img" aria-label="energía">⚡</span>
                       Energía Acumulada
-                    </h2>
+                    </h3>
                     <div className="space-y-3">
                       <MemoizedEnergyBar 
                         label="XP Obtenido"
@@ -573,38 +511,39 @@ export const GalacticCoursePage: React.FC<GalacticCoursePageProps> = ({
                         color="yellow"
                       />
                     </div>
-                  </section>
+                  </div>
                 </HolographicPanel>
-              </aside>
+              </motion.aside>
 
               {/* Main Module Content */}
-              <motion.article 
+              <motion.main 
                 ref={moduleMainRef}
-                initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
+                initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={animationConfig}
                 className="lg:col-span-9"
-                aria-label={`Contenido del módulo: ${selectedModule.title}`}
+                role="main"
+                aria-label="Contenido del módulo"
               >
-                <Suspense fallback={<ComponentLoader />}>
-                  <HolographicCabin
-                    module={selectedModule}
-                    onComplete={handleModuleComplete}
-                    onNavigate={handleNavigateModule}
-                    onBookmark={handleModuleBookmark}
-                    isCompleted={completedModules.has(selectedModule.id)}
-                    isBookmarked={bookmarkedModules?.has(selectedModule.id)}
-                    hasPrevious={hasPrevious}
-                    hasNext={hasNext}
-                    currentModuleNumber={currentModuleNumber}
-                    totalModules={totalModules}
-                  />
-                </Suspense>
-              </motion.article>
+                <MemoizedHolographicCabin
+                  module={selectedModule}
+                  onComplete={handleModuleComplete}
+                  onNavigate={handleNavigateModule}
+                  onBookmark={handleModuleBookmark}
+                  isCompleted={completedModules.has(selectedModule.id)}
+                  isBookmarked={bookmarkedModules?.has(selectedModule.id)}
+                  hasPrevious={hasPrevious}
+                  hasNext={hasNext}
+                  currentModuleNumber={currentModuleNumber}
+                  totalModules={totalModules}
+                />
+              </motion.main>
             </>
           )}
         </motion.div>
       </div>
+
+      {/* Global Styles */}
+      <style>{galacticStyles}</style>
     </div>
   );
 };
